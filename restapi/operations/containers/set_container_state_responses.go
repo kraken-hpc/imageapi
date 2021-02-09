@@ -63,6 +63,11 @@ swagger:response setContainerStateDefault
 */
 type SetContainerStateDefault struct {
 	_statusCode int
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
 }
 
 // NewSetContainerStateDefault creates SetContainerStateDefault with default headers values
@@ -87,10 +92,25 @@ func (o *SetContainerStateDefault) SetStatusCode(code int) {
 	o._statusCode = code
 }
 
+// WithPayload adds the payload to the set container state default response
+func (o *SetContainerStateDefault) WithPayload(payload *models.Error) *SetContainerStateDefault {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the set container state default response
+func (o *SetContainerStateDefault) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *SetContainerStateDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(o._statusCode)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }

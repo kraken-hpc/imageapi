@@ -250,7 +250,10 @@ func init() {
             }
           },
           "default": {
-            "description": "error"
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
           }
         }
       },
@@ -514,14 +517,6 @@ func init() {
         },
         "state": {
           "description": "When read, this contains the current container state.\nOn creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `).\nThe default is ` + "`" + `created` + "`" + `.\n",
-          "enum": [
-            "created",
-            "running",
-            "restarting",
-            "paused",
-            "exited",
-            "dead"
-          ],
           "$ref": "#/definitions/container_state"
         }
       }
@@ -1031,7 +1026,10 @@ func init() {
             }
           },
           "default": {
-            "description": "error"
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
           }
         }
       },
@@ -1295,14 +1293,6 @@ func init() {
         },
         "state": {
           "description": "When read, this contains the current container state.\nOn creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `).\nThe default is ` + "`" + `created` + "`" + `.\n",
-          "enum": [
-            "created",
-            "running",
-            "restarting",
-            "paused",
-            "exited",
-            "dead"
-          ],
           "$ref": "#/definitions/container_state"
         }
       }

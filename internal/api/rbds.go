@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/bensallen/rbd/models"
 	"github.com/bensallen/rbd/pkg/krbd"
+	"github.com/jlowellwofford/imageapi/models"
 )
 
 type RbdsType struct {

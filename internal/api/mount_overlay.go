@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bensallen/rbd/models"
 	"github.com/bensallen/rbd/pkg/mount"
+	"github.com/jlowellwofford/imageapi/models"
 )
 
 type MountsOverlayType struct {
