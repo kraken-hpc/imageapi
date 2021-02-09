@@ -176,8 +176,12 @@ github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jessevdk/go-flags v1.4.0 h1:4IU2WS7AumrZ/40jfhf4QVDMsQwqA7VEHozFRrGARJA=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
+github.com/jlowellwofford/go-fork v0.0.0-20210209212206-08fa7acf04af h1:B/UfjoPZizFpnEUqIQX/V4eH6jl9R6WPbwbpgCt3JQk=
+github.com/jlowellwofford/go-fork v0.0.0-20210209212206-08fa7acf04af/go.mod h1:zyN2LmGALF7QJbMSbXe0j0hkfask/scXWxKR+wYr9fM=
 github.com/jlowellwofford/rbd v0.0.0-20210209155714-708f1b8f8fd7 h1:BwwFDyefGRSlNGuwkDK5e8shn1rVMUZHeOaed7QoBYA=
 github.com/jlowellwofford/rbd v0.0.0-20210209155714-708f1b8f8fd7/go.mod h1:scQzzcMu4X4w0L6rELxUERr68HS2Lqu/NYdnxw72sV8=
+github.com/jlowellwofford/uinit v0.0.0-20210105192521-a5a9b4f1edb7 h1:MKHNmJhXgGgUU6ZX77jn/U7wX+yt+cPTM3WJwHnB+dg=
+github.com/jlowellwofford/uinit v0.0.0-20210105192521-a5a9b4f1edb7/go.mod h1:pSvgxRwS4DLDylGDoITBWMWVfrZNxytrE09UnTxkQrI=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
