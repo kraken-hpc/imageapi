@@ -225,8 +225,14 @@ definitions:
         $ref: "#/definitions/mount"
       command:
         type: string
+      systemd:
+        type: boolean
+        description: >
+          When `systemd` is set to `true`, we will assume that this container will run `systemd`,
+          and perform the necessary magic dance to make systemd run inside of the container.
+          The default is `false`.
       state:
-        description: |
+        description: >
           When read, this contains the current container state.
           On creation, this requests the initial state (valid options: `created` or `running`).
           The default is `created`.

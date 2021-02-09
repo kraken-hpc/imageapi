@@ -516,8 +516,12 @@ func init() {
           }
         },
         "state": {
-          "description": "When read, this contains the current container state.\nOn creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `).\nThe default is ` + "`" + `created` + "`" + `.\n",
+          "description": "When read, this contains the current container state. On creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `). The default is ` + "`" + `created` + "`" + `.\n",
           "$ref": "#/definitions/container_state"
+        },
+        "systemd": {
+          "description": "When ` + "`" + `systemd` + "`" + ` is set to ` + "`" + `true` + "`" + `, we will assume that this container will run ` + "`" + `systemd` + "`" + `, and perform the necessary magic dance to make systemd run inside of the container. The default is ` + "`" + `false` + "`" + `.\n",
+          "type": "boolean"
         }
       }
     },
@@ -1292,8 +1296,12 @@ func init() {
           }
         },
         "state": {
-          "description": "When read, this contains the current container state.\nOn creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `).\nThe default is ` + "`" + `created` + "`" + `.\n",
+          "description": "When read, this contains the current container state. On creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `). The default is ` + "`" + `created` + "`" + `.\n",
           "$ref": "#/definitions/container_state"
+        },
+        "systemd": {
+          "description": "When ` + "`" + `systemd` + "`" + ` is set to ` + "`" + `true` + "`" + `, we will assume that this container will run ` + "`" + `systemd` + "`" + `, and perform the necessary magic dance to make systemd run inside of the container. The default is ` + "`" + `false` + "`" + `.\n",
+          "type": "boolean"
         }
       }
     },

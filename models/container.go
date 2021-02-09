@@ -43,11 +43,13 @@ type Container struct {
 	//
 	Namespaces []ContainerNamespace `json:"namespaces"`
 
-	// When read, this contains the current container state.
-	// On creation, this requests the initial state (valid options: `created` or `running`).
-	// The default is `created`.
+	// When read, this contains the current container state. On creation, this requests the initial state (valid options: `created` or `running`). The default is `created`.
 	//
 	State ContainerState `json:"state,omitempty"`
+
+	// When `systemd` is set to `true`, we will assume that this container will run `systemd`, and perform the necessary magic dance to make systemd run inside of the container. The default is `false`.
+	//
+	Systemd bool `json:"systemd,omitempty"`
 }
 
 // Validate validates this container
