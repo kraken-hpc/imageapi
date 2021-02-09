@@ -64,13 +64,16 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		var err error
 		var r *models.Rbd
 		if r, err = internal.Rbds.Get(params.ID); err != nil {
-			return attach.NewGetRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String(err.Error())})
+			return attach.NewGetRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("rbd not found")})
 		}
 		return attach.NewGetRbdOK().WithPayload(r)
 	})
 
 	api.AttachUnmapRbdHandler = attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
 		if err := internal.Rbds.Unmap(params.ID); err != nil {
+			if err == internal.ERRNOTFOUND {
+				return attach.NewUnmapRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("rbd not found")})
+			}
 			return attach.NewUnmapRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 		return attach.NewUnmapRbdNoContent()
@@ -102,7 +105,10 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 
 	api.MountsUnmountRbdHandler = mounts.UnmountRbdHandlerFunc(func(params mounts.UnmountRbdParams) middleware.Responder {
 		if err := internal.MountsRbd.Unmount(params.ID); err != nil {
-			return mounts.NewUnmountRbdDefault(500).WithPayload(&models.Error{Code: 404, Message: swag.String(err.Error())})
+			if err == internal.ERRNOTFOUND {
+				return mounts.NewUnmountRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
+			}
+			return mounts.NewUnmountRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 		return mounts.NewUnmountRbdNoContent()
 	})
@@ -126,16 +132,62 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		var err error
 		var r *models.MountOverlay
 		if r, err = internal.MountsOverlay.Get(params.ID); err != nil {
-			return mounts.NewGetMountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String(err.Error())})
+			return mounts.NewGetMountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
 		}
 		return mounts.NewGetMountOverlayOK().WithPayload(r)
 	})
 
 	api.MountsUnmountOverlayHandler = mounts.UnmountOverlayHandlerFunc(func(params mounts.UnmountOverlayParams) middleware.Responder {
 		if err := internal.MountsOverlay.Unmount(params.ID); err != nil {
-			return mounts.NewUnmountOverlayDefault(500).WithPayload(&models.Error{Code: 404, Message: swag.String(err.Error())})
+			if err == internal.ERRNOTFOUND {
+				return mounts.NewUnmountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
+			}
+			return mounts.NewUnmountOverlayDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 		return mounts.NewUnmountOverlayNoContent()
+	})
+
+	// Containers
+	api.ContainersCreateContainerHandler = containers.CreateContainerHandlerFunc(func(params containers.CreateContainerParams) middleware.Responder {
+		var ctn *models.Container
+		var err error
+		if ctn, err = internal.Containers.Create(params.Container); err != nil {
+			return containers.NewCreateContainerDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return containers.NewCreateContainerCreated().WithPayload(ctn)
+	})
+
+	api.ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
+		if err := internal.Containers.Delete(params.ID); err != nil {
+			if err == internal.ERRNOTFOUND {
+				return containers.NewDeleteContainerDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
+			}
+			return containers.NewDeleteContainerDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return containers.NewDeleteContainerNoContent()
+	})
+
+	api.ContainersGetContainerHandler = containers.GetContainerHandlerFunc(func(params containers.GetContainerParams) middleware.Responder {
+		var ctn *models.Container
+		var err error
+		if ctn, err = internal.Containers.Get(params.ID); err != nil {
+			return containers.NewGetContainerDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
+		}
+		return containers.NewGetContainerOK().WithPayload(ctn)
+	})
+
+	api.ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(params containers.ListContainersParams) middleware.Responder {
+		return containers.NewListContainersOK().WithPayload(internal.Containers.List())
+	})
+
+	api.ContainersSetContainerStateHandler = containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
+		if err := internal.Containers.SetState(params.ID, models.ContainerState(params.State)); err != nil {
+			if err == internal.ERRNOTFOUND {
+				return containers.NewSetContainerStateDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
+			}
+			return containers.NewSetContainerStateDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return middleware.NotImplemented("operation containers.SetContainerState has not yet been implemented")
 	})
 
 	//////////////////////////////

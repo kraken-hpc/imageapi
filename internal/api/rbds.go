@@ -85,7 +85,7 @@ func (r *RbdsType) Get(id int64) (m *models.Rbd, err error) {
 	if m, ok = r.rbds[id]; ok {
 		return
 	}
-	return nil, fmt.Errorf("no such device id: %d", id)
+	return nil, ERRNOTFOUND
 }
 
 func (r *RbdsType) Unmap(id int64) (err error) {
@@ -96,7 +96,7 @@ func (r *RbdsType) Unmap(id int64) (err error) {
 	var ok bool
 
 	if rbd, ok = r.rbds[id]; !ok {
-		return fmt.Errorf("no such device id: %d", id)
+		return ERRNOTFOUND
 	}
 
 	// should we be able to force this?

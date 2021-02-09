@@ -38,7 +38,7 @@ func (m *MountsOverlayType) Get(id int64) (*models.MountOverlay, error) {
 	if r, ok := m.mnts[id]; ok {
 		return r, nil
 	}
-	return nil, fmt.Errorf("no overlay mount by id %d", id)
+	return nil, ERRNOTFOUND
 }
 
 func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOverlay, err error) {
@@ -109,7 +109,7 @@ func (m *MountsOverlayType) Unmount(id int64) (err error) {
 	var ok bool
 
 	if mnt, ok = m.mnts[id]; !ok {
-		return fmt.Errorf("unmount failure: no such device %d", id)
+		return ERRNOTFOUND
 	}
 
 	if mnt.Ref > 0 {

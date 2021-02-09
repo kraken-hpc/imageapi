@@ -30,7 +30,7 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	}
 	// make sure the dev exists/is ours
 	if _, err = Rbds.Get(*mnt.ID); err != nil {
-		return nil, fmt.Errorf("mount failure: %v", err)
+		return nil, ERRNOTFOUND
 	}
 	// ok, we're good to attempt the mount
 	// make a mountpoint
@@ -57,7 +57,7 @@ func (m *MountsRBDType) Unmount(id int64) (err error) {
 	var ok bool
 
 	if mnt, ok = m.mnts[id]; !ok {
-		return fmt.Errorf("unmount failure: no such device %d", id)
+		return ERRNOTFOUND
 	}
 
 	if mnt.Ref > 0 {
@@ -79,7 +79,7 @@ func (m *MountsRBDType) Get(id int64) (mnt *models.MountRbd, err error) {
 	defer m.mutex.Unlock()
 	var ok bool
 	if mnt, ok = m.mnts[id]; !ok {
-		return nil, fmt.Errorf("rbd mount does not exist: %d", id)
+		return nil, ERRNOTFOUND
 	}
 	return
 }

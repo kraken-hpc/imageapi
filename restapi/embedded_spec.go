@@ -169,6 +169,16 @@ func init() {
           "containers"
         ],
         "operationId": "create_container",
+        "parameters": [
+          {
+            "name": "container",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "Container creation succeed",
@@ -949,6 +959,16 @@ func init() {
           "containers"
         ],
         "operationId": "create_container",
+        "parameters": [
+          {
+            "name": "container",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "Container creation succeed",
