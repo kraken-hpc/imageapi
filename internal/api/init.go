@@ -3,8 +3,10 @@ package api
 var Rbds RbdsType
 var MountsRbd MountsRBDType
 var MountsOverlay MountsOverlayType
+var Containers ContainersType
 
-const mountDir = "/var/run/rbd-server/mounts"
+const mountDir = "/var/run/imageapi/mounts"
+const logDir = "/var/run/imageapi/logs"
 
 func init() {
 	Rbds = RbdsType{}
@@ -13,4 +15,6 @@ func init() {
 	MountsRbd.Init()
 	MountsOverlay = MountsOverlayType{}
 	MountsOverlay.Init()
+	Containers = ContainersType{}
+	Containers.Init()
 }
