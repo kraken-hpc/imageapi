@@ -231,7 +231,6 @@ definitions:
           On creation, this requests the initial state (valid options: `created` or `running`).
           The default is `created`.
         $ref: "#/definitions/container_state"
-        enum: [ "created",  "running", "restarting", "paused", "exited", "dead" ]
       namespaces:
         description: |
           A list of Linux namespaces to use.
@@ -564,3 +563,4 @@ paths:
         default:
           description: error
           schema:
+            $ref: "#/definitions/error"
