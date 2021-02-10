@@ -63,7 +63,9 @@ func (c *ContainersType) Get(id int64) (*models.Container, error) {
 func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err error) {
 	// This creates a container in our list, and activates its initial state
 	// find the mount
-	n := &container{}
+	n := &container{
+		ctn: ctn,
+	}
 	switch *ctn.Mount.Kind {
 	case models.MountKindOverlay:
 		mnt, e := MountsOverlay.Get(*ctn.Mount.ID)
@@ -86,6 +88,9 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	ctn.ID = c.next
 
 	// set up logger
+	if err = os.MkdirAll(logDir, 0700); err != nil {
+		return nil, fmt.Errorf("could not create log directory: %v", err)
+	}
 	ctn.Logfile = path.Join(logDir, fmt.Sprintf("%d-%d.log", ctn.ID, time.Now().Unix()))
 	f, e := os.Create(ctn.Logfile)
 	if e != nil {
@@ -97,9 +102,11 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	// handle initial state
 	switch ctn.State {
 	case models.ContainerStateRunning:
-		// run it
-	case models.ContainerStateRestarting,
-		models.ContainerStatePaused,
+		if err := c.run(n); err != nil {
+			return nil, fmt.Errorf("failed to start container: %v", err)
+		}
+		ctn.State = models.ContainerStateRunning
+	case models.ContainerStateStopping,
 		models.ContainerStateExited,
 		models.ContainerStateDead:
 		return nil, fmt.Errorf("requested invalid initial container state: %s.  valid initial states: [ %s, %s ]", ctn.State, models.ContainerStateCreated, models.ContainerStateRunning)
@@ -130,21 +137,20 @@ func (c *ContainersType) SetState(id int64, state models.ContainerState) (err er
 		if ctn.ctn.State == state {
 			return
 		}
-		// run it
+		ctn.ctn.State = models.ContainerStateRunning
+		if err = c.run(ctn); err != nil {
+			ctn.ctn.State = models.ContainerStateDead
+			return
+		}
 	case models.ContainerStateExited:
 		if ctn.ctn.State == state {
 			return
 		}
-		// stop it
-	case models.ContainerStatePaused,
-		models.ContainerStateRestarting:
-		return fmt.Errorf("container state is not yet implemented: %s", state)
+		c.stop(ctn)
 	default: // something not valid
-		return fmt.Errorf("can't set state to: %s.  valid initial states: [ %s, %s, %s, %s ]", state,
+		return fmt.Errorf("can't set state to: %s.  valid states to request: [ %s, %s ]", state,
 			models.ContainerStateRunning,
-			models.ContainerStateExited,
-			models.ContainerStateRestarting,
-			models.ContainerStatePaused)
+			models.ContainerStateExited)
 	}
 	return
 }
@@ -161,7 +167,7 @@ func (c *ContainersType) Delete(id int64) (err error) {
 	//case models.ContainerStatePaused:
 	//case models.ContainerStateRestarting:
 	case models.ContainerStateRunning:
-		// stop it
+		c.stop(ctn)
 	}
 	ctn.log.Printf("container deleted")
 	ctn.log.Writer().(io.WriteCloser).Close()
@@ -183,10 +189,9 @@ func (c *ContainersType) stop(ctn *container) error {
 	}
 	// we trust the watcher to take care of everything for us
 	ctn.cancel()
+	ctn.ctn.State = models.ContainerStateStopping
 	return nil
 }
-
-var systemdTmpfs = []string{"/run", "/run/lock", "/tmp", "/sys/fs/cgrooup/systemd", "/var/lib/journal"}
 
 // this is the workhorse
 func (c *ContainersType) run(ctn *container) (err error) {
@@ -225,8 +230,10 @@ func (c *ContainersType) run(ctn *container) (err error) {
 	f.Stdout = log.Writer().(*os.File)
 	f.Stderr = log.Writer().(*os.File)
 	f.Stdin = nil
-	f.SysProcAttr.Cloneflags = syscall.CLONE_NEWNS | syscall.CLONE_NEWPID
-	if err := f.Fork(ctn.mnt, args); err != nil {
+	f.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWIPC | syscall.CLONE_NEWUTS,
+	}
+	if err := f.Fork(ctn.mnt, ctn.ctn.Systemd, args); err != nil {
 		return fmt.Errorf("clone: failed to start pid_init: %v", err)
 	}
 
@@ -237,8 +244,60 @@ func (c *ContainersType) run(ctn *container) (err error) {
 	return
 }
 
+type mountType struct {
+	dev    string
+	path   string
+	fstype string
+	flags  uintptr
+}
+
+// see libcontainer SPEC.md
+var specialMounts = []mountType{
+	{"proc", "/proc", "proc", unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV},
+	{"tmpfs", "/dev", "tmpfs", unix.MS_NOEXEC | unix.MS_STRICTATIME},
+	{"tmpfs", "/dev/shm", "tmpfs", unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV},
+	{"mqueue", "/dev/mqueue", "mqueue", unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV},
+	{"devpts", "/dev/pts", "devpts", unix.MS_NOEXEC | unix.MS_NOSUID},
+	{"sysfs", "/sys", "sysfs", unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV | unix.MS_RDONLY},
+}
+
+var systemdMounts = []mountType{
+	{"tmpfs", "/run", "tmpfs", unix.MS_NOSUID | unix.MS_NODEV},
+	{"tmpfs", "/tmp", "tmpfs", unix.MS_NOSUID | unix.MS_NODEV},
+	{"tmpfs", "/sys/fs/cgroup", "tmpfs", unix.MS_NOSUID | unix.MS_NODEV},
+	{"tmpfs", "/var/lib/journal", "tmpfs", unix.MS_NOSUID | unix.MS_NODEV},
+}
+
+type deviceFileType struct {
+	path string
+	mode uint32
+	dev  uint64
+}
+
+var specialDevices = []deviceFileType{
+	{"/dev/null", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(1, 3)},
+	{"/dev/zero", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(1, 5)},
+	{"/dev/full", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(1, 7)},
+	{"/dev/tty", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(5, 0)},
+	{"/dev/random", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(1, 8)},
+	{"/dev/urandom", syscall.S_IFCHR | uint32(os.FileMode(0666)), unix.Mkdev(1, 9)},
+}
+
+type symlinkType struct {
+	from string
+	to   string
+}
+
+var specialLinks = []symlinkType{
+	{"/dev/pts/ptmx", "/dev/ptmx"},
+	{"/proc/self/fd", "/dev/fd"},
+	{"/proc/self/fd/0", "/dev/stdin"},
+	{"/proc/self/fd/1", "/dev/stdout"},
+	{"/proc/self/fd/2", "/dev/stderr"},
+}
+
 // this is run as a separate process
-func containerInit(mountpoint string, args []string) {
+func containerInit(mountpoint string, systemd bool, args []string) {
 	// 0. setup logging
 	l := log.New(os.Stdout, fmt.Sprintf("init: "), log.Ldate|log.Ltime|log.Lmsgprefix)
 
@@ -254,16 +313,33 @@ func containerInit(mountpoint string, args []string) {
 		l.Fatalf("could not prepare image: %v", err)
 	}
 
-	// 3. Prep pid stuff
-	l.Print("mounting /proc")
-	if isMountpoint("/proc") {
-		if err := unix.Unmount("/proc", unix.MNT_DETACH); err != nil {
-			l.Printf("warn: could not unmount /proc, will overlay instead: %v", err)
+	// 3. Setup special mounts
+	if systemd {
+		specialMounts = append(specialMounts, systemdMounts...)
+	}
+	for _, m := range specialMounts {
+		if err := containerMount(l, m.dev, m.path, m.fstype, m.flags); err != nil {
+			l.Fatalf("mount failed for %s: %v", m.path, err)
 		}
 	}
-	if err := unix.Mount("proc", "/proc", "proc", unix.MS_NODEV|unix.MS_NOSUID|unix.MS_NOEXEC, ""); err != nil {
-		l.Fatalf("/proc mount failed: %v", err)
+
+	// 4. Setup special dev files
+	for _, d := range specialDevices {
+		l.Printf("making device file %s", d.path)
+		if err := unix.Mknod(d.path, d.mode, int(d.dev)); err != nil {
+			l.Fatalf("failed to create device %s: %v", d.path, err)
+		}
 	}
+
+	// 5. Setup special symlinks
+	for _, s := range specialLinks {
+		l.Printf("creating symlink %s -> %s", s.from, s.to)
+		if err := os.Symlink(s.from, s.to); err != nil {
+			l.Fatalf("failed to create symlink %s: %v", s.to, err)
+		}
+	}
+
+	// 6. execute init
 	l.Print("executing init")
 	if err := unix.Exec(args[0], args, []string{}); err != nil {
 		l.Fatalf("containerInit: exec failed: %v", err)
@@ -288,7 +364,12 @@ func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Fu
 	case <-ctx.Done():
 		// signal the process to stop
 		// TODO: be smarter about the signals we send
-		f.Process.Kill()
+		if ctn.ctn.Systemd {
+			// SIGRTMIN+3
+			f.Process.Signal(syscall.Signal(37))
+		} else {
+			f.Process.Kill()
+		}
 		ctn.log.Printf("process killed")
 	}
 	// process is over, set the state
@@ -296,6 +377,20 @@ func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Fu
 	defer c.mutex.Unlock()
 	ctn.ctn.State = state
 	ctn.log.Printf("container state: %s", state)
+}
+
+func containerMount(l *log.Logger, dev, path, fstype string, flags uintptr) error {
+	l.Printf("mounting %s", path)
+	// make sure path exists
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return fmt.Errorf("could not create mount path %s: %v", path, err)
+	}
+	if isMountpoint(path) {
+		if err := unix.Unmount(path, unix.MNT_DETACH); err != nil {
+			l.Printf("warn: could not unmount %s, will overlay instead: %v", path, err)
+		}
+	}
+	return unix.Mount(dev, path, fstype, flags, "")
 }
 
 // utilities for run
@@ -414,13 +509,14 @@ func chroot(path string) (func() error, error) {
 }
 
 // we store these as a global var so that we could potentially have a way to update at runtime
-var specialMounts = []string{"/dev", "/proc", "/sys", "/run"}
+//var specialMounts = []string{"/dev", "/proc", "/sys", "/run"}
+var moveMounts = []string{}
 
 // this is the workhorse for all schemes
 // it preforms the root-moving dance
 func moveRoot(newRoot string) (err error) {
 	// 1. move special mounts
-	for _, mount := range specialMounts {
+	for _, mount := range moveMounts {
 		if err := moveMount(newRoot, mount); err != nil {
 			// this isn't fatal, but we should mention it
 			log.Printf("warn: couldn't move mount %s: %v", mount, err)
@@ -472,4 +568,9 @@ func validateImage(newRoot string) (err error) {
 		return fmt.Errorf("new root is not a mountpoint")
 	}
 	return
+}
+
+func init() {
+	fork.RegisterFunc("containerInit", containerInit)
+	fork.Init()
 }

@@ -37,10 +37,10 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 		return nil, fmt.Errorf("The following are required: 1 or more monitors, pool, image, options/name, options/secret")
 	}
 	w, err := krbd.RBDBusAddWriter()
-	defer w.Close()
 	if err != nil {
 		return nil, fmt.Errorf("krbd error: %v", err)
 	}
+	defer w.Close()
 
 	// We allow this because we get free IPv4 format checking
 	mons := []string{}

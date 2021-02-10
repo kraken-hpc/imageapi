@@ -555,8 +555,7 @@ func init() {
       "enum": [
         "created",
         "running",
-        "restarting",
-        "paused",
+        "stopping",
         "exited",
         "dead"
       ]
@@ -1345,8 +1344,7 @@ func init() {
       "enum": [
         "created",
         "running",
-        "restarting",
-        "paused",
+        "stopping",
         "exited",
         "dead"
       ]

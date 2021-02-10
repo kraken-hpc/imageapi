@@ -203,7 +203,7 @@ definitions:
     description: Valid container states
     type: string
     # stolen straight from docker (even if we don't use them all)
-    enum: [ "created",  "running", "restarting", "paused", "exited", "dead" ]
+    enum: [ "created",  "running", "stopping", "exited", "dead" ]
 
   container:
     description: The `container` option describes a minimally namespaced container.

@@ -187,7 +187,8 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 			}
 			return containers.NewSetContainerStateDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return middleware.NotImplemented("operation containers.SetContainerState has not yet been implemented")
+		ctn, _ := internal.Containers.Get(params.ID)
+		return containers.NewSetContainerStateOK().WithPayload(ctn)
 	})
 
 	//////////////////////////////

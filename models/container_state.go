@@ -27,11 +27,8 @@ const (
 	// ContainerStateRunning captures enum value "running"
 	ContainerStateRunning ContainerState = "running"
 
-	// ContainerStateRestarting captures enum value "restarting"
-	ContainerStateRestarting ContainerState = "restarting"
-
-	// ContainerStatePaused captures enum value "paused"
-	ContainerStatePaused ContainerState = "paused"
+	// ContainerStateStopping captures enum value "stopping"
+	ContainerStateStopping ContainerState = "stopping"
 
 	// ContainerStateExited captures enum value "exited"
 	ContainerStateExited ContainerState = "exited"
@@ -45,7 +42,7 @@ var containerStateEnum []interface{}
 
 func init() {
 	var res []ContainerState
-	if err := json.Unmarshal([]byte(`["created","running","restarting","paused","exited","dead"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["created","running","stopping","exited","dead"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
