@@ -28,7 +28,7 @@ func main() {
 	defer server.Shutdown()
 
 	parser := flags.NewParser(server, flags.Default)
-	parser.ShortDescription = "Image Loader API"
+	parser.ShortDescription = "Image API"
 	parser.LongDescription = "Mange system image containers"
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {

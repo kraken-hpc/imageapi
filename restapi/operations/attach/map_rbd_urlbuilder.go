@@ -38,6 +38,9 @@ func (o *MapRbdURL) Build() (*url.URL, error) {
 	var _path = "/attach/rbd"
 
 	_basePath := o._basePath
+	if _basePath == "" {
+		_basePath = "/imageapi/v1"
+	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	return &_result, nil

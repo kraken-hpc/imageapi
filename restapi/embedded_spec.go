@@ -31,9 +31,10 @@ func init() {
   "swagger": "2.0",
   "info": {
     "description": "Mange system image containers",
-    "title": "Image Loader API",
+    "title": "Image API",
     "version": "1.0.0"
   },
+  "basePath": "/imageapi/v1",
   "paths": {
     "/attach/rbd": {
       "get": {
@@ -820,9 +821,10 @@ func init() {
   "swagger": "2.0",
   "info": {
     "description": "Mange system image containers",
-    "title": "Image Loader API",
+    "title": "Image API",
     "version": "1.0.0"
   },
+  "basePath": "/imageapi/v1",
   "paths": {
     "/attach/rbd": {
       "get": {

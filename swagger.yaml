@@ -1,16 +1,17 @@
 ---
+swagger: "2.0"
 consumes:
 - application/json
 info:
   description: Mange system image containers
-  title: Image Loader API
+  title: Image API
   version: 1.0.0
 produces:
 - application/json
 schemes:
 - http
 - https
-swagger: "2.0"
+basePath: /imageapi/v1
 
 definitions:
 
