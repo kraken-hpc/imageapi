@@ -33,12 +33,14 @@ type container struct {
 type ContainersType struct {
 	next  int64
 	ctns  map[int64]*container
+	names map[string]int64
 	mutex *sync.Mutex
 }
 
 func (c *ContainersType) Init() {
 	c.next = 0
 	c.ctns = make(map[int64]*container)
+	c.names = make(map[string]int64)
 	c.mutex = &sync.Mutex{}
 }
 
@@ -85,6 +87,10 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	// ok, we've got a valid mountpoint
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	// fail early on non-unique name
+	if _, ok := c.names[ctn.Name]; ctn.Name != "" && ok {
+		return nil, fmt.Errorf("container with name %s already exists.", ctn.Name)
+	}
 	ctn.ID = c.next
 
 	// set up logger
@@ -119,6 +125,7 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	// container is ready to be entered
 	c.ctns[ctn.ID] = n
 	c.next++
+	c.names[ctn.Name] = ctn.ID
 
 	return ctn, nil
 }
@@ -172,6 +179,9 @@ func (c *ContainersType) Delete(id int64) (err error) {
 	ctn.log.Printf("container deleted")
 	ctn.log.Writer().(io.WriteCloser).Close()
 	delete(c.ctns, id)
+	if ctn.ctn.Name != "" {
+		delete(c.names, ctn.ctn.Name)
+	}
 	switch *ctn.ctn.Mount.Kind {
 	case models.MountKindOverlay:
 		MountsOverlay.RefAdd(*ctn.ctn.Mount.ID, -1)
@@ -179,6 +189,18 @@ func (c *ContainersType) Delete(id int64) (err error) {
 		MountsRbd.RefAdd(*ctn.ctn.Mount.ID, -1)
 	}
 	return
+}
+
+// NameGetID will return the ID for a given name
+// This is used to implement the `byname` calls
+// If the name is not found,  it will return -1
+func (c *ContainersType) NameGetID(name string) int64 {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if id, ok := c.names[name]; ok {
+		return id
+	}
+	return -1
 }
 
 func (c *ContainersType) stop(ctn *container) error {

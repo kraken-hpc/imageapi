@@ -191,95 +191,33 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		return containers.NewSetContainerStateOK().WithPayload(ctn)
 	})
 
+	api.ContainersGetContainerBynameHandler = containers.GetContainerBynameHandlerFunc(func(params containers.GetContainerBynameParams) middleware.Responder {
+		id := internal.Containers.NameGetID(params.Name)
+		if id < 0 {
+			return containers.NewGetContainerBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
+		}
+		return api.ContainersGetContainerHandler.Handle(containers.GetContainerParams{HTTPRequest: params.HTTPRequest, ID: id})
+	})
+
+	api.ContainersDeleteContainerBynameHandler = containers.DeleteContainerBynameHandlerFunc(func(params containers.DeleteContainerBynameParams) middleware.Responder {
+		id := internal.Containers.NameGetID(params.Name)
+		if id < 0 {
+			return containers.NewDeleteContainerBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
+		}
+		return api.ContainersDeleteContainerHandler.Handle(containers.DeleteContainerParams{HTTPRequest: params.HTTPRequest, ID: id})
+	})
+
+	api.ContainersSetContainerStateBynameHandler = containers.SetContainerStateBynameHandlerFunc(func(params containers.SetContainerStateBynameParams) middleware.Responder {
+		id := internal.Containers.NameGetID(params.Name)
+		if id < 0 {
+			return containers.NewSetContainerStateBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
+		}
+		return api.ContainersSetContainerStateHandler.Handle(containers.SetContainerStateParams{HTTPRequest: params.HTTPRequest, State: params.State, ID: id})
+	})
+
 	//////////////////////////////
 	// End: Non-generated block /
 	////////////////////////////
-
-	if api.ContainersCreateContainerHandler == nil {
-		api.ContainersCreateContainerHandler = containers.CreateContainerHandlerFunc(func(params containers.CreateContainerParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.CreateContainer has not yet been implemented")
-		})
-	}
-	if api.ContainersDeleteContainerHandler == nil {
-		api.ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.DeleteContainer has not yet been implemented")
-		})
-	}
-	if api.ContainersGetContainerHandler == nil {
-		api.ContainersGetContainerHandler = containers.GetContainerHandlerFunc(func(params containers.GetContainerParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.GetContainer has not yet been implemented")
-		})
-	}
-	if api.MountsGetMountOverlayHandler == nil {
-		api.MountsGetMountOverlayHandler = mounts.GetMountOverlayHandlerFunc(func(params mounts.GetMountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.GetMountOverlay has not yet been implemented")
-		})
-	}
-	if api.MountsGetMountRbdHandler == nil {
-		api.MountsGetMountRbdHandler = mounts.GetMountRbdHandlerFunc(func(params mounts.GetMountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.GetMountRbd has not yet been implemented")
-		})
-	}
-	if api.AttachGetRbdHandler == nil {
-		api.AttachGetRbdHandler = attach.GetRbdHandlerFunc(func(params attach.GetRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.GetRbd has not yet been implemented")
-		})
-	}
-	if api.ContainersListContainersHandler == nil {
-		api.ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(params containers.ListContainersParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.ListContainers has not yet been implemented")
-		})
-	}
-	if api.MountsListMountsOverlayHandler == nil {
-		api.MountsListMountsOverlayHandler = mounts.ListMountsOverlayHandlerFunc(func(params mounts.ListMountsOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.ListMountsOverlay has not yet been implemented")
-		})
-	}
-	if api.MountsListMountsRbdHandler == nil {
-		api.MountsListMountsRbdHandler = mounts.ListMountsRbdHandlerFunc(func(params mounts.ListMountsRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.ListMountsRbd has not yet been implemented")
-		})
-	}
-	if api.AttachListRbdsHandler == nil {
-		api.AttachListRbdsHandler = attach.ListRbdsHandlerFunc(func(params attach.ListRbdsParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.ListRbds has not yet been implemented")
-		})
-	}
-	if api.AttachMapRbdHandler == nil {
-		api.AttachMapRbdHandler = attach.MapRbdHandlerFunc(func(params attach.MapRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.MapRbd has not yet been implemented")
-		})
-	}
-	if api.MountsMountOverlayHandler == nil {
-		api.MountsMountOverlayHandler = mounts.MountOverlayHandlerFunc(func(params mounts.MountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.MountOverlay has not yet been implemented")
-		})
-	}
-	if api.MountsMountRbdHandler == nil {
-		api.MountsMountRbdHandler = mounts.MountRbdHandlerFunc(func(params mounts.MountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.MountRbd has not yet been implemented")
-		})
-	}
-	if api.ContainersSetContainerStateHandler == nil {
-		api.ContainersSetContainerStateHandler = containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.SetContainerState has not yet been implemented")
-		})
-	}
-	if api.AttachUnmapRbdHandler == nil {
-		api.AttachUnmapRbdHandler = attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.UnmapRbd has not yet been implemented")
-		})
-	}
-	if api.MountsUnmountOverlayHandler == nil {
-		api.MountsUnmountOverlayHandler = mounts.UnmountOverlayHandlerFunc(func(params mounts.UnmountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.UnmountOverlay has not yet been implemented")
-		})
-	}
-	if api.MountsUnmountRbdHandler == nil {
-		api.MountsUnmountRbdHandler = mounts.UnmountRbdHandlerFunc(func(params mounts.UnmountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.UnmountRbd has not yet been implemented")
-		})
-	}
 
 	api.PreServerShutdown = func() {}
 

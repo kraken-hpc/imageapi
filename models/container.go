@@ -36,6 +36,9 @@ type Container struct {
 	// Required: true
 	Mount *Mount `json:"mount"`
 
+	// name is an optional identifier for the container.  Name must be unique.
+	Name string `json:"name,omitempty"`
+
 	// A list of Linux namespaces to use.
 	//
 	// Note: This is currently unused.  All containers currently get `mnt` and `pid`.

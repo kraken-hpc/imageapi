@@ -52,8 +52,14 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		ContainersDeleteContainerHandler: containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.DeleteContainer has not yet been implemented")
 		}),
+		ContainersDeleteContainerBynameHandler: containers.DeleteContainerBynameHandlerFunc(func(params containers.DeleteContainerBynameParams) middleware.Responder {
+			return middleware.NotImplemented("operation containers.DeleteContainerByname has not yet been implemented")
+		}),
 		ContainersGetContainerHandler: containers.GetContainerHandlerFunc(func(params containers.GetContainerParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.GetContainer has not yet been implemented")
+		}),
+		ContainersGetContainerBynameHandler: containers.GetContainerBynameHandlerFunc(func(params containers.GetContainerBynameParams) middleware.Responder {
+			return middleware.NotImplemented("operation containers.GetContainerByname has not yet been implemented")
 		}),
 		MountsGetMountOverlayHandler: mounts.GetMountOverlayHandlerFunc(func(params mounts.GetMountOverlayParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.GetMountOverlay has not yet been implemented")
@@ -87,6 +93,9 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		}),
 		ContainersSetContainerStateHandler: containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.SetContainerState has not yet been implemented")
+		}),
+		ContainersSetContainerStateBynameHandler: containers.SetContainerStateBynameHandlerFunc(func(params containers.SetContainerStateBynameParams) middleware.Responder {
+			return middleware.NotImplemented("operation containers.SetContainerStateByname has not yet been implemented")
 		}),
 		AttachUnmapRbdHandler: attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
 			return middleware.NotImplemented("operation attach.UnmapRbd has not yet been implemented")
@@ -135,8 +144,12 @@ type ImageapiAPI struct {
 	ContainersCreateContainerHandler containers.CreateContainerHandler
 	// ContainersDeleteContainerHandler sets the operation handler for the delete container operation
 	ContainersDeleteContainerHandler containers.DeleteContainerHandler
+	// ContainersDeleteContainerBynameHandler sets the operation handler for the delete container byname operation
+	ContainersDeleteContainerBynameHandler containers.DeleteContainerBynameHandler
 	// ContainersGetContainerHandler sets the operation handler for the get container operation
 	ContainersGetContainerHandler containers.GetContainerHandler
+	// ContainersGetContainerBynameHandler sets the operation handler for the get container byname operation
+	ContainersGetContainerBynameHandler containers.GetContainerBynameHandler
 	// MountsGetMountOverlayHandler sets the operation handler for the get mount overlay operation
 	MountsGetMountOverlayHandler mounts.GetMountOverlayHandler
 	// MountsGetMountRbdHandler sets the operation handler for the get mount rbd operation
@@ -159,6 +172,8 @@ type ImageapiAPI struct {
 	MountsMountRbdHandler mounts.MountRbdHandler
 	// ContainersSetContainerStateHandler sets the operation handler for the set container state operation
 	ContainersSetContainerStateHandler containers.SetContainerStateHandler
+	// ContainersSetContainerStateBynameHandler sets the operation handler for the set container state byname operation
+	ContainersSetContainerStateBynameHandler containers.SetContainerStateBynameHandler
 	// AttachUnmapRbdHandler sets the operation handler for the unmap rbd operation
 	AttachUnmapRbdHandler attach.UnmapRbdHandler
 	// MountsUnmountOverlayHandler sets the operation handler for the unmount overlay operation
@@ -247,8 +262,14 @@ func (o *ImageapiAPI) Validate() error {
 	if o.ContainersDeleteContainerHandler == nil {
 		unregistered = append(unregistered, "containers.DeleteContainerHandler")
 	}
+	if o.ContainersDeleteContainerBynameHandler == nil {
+		unregistered = append(unregistered, "containers.DeleteContainerBynameHandler")
+	}
 	if o.ContainersGetContainerHandler == nil {
 		unregistered = append(unregistered, "containers.GetContainerHandler")
+	}
+	if o.ContainersGetContainerBynameHandler == nil {
+		unregistered = append(unregistered, "containers.GetContainerBynameHandler")
 	}
 	if o.MountsGetMountOverlayHandler == nil {
 		unregistered = append(unregistered, "mounts.GetMountOverlayHandler")
@@ -282,6 +303,9 @@ func (o *ImageapiAPI) Validate() error {
 	}
 	if o.ContainersSetContainerStateHandler == nil {
 		unregistered = append(unregistered, "containers.SetContainerStateHandler")
+	}
+	if o.ContainersSetContainerStateBynameHandler == nil {
+		unregistered = append(unregistered, "containers.SetContainerStateBynameHandler")
 	}
 	if o.AttachUnmapRbdHandler == nil {
 		unregistered = append(unregistered, "attach.UnmapRbdHandler")
@@ -388,10 +412,18 @@ func (o *ImageapiAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/container/{id}"] = containers.NewDeleteContainer(o.context, o.ContainersDeleteContainerHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/container/byname/{name}"] = containers.NewDeleteContainerByname(o.context, o.ContainersDeleteContainerBynameHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/container/{id}"] = containers.NewGetContainer(o.context, o.ContainersGetContainerHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/container/byname/{name}"] = containers.NewGetContainerByname(o.context, o.ContainersGetContainerBynameHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -436,6 +468,10 @@ func (o *ImageapiAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/container/{id}/{state}"] = containers.NewSetContainerState(o.context, o.ContainersSetContainerStateHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/container/byname/{name}/{state}"] = containers.NewSetContainerStateByname(o.context, o.ContainersSetContainerStateBynameHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

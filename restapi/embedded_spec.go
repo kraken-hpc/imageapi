@@ -196,6 +196,98 @@ func init() {
         }
       }
     },
+    "/container/byname/{name}": {
+      "get": {
+        "description": "Get a container definition",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "get_container_byname",
+        "responses": {
+          "200": {
+            "description": "Container entry",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a container defition.  \nThis will stop running containers.\n",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "delete_container_byname",
+        "responses": {
+          "204": {
+            "description": "Container deleted"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "pattern": "^[a-zA-Z0-9._-]*$",
+          "type": "string",
+          "name": "name",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/container/byname/{name}/{state}": {
+      "get": {
+        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "set_container_state_byname",
+        "responses": {
+          "200": {
+            "description": "Container state changed",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "pattern": "^[a-zA-Z0-9._-]*$",
+          "type": "string",
+          "name": "name",
+          "in": "path",
+          "required": true
+        },
+        {
+          "enum": [
+            "running",
+            "exited"
+          ],
+          "type": "string",
+          "name": "state",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/container/{id}": {
       "get": {
         "description": "Get a container definition",
@@ -518,6 +610,10 @@ func init() {
         },
         "mount": {
           "$ref": "#/definitions/mount"
+        },
+        "name": {
+          "description": "name is an optional identifier for the container.  Name must be unique.",
+          "type": "string"
         },
         "namespaces": {
           "description": "A list of Linux namespaces to use.\n\nNote: This is currently unused.  All containers currently get ` + "`" + `mnt` + "`" + ` and ` + "`" + `pid` + "`" + `.\n      It's here as a placeholder for future use.\n",
@@ -986,6 +1082,98 @@ func init() {
         }
       }
     },
+    "/container/byname/{name}": {
+      "get": {
+        "description": "Get a container definition",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "get_container_byname",
+        "responses": {
+          "200": {
+            "description": "Container entry",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a container defition.  \nThis will stop running containers.\n",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "delete_container_byname",
+        "responses": {
+          "204": {
+            "description": "Container deleted"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "pattern": "^[a-zA-Z0-9._-]*$",
+          "type": "string",
+          "name": "name",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/container/byname/{name}/{state}": {
+      "get": {
+        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
+        "tags": [
+          "containers"
+        ],
+        "operationId": "set_container_state_byname",
+        "responses": {
+          "200": {
+            "description": "Container state changed",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "pattern": "^[a-zA-Z0-9._-]*$",
+          "type": "string",
+          "name": "name",
+          "in": "path",
+          "required": true
+        },
+        {
+          "enum": [
+            "running",
+            "exited"
+          ],
+          "type": "string",
+          "name": "state",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/container/{id}": {
       "get": {
         "description": "Get a container definition",
@@ -1308,6 +1496,10 @@ func init() {
         },
         "mount": {
           "$ref": "#/definitions/mount"
+        },
+        "name": {
+          "description": "name is an optional identifier for the container.  Name must be unique.",
+          "type": "string"
         },
         "namespaces": {
           "description": "A list of Linux namespaces to use.\n\nNote: This is currently unused.  All containers currently get ` + "`" + `mnt` + "`" + ` and ` + "`" + `pid` + "`" + `.\n      It's here as a placeholder for future use.\n",

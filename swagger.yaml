@@ -222,6 +222,9 @@ definitions:
         type: string
         readOnly: true
       # external
+      name:
+        description: name is an optional identifier for the container.  Name must be unique.
+        type: string
       mount:
         $ref: "#/definitions/mount"
       command:
@@ -568,6 +571,74 @@ paths:
         Request a (valid) state for a container. 
         Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
       operationId: set_container_state
+      responses:
+        200:
+          description: Container state changed
+          schema:
+            $ref: "#/definitions/container"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+
+  /container/byname/{name}:
+    parameters:
+      - type: string
+        pattern: '^[a-zA-Z0-9._-]*$'
+        name: name
+        in: path
+        required: true
+
+    get:
+      tags:
+        - containers
+      description: Get a container definition
+      operationId: get_container_byname
+      responses:
+        200:
+          description: Container entry
+          schema:
+            $ref: "#/definitions/container"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+
+    delete:
+      tags:
+        - containers
+      description: |
+        Delete a container defition.  
+        This will stop running containers.
+      operationId: delete_container_byname
+      responses:
+        204:
+          description: Container deleted
+        default:
+          description: error
+          schema:
+            $ref:  "#/definitions/error"
+
+  /container/byname/{name}/{state}:
+    parameters:
+      - type: string
+        pattern: '^[a-zA-Z0-9._-]*$'
+        name: name
+        in: path
+        required: true
+      - type: string
+        enum: [ "running", "exited" ]
+        in: path
+        name: state
+        required: true
+
+    get:
+      tags:
+        - containers
+      description: |
+        Request a (valid) state for a container. 
+        Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
+      operationId: set_container_state_byname
       responses:
         200:
           description: Container state changed
