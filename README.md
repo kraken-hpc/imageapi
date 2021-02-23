@@ -24,7 +24,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
 3. Attach an RBD object.  We will attach one named `systemd.sqsh` that already contains a `systemd` based image in a `squashfs` filesystem.
 
    ```bash
-   $ curl -s -XPOST -H 'Content-Type: application/json' -d '{"monitors":["192.168.1.48"],"pool":"rbd","image":"systemd.sqsh","options":{"ro":true,"name":"admin","secret":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}' http://localhost:8080/attach/rbd | jq
+   $ curl -s -XPOST -H 'Content-Type: application/json' -d '{"monitors":["192.168.1.48"],"pool":"rbd","image":"systemd.sqsh","options":{"ro":true,"name":"admin","secret":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}' http://localhost:8080/imageapi/v1/attach/rbd | jq
    {
      "image": "systemd.sqsh",
      "monitors": [
@@ -49,7 +49,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    ```
 4. Now that we have attached the object, we need to mount it.
    ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{"id": 0, "fs_type": "squashfs", "mount_options": [ "ro" ] }' http://localhost:8080/mount/rbd | jq
+   $ curl -s -XPOST -H 'Content-type: application/json' -d '{"id": 0, "fs_type": "squashfs", "mount_options": [ "ro" ] }' http://localhost:8080/imageapi/v1/mount/rbd | jq
    {
      "fs_type": "squashfs",
      "id": 0,
@@ -66,7 +66,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    ```
 5. To make make a non-destructive, locally read-write image, we mount an `overlay` over this image.
    ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "lower": [ 0 ]}' http://localhost:8080/mount/overlay | jq
+   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "lower": [ 0 ]}' http://localhost:8080/imageapi/v1/mount/overlay | jq
    {
      "id": 1,
      "lower": [
@@ -82,7 +82,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    The `mountpoint` at `/var/run/imageapi/mounts/mount_725692383` is read-write.
 6. Now we can define our container on this mount:
    ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "mount": { "id": 1, "kind": "overlay" }, "command": "/usr/lib/systemd/systemd", "state": "created", "systemd": true }' http://localhost:8080/container | jq
+   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "name": "test-container", "mount": { "id": 1, "kind": "overlay" }, "command": "/usr/lib/systemd/systemd", "state": "created", "systemd": true }' http://localhost:8080/imageapi/v1/container | jq
    {
      "command": "/usr/lib/systemd/systemd",
      "logfile": "/var/run/imageapi/logs/0-1613002114.log",
@@ -90,6 +90,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
        "id": 1,
        "kind": "overlay"
      },
+     "name": "test-container",
      "namespaces": null,
      "state": "created",
      "systemd": true
@@ -107,7 +108,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    That's because we didn't request that the container actually start.  We could have with `"state": "running"`.
 7. Since we didn't auto-start our container, let's start it:
    ```bash
-   $ curl -s -XGET http://localhost:8080/container/0/running | jq
+   $ curl -s -XGET http://localhost:8080/imageapi/v1/container/0/running | jq
    {
      "command": "/usr/lib/systemd/systemd",
      "logfile": "/var/run/imageapi/logs/0-1613002114.log",
@@ -115,6 +116,7 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
        "id": 1,
        "kind": "overlay"
      },
+     "name": "test-container",
      "namespaces": null,
      "state": "running",
      "systemd": true
@@ -150,11 +152,12 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    ```
    We can check our currently running containers:
    ```bash
-   $ curl -s http://localhost:8080/container | jq
+   $ curl -s http://localhost:8080/imageapi/v1/container | jq
    [
      {
        "command": "/usr/lib/systemd/systemd",
        "logfile": "/var/run/imageapi/logs/0-1613002114.log",
+       "name": "test-container",
        "mount": {
          "id": 1,
          "kind": "overlay"
@@ -166,12 +169,33 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    ]
    ```
 
-8. Finally, let's tear it all down:
+8. Notice that we passed a `"name"` parameter to our container.  This parameter is optional, but can be useful.  If and only if a `name` is provided, containers can be accessed by name.  These calls have the same structure as access by id, but have `byname` in the path. For instance, the following will stop the container:
+
    ```bash
-   $ curl -XDELETE http://localhost:8080/container/0
-   $ curl -XDELETE http://localhost:8080/mount/overlay/1
-   $ curl -XDELETE http://localhost:8080/mount/rbd/0
-   $ curl -XDELETE http://localhost:8080/attach/rbd/0
+   $ curl -s http://localhost:8080/imageapi/v1/container/byname/test-container/exited | jq
+   [
+     {
+       "command": "/usr/lib/systemd/systemd",
+       "logfile": "/var/run/imageapi/logs/0-1613002114.log",
+       "name": "test-container",
+       "mount": {
+         "id": 1,
+         "kind": "overlay"
+       },
+       "namespaces": null,
+       "state": "stopping",
+       "systemd": true
+     }
+   ]
+   ```
+
+
+9.  Finally, let's tear it all down:
+   ```bash
+   $ curl -XDELETE http://localhost:8080/imageapi/v1/container/0
+   $ curl -XDELETE http://localhost:8080/imageapi/v1/mount/overlay/1
+   $ curl -XDELETE http://localhost:8080/imageapi/v1/mount/rbd/0
+   $ curl -XDELETE http://localhost:8080/imageapi/v1/attach/rbd/0
    $ sudo cat /var/run/imageapi/logs/0-1613002114.log
    2021/02/11 00:08:34 container(0): container created
    2021/02/11 00:14:54 container(0): starting container
@@ -206,3 +230,4 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
    ls: cannot access '/dev/rbd0': No such file or directory
 
    ```
+
