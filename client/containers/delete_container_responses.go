@@ -51,13 +51,25 @@ func NewDeleteContainerNoContent() *DeleteContainerNoContent {
 Container deleted
 */
 type DeleteContainerNoContent struct {
+	Payload *models.Container
 }
 
 func (o *DeleteContainerNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /container/{id}][%d] deleteContainerNoContent ", 204)
+	return fmt.Sprintf("[DELETE /container/{id}][%d] deleteContainerNoContent  %+v", 204, o.Payload)
+}
+
+func (o *DeleteContainerNoContent) GetPayload() *models.Container {
+	return o.Payload
 }
 
 func (o *DeleteContainerNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Container)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

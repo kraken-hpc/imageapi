@@ -21,6 +21,11 @@ const DeleteContainerNoContentCode int = 204
 swagger:response deleteContainerNoContent
 */
 type DeleteContainerNoContent struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Container `json:"body,omitempty"`
 }
 
 // NewDeleteContainerNoContent creates DeleteContainerNoContent with default headers values
@@ -29,12 +34,27 @@ func NewDeleteContainerNoContent() *DeleteContainerNoContent {
 	return &DeleteContainerNoContent{}
 }
 
+// WithPayload adds the payload to the delete container no content response
+func (o *DeleteContainerNoContent) WithPayload(payload *models.Container) *DeleteContainerNoContent {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the delete container no content response
+func (o *DeleteContainerNoContent) SetPayload(payload *models.Container) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *DeleteContainerNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(204)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*DeleteContainerDefault error

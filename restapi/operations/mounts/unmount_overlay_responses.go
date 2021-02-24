@@ -21,6 +21,11 @@ const UnmountOverlayNoContentCode int = 204
 swagger:response unmountOverlayNoContent
 */
 type UnmountOverlayNoContent struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.MountOverlay `json:"body,omitempty"`
 }
 
 // NewUnmountOverlayNoContent creates UnmountOverlayNoContent with default headers values
@@ -29,12 +34,27 @@ func NewUnmountOverlayNoContent() *UnmountOverlayNoContent {
 	return &UnmountOverlayNoContent{}
 }
 
+// WithPayload adds the payload to the unmount overlay no content response
+func (o *UnmountOverlayNoContent) WithPayload(payload *models.MountOverlay) *UnmountOverlayNoContent {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the unmount overlay no content response
+func (o *UnmountOverlayNoContent) SetPayload(payload *models.MountOverlay) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *UnmountOverlayNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(204)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*UnmountOverlayDefault error

@@ -51,13 +51,25 @@ func NewUnmountRbdNoContent() *UnmountRbdNoContent {
 Unmounted
 */
 type UnmountRbdNoContent struct {
+	Payload *models.MountRbd
 }
 
 func (o *UnmountRbdNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /mount/rbd/{id}][%d] unmountRbdNoContent ", 204)
+	return fmt.Sprintf("[DELETE /mount/rbd/{id}][%d] unmountRbdNoContent  %+v", 204, o.Payload)
+}
+
+func (o *UnmountRbdNoContent) GetPayload() *models.MountRbd {
+	return o.Payload
 }
 
 func (o *UnmountRbdNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.MountRbd)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

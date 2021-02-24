@@ -21,6 +21,11 @@ const UnmapRbdNoContentCode int = 204
 swagger:response unmapRbdNoContent
 */
 type UnmapRbdNoContent struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Rbd `json:"body,omitempty"`
 }
 
 // NewUnmapRbdNoContent creates UnmapRbdNoContent with default headers values
@@ -29,12 +34,27 @@ func NewUnmapRbdNoContent() *UnmapRbdNoContent {
 	return &UnmapRbdNoContent{}
 }
 
+// WithPayload adds the payload to the unmap rbd no content response
+func (o *UnmapRbdNoContent) WithPayload(payload *models.Rbd) *UnmapRbdNoContent {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the unmap rbd no content response
+func (o *UnmapRbdNoContent) SetPayload(payload *models.Rbd) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *UnmapRbdNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(204)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*UnmapRbdDefault error

@@ -51,13 +51,25 @@ func NewUnmountOverlayNoContent() *UnmountOverlayNoContent {
 Unmounted
 */
 type UnmountOverlayNoContent struct {
+	Payload *models.MountOverlay
 }
 
 func (o *UnmountOverlayNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /mount/overlay/{id}][%d] unmountOverlayNoContent ", 204)
+	return fmt.Sprintf("[DELETE /mount/overlay/{id}][%d] unmountOverlayNoContent  %+v", 204, o.Payload)
+}
+
+func (o *UnmountOverlayNoContent) GetPayload() *models.MountOverlay {
+	return o.Payload
 }
 
 func (o *UnmountOverlayNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.MountOverlay)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

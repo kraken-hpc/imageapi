@@ -15,45 +15,54 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Mount Generically address mounts by kind and ID
+// Mount Generically address mounts by kind and ID or definition
+// Either an `mount_id` or a mount definition must be supplied.
+// If both are supplied, the mount definition will be ignored.
+// If `mount_id` is specified, then the kind/id will be used to reference that mount.
+// If no `mount_id` is supplied a defition of type `kind` must be present.
+//
 //
 // swagger:model mount
 type Mount struct {
-
-	// id
-	// Required: true
-	ID *int64 `json:"id"`
 
 	// kind
 	// Required: true
 	// Enum: [overlay rbd]
 	Kind *string `json:"kind"`
+
+	// mount id
+	MountID ID `json:"mount_id,omitempty"`
+
+	// overlay
+	Overlay *MountOverlay `json:"overlay,omitempty"`
+
+	// rbd
+	Rbd *MountRbd `json:"rbd,omitempty"`
 }
 
 // Validate validates this mount
 func (m *Mount) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateKind(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateKind(formats); err != nil {
+	if err := m.validateMountID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateOverlay(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRbd(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Mount) validateID(formats strfmt.Registry) error {
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -100,8 +109,114 @@ func (m *Mount) validateKind(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this mount based on context it is used
+func (m *Mount) validateMountID(formats strfmt.Registry) error {
+	if swag.IsZero(m.MountID) { // not required
+		return nil
+	}
+
+	if err := m.MountID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("mount_id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *Mount) validateOverlay(formats strfmt.Registry) error {
+	if swag.IsZero(m.Overlay) { // not required
+		return nil
+	}
+
+	if m.Overlay != nil {
+		if err := m.Overlay.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("overlay")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mount) validateRbd(formats strfmt.Registry) error {
+	if swag.IsZero(m.Rbd) { // not required
+		return nil
+	}
+
+	if m.Rbd != nil {
+		if err := m.Rbd.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("rbd")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this mount based on the context it is used
 func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateMountID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateOverlay(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRbd(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Mount) contextValidateMountID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.MountID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("mount_id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateOverlay(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Overlay != nil {
+		if err := m.Overlay.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("overlay")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateRbd(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Rbd != nil {
+		if err := m.Rbd.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("rbd")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

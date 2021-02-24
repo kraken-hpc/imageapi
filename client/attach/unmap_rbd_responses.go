@@ -51,13 +51,25 @@ func NewUnmapRbdNoContent() *UnmapRbdNoContent {
 Unmapped
 */
 type UnmapRbdNoContent struct {
+	Payload *models.Rbd
 }
 
 func (o *UnmapRbdNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /attach/rbd/{id}][%d] unmapRbdNoContent ", 204)
+	return fmt.Sprintf("[DELETE /attach/rbd/{id}][%d] unmapRbdNoContent  %+v", 204, o.Payload)
+}
+
+func (o *UnmapRbdNoContent) GetPayload() *models.Rbd {
+	return o.Payload
 }
 
 func (o *UnmapRbdNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Rbd)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

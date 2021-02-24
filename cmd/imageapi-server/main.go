@@ -29,7 +29,7 @@ func main() {
 
 	parser := flags.NewParser(server, flags.Default)
 	parser.ShortDescription = "Image API"
-	parser.LongDescription = "Mange system image containers"
+	parser.LongDescription = "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n"
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {
 		_, err := parser.AddGroup(optsGroup.ShortDescription, optsGroup.LongDescription, optsGroup.Options)
