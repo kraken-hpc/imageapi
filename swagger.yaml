@@ -115,8 +115,9 @@ definitions:
       - image
     properties:
       id:
-        type: integer
-        format: int64
+        $ref: "#/definitions/id"
+      device_file:
+        type: string
         readOnly: true
       refs:
         type: integer
@@ -261,9 +262,7 @@ definitions:
     properties:
       # internal
       id:
-        type: integer
-        format: int64
-        readOnly: true
+        $ref: "#/definitions/id"
       logfile:
         type: string
         readOnly: true

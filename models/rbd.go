@@ -22,9 +22,12 @@ import (
 // swagger:model rbd
 type Rbd struct {
 
-	// id
+	// device file
 	// Read Only: true
-	ID int64 `json:"id,omitempty"`
+	DeviceFile string `json:"device_file,omitempty"`
+
+	// id
+	ID ID `json:"id,omitempty"`
 
 	// image
 	// Required: true
@@ -55,6 +58,10 @@ type Rbd struct {
 func (m *Rbd) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateImage(formats); err != nil {
 		res = append(res, err)
 	}
@@ -74,6 +81,21 @@ func (m *Rbd) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Rbd) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -145,6 +167,10 @@ func (m *Rbd) validatePool(formats strfmt.Registry) error {
 func (m *Rbd) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateDeviceFile(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateID(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -163,9 +189,21 @@ func (m *Rbd) ContextValidate(ctx context.Context, formats strfmt.Registry) erro
 	return nil
 }
 
+func (m *Rbd) contextValidateDeviceFile(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "device_file", "body", string(m.DeviceFile)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *Rbd) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 

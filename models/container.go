@@ -31,8 +31,7 @@ type Container struct {
 	Command *string `json:"command"`
 
 	// id
-	// Read Only: true
-	ID int64 `json:"id,omitempty"`
+	ID ID `json:"id,omitempty"`
 
 	// logfile
 	// Read Only: true
@@ -69,6 +68,10 @@ func (m *Container) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateMount(formats); err != nil {
 		res = append(res, err)
 	}
@@ -94,6 +97,21 @@ func (m *Container) Validate(formats strfmt.Registry) error {
 func (m *Container) validateCommand(formats strfmt.Registry) error {
 
 	if err := validate.Required("command", "body", m.Command); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Container) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 
@@ -203,7 +221,10 @@ func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry
 
 func (m *Container) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 

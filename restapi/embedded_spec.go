@@ -692,9 +692,7 @@ func init() {
           "type": "string"
         },
         "id": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
+          "$ref": "#/definitions/id"
         },
         "logfile": {
           "type": "string",
@@ -882,10 +880,12 @@ func init() {
         "image"
       ],
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
+        "device_file": {
+          "type": "string",
           "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id"
         },
         "image": {
           "type": "string",
@@ -1685,9 +1685,7 @@ func init() {
           "type": "string"
         },
         "id": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
+          "$ref": "#/definitions/id"
         },
         "logfile": {
           "type": "string",
@@ -1875,10 +1873,12 @@ func init() {
         "image"
       ],
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64",
+        "device_file": {
+          "type": "string",
           "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id"
         },
         "image": {
           "type": "string",

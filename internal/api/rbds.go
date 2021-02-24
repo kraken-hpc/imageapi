@@ -11,12 +11,14 @@ import (
 )
 
 type RbdsType struct {
-	rbds  map[int64]*models.Rbd
+	next  models.ID
+	rbds  map[models.ID]*models.Rbd
 	mutex *sync.Mutex
 }
 
 func (r *RbdsType) Init() {
-	r.rbds = make(map[int64]*models.Rbd)
+	r.next = 1 // starting from 1 means 0 == unspecified
+	r.rbds = make(map[models.ID]*models.Rbd)
 	r.mutex = &sync.Mutex{}
 }
 
@@ -72,13 +74,15 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	if err := dev.Find(); err != nil {
 		return nil, fmt.Errorf("could not find device ID: %v", err)
 	}
-	rbd.ID = dev.ID
+	rbd.DeviceFile = fmt.Sprintf("/dev/rbd%d", dev.ID)
+	rbd.ID = r.next
+	r.next++
 	r.rbds[rbd.ID] = rbd
 
 	return rbd, err
 }
 
-func (r *RbdsType) Get(id int64) (m *models.Rbd, err error) {
+func (r *RbdsType) Get(id models.ID) (m *models.Rbd, err error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	var ok bool
@@ -88,7 +92,7 @@ func (r *RbdsType) Get(id int64) (m *models.Rbd, err error) {
 	return nil, ERRNOTFOUND
 }
 
-func (r *RbdsType) Unmap(id int64) (err error) {
+func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -96,12 +100,12 @@ func (r *RbdsType) Unmap(id int64) (err error) {
 	var ok bool
 
 	if rbd, ok = r.rbds[id]; !ok {
-		return ERRNOTFOUND
+		return nil, ERRNOTFOUND
 	}
 
 	// should we be able to force this?
 	if rbd.Refs > 0 {
-		return fmt.Errorf("device %d is in use, cannot unmap", id)
+		return nil, fmt.Errorf("device %d is in use, cannot unmap", id)
 	}
 
 	wc, err := krbd.RBDBusRemoveWriter()
@@ -115,17 +119,17 @@ func (r *RbdsType) Unmap(id int64) (err error) {
 	}
 
 	if err := i.Unmap(wc); err != nil {
-		return fmt.Errorf("krbd error: %v", err)
+		return nil, fmt.Errorf("krbd error: %v", err)
 	}
 	// remove from our map
 	delete(r.rbds, id)
 
-	return
+	return rbd, nil
 }
 
 // add/subtract from ref counter
 // silently fails if id doesn't exist
-func (r *RbdsType) RefAdd(id, n int64) {
+func (r *RbdsType) RefAdd(id models.ID, n int64) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	if rbd, ok := r.rbds[id]; ok {
