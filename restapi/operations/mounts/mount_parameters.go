@@ -6,10 +6,16 @@ package mounts
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/validate"
+
+	"github.com/jlowellwofford/imageapi/models"
 )
 
 // NewMountParams creates a new MountParams object
@@ -27,6 +33,12 @@ type MountParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
+
+	/*
+	  Required: true
+	  In: body
+	*/
+	Mount *models.Mount
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -38,6 +50,33 @@ func (o *MountParams) BindRequest(r *http.Request, route *middleware.MatchedRout
 
 	o.HTTPRequest = r
 
+	if runtime.HasBody(r) {
+		defer r.Body.Close()
+		var body models.Mount
+		if err := route.Consumer.Consume(r.Body, &body); err != nil {
+			if err == io.EOF {
+				res = append(res, errors.Required("mount", "body", ""))
+			} else {
+				res = append(res, errors.NewParseError("mount", "body", "", err))
+			}
+		} else {
+			// validate body object
+			if err := body.Validate(route.Formats); err != nil {
+				res = append(res, err)
+			}
+
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
+			if len(res) == 0 {
+				o.Mount = &body
+			}
+		}
+	} else {
+		res = append(res, errors.Required("mount", "body", ""))
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}

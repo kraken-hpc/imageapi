@@ -25,7 +25,7 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeleteMount(params *DeleteMountParams) (*DeleteMountNoContent, error)
+	DeleteMount(params *DeleteMountParams) (*DeleteMountOK, error)
 
 	GetMountOverlay(params *GetMountOverlayParams) (*GetMountOverlayOK, error)
 
@@ -43,9 +43,9 @@ type ClientService interface {
 
 	MountRbd(params *MountRbdParams) (*MountRbdCreated, error)
 
-	UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNoContent, error)
+	UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayOK, error)
 
-	UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, error)
+	UnmountRbd(params *UnmountRbdParams) (*UnmountRbdOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -53,7 +53,7 @@ type ClientService interface {
 /*
   DeleteMount Unmount a specified mount.  Note that mount reference IDs must be specified.
 */
-func (a *Client) DeleteMount(params *DeleteMountParams) (*DeleteMountNoContent, error) {
+func (a *Client) DeleteMount(params *DeleteMountParams) (*DeleteMountOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteMountParams()
@@ -74,7 +74,7 @@ func (a *Client) DeleteMount(params *DeleteMountParams) (*DeleteMountNoContent, 
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteMountNoContent)
+	success, ok := result.(*DeleteMountOK)
 	if ok {
 		return success, nil
 	}
@@ -350,7 +350,7 @@ func (a *Client) MountRbd(params *MountRbdParams) (*MountRbdCreated, error) {
 /*
   UnmountOverlay unmount overlay API
 */
-func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNoContent, error) {
+func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUnmountOverlayParams()
@@ -371,7 +371,7 @@ func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNo
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UnmountOverlayNoContent)
+	success, ok := result.(*UnmountOverlayOK)
 	if ok {
 		return success, nil
 	}
@@ -383,7 +383,7 @@ func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNo
 /*
   UnmountRbd unmount rbd API
 */
-func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, error) {
+func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUnmountRbdParams()
@@ -404,7 +404,7 @@ func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, err
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UnmountRbdNoContent)
+	success, ok := result.(*UnmountRbdOK)
 	if ok {
 		return success, nil
 	}

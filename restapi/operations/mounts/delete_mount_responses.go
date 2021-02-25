@@ -13,14 +13,14 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// DeleteMountNoContentCode is the HTTP code returned for type DeleteMountNoContent
-const DeleteMountNoContentCode int = 204
+// DeleteMountOKCode is the HTTP code returned for type DeleteMountOK
+const DeleteMountOKCode int = 200
 
-/*DeleteMountNoContent Unmount succeeded
+/*DeleteMountOK Unmount succeeded
 
-swagger:response deleteMountNoContent
+swagger:response deleteMountOK
 */
-type DeleteMountNoContent struct {
+type DeleteMountOK struct {
 
 	/*
 	  In: Body
@@ -28,27 +28,27 @@ type DeleteMountNoContent struct {
 	Payload *models.Mount `json:"body,omitempty"`
 }
 
-// NewDeleteMountNoContent creates DeleteMountNoContent with default headers values
-func NewDeleteMountNoContent() *DeleteMountNoContent {
+// NewDeleteMountOK creates DeleteMountOK with default headers values
+func NewDeleteMountOK() *DeleteMountOK {
 
-	return &DeleteMountNoContent{}
+	return &DeleteMountOK{}
 }
 
-// WithPayload adds the payload to the delete mount no content response
-func (o *DeleteMountNoContent) WithPayload(payload *models.Mount) *DeleteMountNoContent {
+// WithPayload adds the payload to the delete mount o k response
+func (o *DeleteMountOK) WithPayload(payload *models.Mount) *DeleteMountOK {
 	o.Payload = payload
 	return o
 }
 
-// SetPayload sets the payload to the delete mount no content response
-func (o *DeleteMountNoContent) SetPayload(payload *models.Mount) {
+// SetPayload sets the payload to the delete mount o k response
+func (o *DeleteMountOK) SetPayload(payload *models.Mount) {
 	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *DeleteMountNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *DeleteMountOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

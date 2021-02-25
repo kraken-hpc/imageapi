@@ -14,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/jlowellwofford/imageapi/models"
 )
 
 // NewMountParams creates a new MountParams object
 // with the default values initialized.
 func NewMountParams() *MountParams {
-
+	var ()
 	return &MountParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +31,7 @@ func NewMountParams() *MountParams {
 // NewMountParamsWithTimeout creates a new MountParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewMountParamsWithTimeout(timeout time.Duration) *MountParams {
-
+	var ()
 	return &MountParams{
 
 		timeout: timeout,
@@ -39,7 +41,7 @@ func NewMountParamsWithTimeout(timeout time.Duration) *MountParams {
 // NewMountParamsWithContext creates a new MountParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewMountParamsWithContext(ctx context.Context) *MountParams {
-
+	var ()
 	return &MountParams{
 
 		Context: ctx,
@@ -49,7 +51,7 @@ func NewMountParamsWithContext(ctx context.Context) *MountParams {
 // NewMountParamsWithHTTPClient creates a new MountParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewMountParamsWithHTTPClient(client *http.Client) *MountParams {
-
+	var ()
 	return &MountParams{
 		HTTPClient: client,
 	}
@@ -59,6 +61,10 @@ func NewMountParamsWithHTTPClient(client *http.Client) *MountParams {
 for the mount operation typically these are written to a http.Request
 */
 type MountParams struct {
+
+	/*Mount*/
+	Mount *models.Mount
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +103,17 @@ func (o *MountParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithMount adds the mount to the mount params
+func (o *MountParams) WithMount(mount *models.Mount) *MountParams {
+	o.SetMount(mount)
+	return o
+}
+
+// SetMount adds the mount to the mount params
+func (o *MountParams) SetMount(mount *models.Mount) {
+	o.Mount = mount
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *MountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +121,12 @@ func (o *MountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registr
 		return err
 	}
 	var res []error
+
+	if o.Mount != nil {
+		if err := r.SetBodyParam(o.Mount); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

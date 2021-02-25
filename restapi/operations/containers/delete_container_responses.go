@@ -13,14 +13,14 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// DeleteContainerNoContentCode is the HTTP code returned for type DeleteContainerNoContent
-const DeleteContainerNoContentCode int = 204
+// DeleteContainerOKCode is the HTTP code returned for type DeleteContainerOK
+const DeleteContainerOKCode int = 200
 
-/*DeleteContainerNoContent Container deleted
+/*DeleteContainerOK Container deleted
 
-swagger:response deleteContainerNoContent
+swagger:response deleteContainerOK
 */
-type DeleteContainerNoContent struct {
+type DeleteContainerOK struct {
 
 	/*
 	  In: Body
@@ -28,27 +28,27 @@ type DeleteContainerNoContent struct {
 	Payload *models.Container `json:"body,omitempty"`
 }
 
-// NewDeleteContainerNoContent creates DeleteContainerNoContent with default headers values
-func NewDeleteContainerNoContent() *DeleteContainerNoContent {
+// NewDeleteContainerOK creates DeleteContainerOK with default headers values
+func NewDeleteContainerOK() *DeleteContainerOK {
 
-	return &DeleteContainerNoContent{}
+	return &DeleteContainerOK{}
 }
 
-// WithPayload adds the payload to the delete container no content response
-func (o *DeleteContainerNoContent) WithPayload(payload *models.Container) *DeleteContainerNoContent {
+// WithPayload adds the payload to the delete container o k response
+func (o *DeleteContainerOK) WithPayload(payload *models.Container) *DeleteContainerOK {
 	o.Payload = payload
 	return o
 }
 
-// SetPayload sets the payload to the delete container no content response
-func (o *DeleteContainerNoContent) SetPayload(payload *models.Container) {
+// SetPayload sets the payload to the delete container o k response
+func (o *DeleteContainerOK) SetPayload(payload *models.Container) {
 	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *DeleteContainerNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *DeleteContainerOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

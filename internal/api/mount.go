@@ -10,7 +10,7 @@ import (
 // This essentially acts as a switcher for rbd/overlay
 
 // List all mounts
-func List() (ret []*models.Mount) {
+func ListMounts() (ret []*models.Mount) {
 	ret = []*models.Mount{}
 	strRbd := "rbd"
 	for _, m := range MountsRbd.List() {

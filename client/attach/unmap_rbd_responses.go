@@ -23,8 +23,8 @@ type UnmapRbdReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *UnmapRbdReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewUnmapRbdNoContent()
+	case 200:
+		result := NewUnmapRbdOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,28 +41,28 @@ func (o *UnmapRbdReader) ReadResponse(response runtime.ClientResponse, consumer 
 	}
 }
 
-// NewUnmapRbdNoContent creates a UnmapRbdNoContent with default headers values
-func NewUnmapRbdNoContent() *UnmapRbdNoContent {
-	return &UnmapRbdNoContent{}
+// NewUnmapRbdOK creates a UnmapRbdOK with default headers values
+func NewUnmapRbdOK() *UnmapRbdOK {
+	return &UnmapRbdOK{}
 }
 
-/*UnmapRbdNoContent handles this case with default header values.
+/*UnmapRbdOK handles this case with default header values.
 
 Unmapped
 */
-type UnmapRbdNoContent struct {
+type UnmapRbdOK struct {
 	Payload *models.Rbd
 }
 
-func (o *UnmapRbdNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /attach/rbd/{id}][%d] unmapRbdNoContent  %+v", 204, o.Payload)
+func (o *UnmapRbdOK) Error() string {
+	return fmt.Sprintf("[DELETE /attach/rbd/{id}][%d] unmapRbdOK  %+v", 200, o.Payload)
 }
 
-func (o *UnmapRbdNoContent) GetPayload() *models.Rbd {
+func (o *UnmapRbdOK) GetPayload() *models.Rbd {
 	return o.Payload
 }
 
-func (o *UnmapRbdNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *UnmapRbdOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.Rbd)
 

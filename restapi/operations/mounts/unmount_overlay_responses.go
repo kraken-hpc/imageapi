@@ -13,14 +13,14 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// UnmountOverlayNoContentCode is the HTTP code returned for type UnmountOverlayNoContent
-const UnmountOverlayNoContentCode int = 204
+// UnmountOverlayOKCode is the HTTP code returned for type UnmountOverlayOK
+const UnmountOverlayOKCode int = 200
 
-/*UnmountOverlayNoContent Unmounted
+/*UnmountOverlayOK Unmounted
 
-swagger:response unmountOverlayNoContent
+swagger:response unmountOverlayOK
 */
-type UnmountOverlayNoContent struct {
+type UnmountOverlayOK struct {
 
 	/*
 	  In: Body
@@ -28,27 +28,27 @@ type UnmountOverlayNoContent struct {
 	Payload *models.MountOverlay `json:"body,omitempty"`
 }
 
-// NewUnmountOverlayNoContent creates UnmountOverlayNoContent with default headers values
-func NewUnmountOverlayNoContent() *UnmountOverlayNoContent {
+// NewUnmountOverlayOK creates UnmountOverlayOK with default headers values
+func NewUnmountOverlayOK() *UnmountOverlayOK {
 
-	return &UnmountOverlayNoContent{}
+	return &UnmountOverlayOK{}
 }
 
-// WithPayload adds the payload to the unmount overlay no content response
-func (o *UnmountOverlayNoContent) WithPayload(payload *models.MountOverlay) *UnmountOverlayNoContent {
+// WithPayload adds the payload to the unmount overlay o k response
+func (o *UnmountOverlayOK) WithPayload(payload *models.MountOverlay) *UnmountOverlayOK {
 	o.Payload = payload
 	return o
 }
 
-// SetPayload sets the payload to the unmount overlay no content response
-func (o *UnmountOverlayNoContent) SetPayload(payload *models.MountOverlay) {
+// SetPayload sets the payload to the unmount overlay o k response
+func (o *UnmountOverlayOK) SetPayload(payload *models.MountOverlay) {
 	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *UnmountOverlayNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *UnmountOverlayOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

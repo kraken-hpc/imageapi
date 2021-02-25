@@ -31,7 +31,7 @@ type ClientService interface {
 
 	MapRbd(params *MapRbdParams) (*MapRbdCreated, error)
 
-	UnmapRbd(params *UnmapRbdParams) (*UnmapRbdNoContent, error)
+	UnmapRbd(params *UnmapRbdParams) (*UnmapRbdOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -138,7 +138,7 @@ func (a *Client) MapRbd(params *MapRbdParams) (*MapRbdCreated, error) {
 /*
   UnmapRbd unmap rbd API
 */
-func (a *Client) UnmapRbd(params *UnmapRbdParams) (*UnmapRbdNoContent, error) {
+func (a *Client) UnmapRbd(params *UnmapRbdParams) (*UnmapRbdOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUnmapRbdParams()
@@ -159,7 +159,7 @@ func (a *Client) UnmapRbd(params *UnmapRbdParams) (*UnmapRbdNoContent, error) {
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UnmapRbdNoContent)
+	success, ok := result.(*UnmapRbdOK)
 	if ok {
 		return success, nil
 	}

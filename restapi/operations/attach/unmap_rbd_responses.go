@@ -13,14 +13,14 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// UnmapRbdNoContentCode is the HTTP code returned for type UnmapRbdNoContent
-const UnmapRbdNoContentCode int = 204
+// UnmapRbdOKCode is the HTTP code returned for type UnmapRbdOK
+const UnmapRbdOKCode int = 200
 
-/*UnmapRbdNoContent Unmapped
+/*UnmapRbdOK Unmapped
 
-swagger:response unmapRbdNoContent
+swagger:response unmapRbdOK
 */
-type UnmapRbdNoContent struct {
+type UnmapRbdOK struct {
 
 	/*
 	  In: Body
@@ -28,27 +28,27 @@ type UnmapRbdNoContent struct {
 	Payload *models.Rbd `json:"body,omitempty"`
 }
 
-// NewUnmapRbdNoContent creates UnmapRbdNoContent with default headers values
-func NewUnmapRbdNoContent() *UnmapRbdNoContent {
+// NewUnmapRbdOK creates UnmapRbdOK with default headers values
+func NewUnmapRbdOK() *UnmapRbdOK {
 
-	return &UnmapRbdNoContent{}
+	return &UnmapRbdOK{}
 }
 
-// WithPayload adds the payload to the unmap rbd no content response
-func (o *UnmapRbdNoContent) WithPayload(payload *models.Rbd) *UnmapRbdNoContent {
+// WithPayload adds the payload to the unmap rbd o k response
+func (o *UnmapRbdOK) WithPayload(payload *models.Rbd) *UnmapRbdOK {
 	o.Payload = payload
 	return o
 }
 
-// SetPayload sets the payload to the unmap rbd no content response
-func (o *UnmapRbdNoContent) SetPayload(payload *models.Rbd) {
+// SetPayload sets the payload to the unmap rbd o k response
+func (o *UnmapRbdOK) SetPayload(payload *models.Rbd) {
 	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *UnmapRbdNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *UnmapRbdOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

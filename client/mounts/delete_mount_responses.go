@@ -23,8 +23,8 @@ type DeleteMountReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *DeleteMountReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewDeleteMountNoContent()
+	case 200:
+		result := NewDeleteMountOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,28 +41,28 @@ func (o *DeleteMountReader) ReadResponse(response runtime.ClientResponse, consum
 	}
 }
 
-// NewDeleteMountNoContent creates a DeleteMountNoContent with default headers values
-func NewDeleteMountNoContent() *DeleteMountNoContent {
-	return &DeleteMountNoContent{}
+// NewDeleteMountOK creates a DeleteMountOK with default headers values
+func NewDeleteMountOK() *DeleteMountOK {
+	return &DeleteMountOK{}
 }
 
-/*DeleteMountNoContent handles this case with default header values.
+/*DeleteMountOK handles this case with default header values.
 
 Unmount succeeded
 */
-type DeleteMountNoContent struct {
+type DeleteMountOK struct {
 	Payload *models.Mount
 }
 
-func (o *DeleteMountNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /mount][%d] deleteMountNoContent  %+v", 204, o.Payload)
+func (o *DeleteMountOK) Error() string {
+	return fmt.Sprintf("[DELETE /mount][%d] deleteMountOK  %+v", 200, o.Payload)
 }
 
-func (o *DeleteMountNoContent) GetPayload() *models.Mount {
+func (o *DeleteMountOK) GetPayload() *models.Mount {
 	return o.Payload
 }
 
-func (o *DeleteMountNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *DeleteMountOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.Mount)
 

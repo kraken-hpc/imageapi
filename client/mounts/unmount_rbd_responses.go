@@ -23,8 +23,8 @@ type UnmountRbdReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *UnmountRbdReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewUnmountRbdNoContent()
+	case 200:
+		result := NewUnmountRbdOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,28 +41,28 @@ func (o *UnmountRbdReader) ReadResponse(response runtime.ClientResponse, consume
 	}
 }
 
-// NewUnmountRbdNoContent creates a UnmountRbdNoContent with default headers values
-func NewUnmountRbdNoContent() *UnmountRbdNoContent {
-	return &UnmountRbdNoContent{}
+// NewUnmountRbdOK creates a UnmountRbdOK with default headers values
+func NewUnmountRbdOK() *UnmountRbdOK {
+	return &UnmountRbdOK{}
 }
 
-/*UnmountRbdNoContent handles this case with default header values.
+/*UnmountRbdOK handles this case with default header values.
 
 Unmounted
 */
-type UnmountRbdNoContent struct {
+type UnmountRbdOK struct {
 	Payload *models.MountRbd
 }
 
-func (o *UnmountRbdNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /mount/rbd/{id}][%d] unmountRbdNoContent  %+v", 204, o.Payload)
+func (o *UnmountRbdOK) Error() string {
+	return fmt.Sprintf("[DELETE /mount/rbd/{id}][%d] unmountRbdOK  %+v", 200, o.Payload)
 }
 
-func (o *UnmountRbdNoContent) GetPayload() *models.MountRbd {
+func (o *UnmountRbdOK) GetPayload() *models.MountRbd {
 	return o.Payload
 }
 
-func (o *UnmountRbdNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *UnmountRbdOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.MountRbd)
 

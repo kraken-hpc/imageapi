@@ -23,8 +23,8 @@ type DeleteContainerBynameReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *DeleteContainerBynameReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewDeleteContainerBynameNoContent()
+	case 200:
+		result := NewDeleteContainerBynameOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,28 +41,28 @@ func (o *DeleteContainerBynameReader) ReadResponse(response runtime.ClientRespon
 	}
 }
 
-// NewDeleteContainerBynameNoContent creates a DeleteContainerBynameNoContent with default headers values
-func NewDeleteContainerBynameNoContent() *DeleteContainerBynameNoContent {
-	return &DeleteContainerBynameNoContent{}
+// NewDeleteContainerBynameOK creates a DeleteContainerBynameOK with default headers values
+func NewDeleteContainerBynameOK() *DeleteContainerBynameOK {
+	return &DeleteContainerBynameOK{}
 }
 
-/*DeleteContainerBynameNoContent handles this case with default header values.
+/*DeleteContainerBynameOK handles this case with default header values.
 
 Container deleted
 */
-type DeleteContainerBynameNoContent struct {
+type DeleteContainerBynameOK struct {
 	Payload *models.Container
 }
 
-func (o *DeleteContainerBynameNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /container/byname/{name}][%d] deleteContainerBynameNoContent  %+v", 204, o.Payload)
+func (o *DeleteContainerBynameOK) Error() string {
+	return fmt.Sprintf("[DELETE /container/byname/{name}][%d] deleteContainerBynameOK  %+v", 200, o.Payload)
 }
 
-func (o *DeleteContainerBynameNoContent) GetPayload() *models.Container {
+func (o *DeleteContainerBynameOK) GetPayload() *models.Container {
 	return o.Payload
 }
 
-func (o *DeleteContainerBynameNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *DeleteContainerBynameOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.Container)
 

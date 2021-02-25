@@ -27,9 +27,9 @@ type Client struct {
 type ClientService interface {
 	CreateContainer(params *CreateContainerParams) (*CreateContainerCreated, error)
 
-	DeleteContainer(params *DeleteContainerParams) (*DeleteContainerNoContent, error)
+	DeleteContainer(params *DeleteContainerParams) (*DeleteContainerOK, error)
 
-	DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameNoContent, error)
+	DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameOK, error)
 
 	GetContainer(params *GetContainerParams) (*GetContainerOK, error)
 
@@ -82,7 +82,7 @@ func (a *Client) CreateContainer(params *CreateContainerParams) (*CreateContaine
 This will stop running containers.
 
 */
-func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContainerNoContent, error) {
+func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContainerOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteContainerParams()
@@ -103,7 +103,7 @@ func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContaine
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteContainerNoContent)
+	success, ok := result.(*DeleteContainerOK)
 	if ok {
 		return success, nil
 	}
@@ -117,7 +117,7 @@ func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContaine
 This will stop running containers.
 
 */
-func (a *Client) DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameNoContent, error) {
+func (a *Client) DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteContainerBynameParams()
@@ -138,7 +138,7 @@ func (a *Client) DeleteContainerByname(params *DeleteContainerBynameParams) (*De
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteContainerBynameNoContent)
+	success, ok := result.(*DeleteContainerBynameOK)
 	if ok {
 		return success, nil
 	}

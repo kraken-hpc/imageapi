@@ -372,7 +372,7 @@ paths:
         - attach
       operationId: unmap_rbd
       responses:
-        204:
+        200:
           description: Unmapped
           schema:
             $ref: "#/definitions/rbd"
@@ -404,6 +404,12 @@ paths:
       tags:
         - mounts
       operationId: mount
+      parameters:
+        - name: mount
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/mount"
       responses:
         201:
           description: mount succeed
@@ -425,7 +431,7 @@ paths:
           schema:
             $ref: "#/definitions/mount"
       responses:
-        204:
+        200:
           description: Unmount succeeded
           schema:
             $ref: "#/definitions/mount"
@@ -497,7 +503,7 @@ paths:
         - mounts
       operationId: unmount_rbd
       responses:
-        204:
+        200:
           description: Unmounted
           schema:
             $ref: "#/definitions/mount_rbd"
@@ -569,7 +575,7 @@ paths:
         - mounts
       operationId: unmount_overlay
       responses:
-        204:
+        200:
           description: Unmounted
           schema:
             $ref: "#/definitions/mount_overlay"
@@ -648,7 +654,7 @@ paths:
         This will stop running containers.
       operationId: delete_container
       responses:
-        204:
+        200:
           description: Container deleted
           schema:
             $ref: "#/definitions/container"
@@ -718,7 +724,7 @@ paths:
         This will stop running containers.
       operationId: delete_container_byname
       responses:
-        204:
+        200:
           description: Container deleted
           schema:
             $ref: "#/definitions/container"

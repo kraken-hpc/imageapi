@@ -118,7 +118,7 @@ func init() {
         ],
         "operationId": "unmap_rbd",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmapped",
             "schema": {
               "$ref": "#/definitions/rbd"
@@ -228,7 +228,7 @@ func init() {
         ],
         "operationId": "delete_container_byname",
         "responses": {
-          "204": {
+          "200": {
             "description": "Container deleted",
             "schema": {
               "$ref": "#/definitions/container"
@@ -323,7 +323,7 @@ func init() {
         ],
         "operationId": "delete_container",
         "responses": {
-          "204": {
+          "200": {
             "description": "Container deleted",
             "schema": {
               "$ref": "#/definitions/container"
@@ -420,6 +420,16 @@ func init() {
           "mounts"
         ],
         "operationId": "mount",
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "mount succeed",
@@ -451,7 +461,7 @@ func init() {
           }
         ],
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmount succeeded",
             "schema": {
               "$ref": "#/definitions/mount"
@@ -548,7 +558,7 @@ func init() {
         ],
         "operationId": "unmount_overlay",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmounted",
             "schema": {
               "$ref": "#/definitions/mount_overlay"
@@ -654,7 +664,7 @@ func init() {
         ],
         "operationId": "unmount_rbd",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmounted",
             "schema": {
               "$ref": "#/definitions/mount_rbd"
@@ -1111,7 +1121,7 @@ func init() {
         ],
         "operationId": "unmap_rbd",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmapped",
             "schema": {
               "$ref": "#/definitions/rbd"
@@ -1221,7 +1231,7 @@ func init() {
         ],
         "operationId": "delete_container_byname",
         "responses": {
-          "204": {
+          "200": {
             "description": "Container deleted",
             "schema": {
               "$ref": "#/definitions/container"
@@ -1316,7 +1326,7 @@ func init() {
         ],
         "operationId": "delete_container",
         "responses": {
-          "204": {
+          "200": {
             "description": "Container deleted",
             "schema": {
               "$ref": "#/definitions/container"
@@ -1413,6 +1423,16 @@ func init() {
           "mounts"
         ],
         "operationId": "mount",
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "mount succeed",
@@ -1444,7 +1464,7 @@ func init() {
           }
         ],
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmount succeeded",
             "schema": {
               "$ref": "#/definitions/mount"
@@ -1541,7 +1561,7 @@ func init() {
         ],
         "operationId": "unmount_overlay",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmounted",
             "schema": {
               "$ref": "#/definitions/mount_overlay"
@@ -1647,7 +1667,7 @@ func init() {
         ],
         "operationId": "unmount_rbd",
         "responses": {
-          "204": {
+          "200": {
             "description": "Unmounted",
             "schema": {
               "$ref": "#/definitions/mount_rbd"
