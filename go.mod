@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/bensallen/rbd v0.0.0-20210224155049-baf486eceefa
-	github.com/davecgh/go-spew v1.1.1
 	github.com/go-openapi/errors v0.20.0
 	github.com/go-openapi/loads v0.20.2
 	github.com/go-openapi/runtime v0.19.26
