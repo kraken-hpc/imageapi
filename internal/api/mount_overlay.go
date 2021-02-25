@@ -95,8 +95,8 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 	}
 
 	// store
-	m.next++
 	mnt.ID = m.next
+	m.next++
 	m.mnts[mnt.ID] = mnt
 
 	// add refs
@@ -116,7 +116,7 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Ref > 0 {
+	if mnt.Refs > 0 {
 		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
@@ -130,9 +130,8 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 	os.RemoveAll(mnt.Upperdir) // option to leave behind? Or store on RBD?
 	delete(m.mnts, id)
 	for i, l := range mnt.Lower {
+		MountRefAdd(l, -1)
 		if l.MountID == 0 { // we own the mount
-			MountRefAdd(l, -1)
-		} else {
 			// try to unmount
 			if mnt.Lower[i], err = Unmount(l); err != nil {
 				return nil, fmt.Errorf("failed to unmount lower mount: %v", err)
@@ -146,7 +145,7 @@ func (m *MountsOverlayType) RefAdd(id models.ID, n int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if r, ok := m.mnts[id]; ok {
-		r.Ref += n
+		r.Refs += n
 	}
 }
 

@@ -110,6 +110,7 @@ func MountGetMountpoint(mnt *models.Mount) (mntpt string, err error) {
 			if mnt.Overlay == nil || mnt.Overlay.ID == 0 {
 				return "", fmt.Errorf("no mount id specified")
 			}
+			id = mnt.Overlay.ID
 		}
 		if overlay, err = MountsOverlay.Get(id); err != nil {
 			return "", err

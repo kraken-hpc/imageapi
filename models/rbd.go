@@ -22,9 +22,13 @@ import (
 // swagger:model rbd
 type Rbd struct {
 
-	// device file
+	// The device_file is the path to the system device file.
 	// Read Only: true
 	DeviceFile string `json:"device_file,omitempty"`
+
+	// The dev_id is the device ID in the rbd subsystem.
+	// Read Only: true
+	DeviceID int64 `json:"device_id,omitempty"`
 
 	// id
 	ID ID `json:"id,omitempty"`
@@ -171,6 +175,10 @@ func (m *Rbd) ContextValidate(ctx context.Context, formats strfmt.Registry) erro
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateDeviceID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateID(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -192,6 +200,15 @@ func (m *Rbd) ContextValidate(ctx context.Context, formats strfmt.Registry) erro
 func (m *Rbd) contextValidateDeviceFile(ctx context.Context, formats strfmt.Registry) error {
 
 	if err := validate.ReadOnly(ctx, "device_file", "body", string(m.DeviceFile)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Rbd) contextValidateDeviceID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "device_id", "body", int64(m.DeviceID)); err != nil {
 		return err
 	}
 

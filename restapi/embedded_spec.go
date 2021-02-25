@@ -824,7 +824,7 @@ func init() {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -869,7 +869,7 @@ func init() {
         "rbd_id": {
           "$ref": "#/definitions/id"
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -891,7 +891,14 @@ func init() {
       ],
       "properties": {
         "device_file": {
+          "description": "The device_file is the path to the system device file.",
           "type": "string",
+          "readOnly": true
+        },
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
+          "type": "integer",
+          "format": "int64",
           "readOnly": true
         },
         "id": {
@@ -1827,7 +1834,7 @@ func init() {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -1872,7 +1879,7 @@ func init() {
         "rbd_id": {
           "$ref": "#/definitions/id"
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -1894,7 +1901,14 @@ func init() {
       ],
       "properties": {
         "device_file": {
+          "description": "The device_file is the path to the system device file.",
           "type": "string",
+          "readOnly": true
+        },
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
+          "type": "integer",
+          "format": "int64",
           "readOnly": true
         },
         "id": {

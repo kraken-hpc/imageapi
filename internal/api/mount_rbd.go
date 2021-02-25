@@ -32,13 +32,14 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	// make sure the dev exists, or attach it
 	var rbd *models.Rbd
 	if mnt.RbdID != 0 { // Rbd was specified by ID
-		if rbd, err = Rbds.Get(mnt.Rbd.ID); err != nil {
+		if rbd, err = Rbds.Get(mnt.RbdID); err != nil {
 			return nil, ERRNOTFOUND
 		}
 	} else if mnt.Rbd != nil { // try to attach it
 		if rbd, err = Rbds.Map(mnt.Rbd); err != nil {
 			return nil, fmt.Errorf("failed to attach underlying RBD image: %v", err)
 		}
+		mnt.RbdID = rbd.ID
 	} else { // unspecified
 		return nil, fmt.Errorf("no rbd specified")
 	}
@@ -71,7 +72,7 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Ref > 0 {
+	if mnt.Refs > 0 {
 		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
@@ -81,10 +82,10 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 	}
 	os.Remove(mnt.Mountpoint) // we shouldn't fail on this. Should we report it anyway?
 	delete(m.mnts, id)
-	Rbds.RefAdd(id, -1)
+	Rbds.RefAdd(mnt.RbdID, -1)
 	if mnt.Rbd != nil { // we own the attach point
 		if _, err = Rbds.Unmap(mnt.Rbd.ID); err != nil {
-			return nil, fmt.Errorf("failed to detach underlying rbd")
+			return nil, fmt.Errorf("failed to detach underlying rbd: %v", err)
 		}
 	}
 	return
@@ -111,6 +112,6 @@ func (m *MountsRBDType) RefAdd(id models.ID, n int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if mnt, ok := m.mnts[id]; ok {
-		mnt.Ref += n
+		mnt.Refs += n
 	}
 }

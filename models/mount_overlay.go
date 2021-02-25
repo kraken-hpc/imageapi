@@ -40,9 +40,9 @@ type MountOverlay struct {
 	// Read Only: true
 	Mountpoint string `json:"mountpoint,omitempty"`
 
-	// ref
+	// refs
 	// Read Only: true
-	Ref int64 `json:"ref,omitempty"`
+	Refs int64 `json:"refs,omitempty"`
 
 	// currently, upperdir is always a directory in mountDir
 	// Read Only: true
@@ -127,7 +127,7 @@ func (m *MountOverlay) ContextValidate(ctx context.Context, formats strfmt.Regis
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateRef(ctx, formats); err != nil {
+	if err := m.contextValidateRefs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -184,9 +184,9 @@ func (m *MountOverlay) contextValidateMountpoint(ctx context.Context, formats st
 	return nil
 }
 
-func (m *MountOverlay) contextValidateRef(ctx context.Context, formats strfmt.Registry) error {
+func (m *MountOverlay) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "ref", "body", int64(m.Ref)); err != nil {
+	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
 		return err
 	}
 

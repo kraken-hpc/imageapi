@@ -116,7 +116,13 @@ definitions:
     properties:
       id:
         $ref: "#/definitions/id"
+      device_id:
+        description: The dev_id is the device ID in the rbd subsystem.
+        type: integer
+        format: int64
+        readOnly: true
       device_file:
+        description: The device_file is the path to the system device file.
         type: string
         readOnly: true
       refs:
@@ -159,7 +165,7 @@ definitions:
       mountpoint:
         type: string
         readOnly: true
-      ref:
+      refs:
         type: integer
         format: int64
         readOnly: true
@@ -203,7 +209,7 @@ definitions:
         description:  currently, upperdir is always a directory in mountDir
         type: string
         readOnly: true
-      ref:
+      refs:
         type: integer
         format: int64
         readOnly: true

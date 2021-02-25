@@ -74,6 +74,7 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	if err := dev.Find(); err != nil {
 		return nil, fmt.Errorf("could not find device ID: %v", err)
 	}
+	rbd.DeviceID = dev.ID
 	rbd.DeviceFile = fmt.Sprintf("/dev/rbd%d", dev.ID)
 	rbd.ID = r.next
 	r.next++
@@ -112,7 +113,7 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	defer wc.Close()
 
 	i := krbd.Image{
-		DevID: int(rbd.ID),
+		DevID: int(rbd.DeviceID),
 		Options: &krbd.Options{
 			Force: rbd.Options.Force,
 		},

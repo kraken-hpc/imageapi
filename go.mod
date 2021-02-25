@@ -6,6 +6,7 @@ replace github.com/bensallen/rbd v0.0.0-20201123204607-9b994a7784d0 => github.co
 
 require (
 	github.com/bensallen/rbd v0.0.0-20201123204607-9b994a7784d0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-openapi/errors v0.20.0
 	github.com/go-openapi/loads v0.20.2
 	github.com/go-openapi/runtime v0.19.26
