@@ -46,6 +46,9 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		MountsDeleteMountHandler: mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
+			return middleware.NotImplemented("operation mounts.DeleteMount has not yet been implemented")
+		}),
 		ContainersCreateContainerHandler: containers.CreateContainerHandlerFunc(func(params containers.CreateContainerParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.CreateContainer has not yet been implemented")
 		}),
@@ -73,6 +76,9 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		ContainersListContainersHandler: containers.ListContainersHandlerFunc(func(params containers.ListContainersParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.ListContainers has not yet been implemented")
 		}),
+		MountsListMountsHandler: mounts.ListMountsHandlerFunc(func(params mounts.ListMountsParams) middleware.Responder {
+			return middleware.NotImplemented("operation mounts.ListMounts has not yet been implemented")
+		}),
 		MountsListMountsOverlayHandler: mounts.ListMountsOverlayHandlerFunc(func(params mounts.ListMountsOverlayParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.ListMountsOverlay has not yet been implemented")
 		}),
@@ -84,6 +90,9 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		}),
 		AttachMapRbdHandler: attach.MapRbdHandlerFunc(func(params attach.MapRbdParams) middleware.Responder {
 			return middleware.NotImplemented("operation attach.MapRbd has not yet been implemented")
+		}),
+		MountsMountHandler: mounts.MountHandlerFunc(func(params mounts.MountParams) middleware.Responder {
+			return middleware.NotImplemented("operation mounts.Mount has not yet been implemented")
 		}),
 		MountsMountOverlayHandler: mounts.MountOverlayHandlerFunc(func(params mounts.MountOverlayParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.MountOverlay has not yet been implemented")
@@ -109,7 +118,18 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 	}
 }
 
-/*ImageapiAPI Mange system image containers */
+/*ImageapiAPI This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.
+
+In general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID,
+or, they can contain the full specification of those lower objects.
+
+If an object references another by ID, deletion of that object does not effect the underlying object.
+
+If an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.
+
+For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
+and detach those lower objects.
+*/
 type ImageapiAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context
@@ -140,6 +160,8 @@ type ImageapiAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// MountsDeleteMountHandler sets the operation handler for the delete mount operation
+	MountsDeleteMountHandler mounts.DeleteMountHandler
 	// ContainersCreateContainerHandler sets the operation handler for the create container operation
 	ContainersCreateContainerHandler containers.CreateContainerHandler
 	// ContainersDeleteContainerHandler sets the operation handler for the delete container operation
@@ -158,6 +180,8 @@ type ImageapiAPI struct {
 	AttachGetRbdHandler attach.GetRbdHandler
 	// ContainersListContainersHandler sets the operation handler for the list containers operation
 	ContainersListContainersHandler containers.ListContainersHandler
+	// MountsListMountsHandler sets the operation handler for the list mounts operation
+	MountsListMountsHandler mounts.ListMountsHandler
 	// MountsListMountsOverlayHandler sets the operation handler for the list mounts overlay operation
 	MountsListMountsOverlayHandler mounts.ListMountsOverlayHandler
 	// MountsListMountsRbdHandler sets the operation handler for the list mounts rbd operation
@@ -166,6 +190,8 @@ type ImageapiAPI struct {
 	AttachListRbdsHandler attach.ListRbdsHandler
 	// AttachMapRbdHandler sets the operation handler for the map rbd operation
 	AttachMapRbdHandler attach.MapRbdHandler
+	// MountsMountHandler sets the operation handler for the mount operation
+	MountsMountHandler mounts.MountHandler
 	// MountsMountOverlayHandler sets the operation handler for the mount overlay operation
 	MountsMountOverlayHandler mounts.MountOverlayHandler
 	// MountsMountRbdHandler sets the operation handler for the mount rbd operation
@@ -256,6 +282,9 @@ func (o *ImageapiAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.MountsDeleteMountHandler == nil {
+		unregistered = append(unregistered, "mounts.DeleteMountHandler")
+	}
 	if o.ContainersCreateContainerHandler == nil {
 		unregistered = append(unregistered, "containers.CreateContainerHandler")
 	}
@@ -283,6 +312,9 @@ func (o *ImageapiAPI) Validate() error {
 	if o.ContainersListContainersHandler == nil {
 		unregistered = append(unregistered, "containers.ListContainersHandler")
 	}
+	if o.MountsListMountsHandler == nil {
+		unregistered = append(unregistered, "mounts.ListMountsHandler")
+	}
 	if o.MountsListMountsOverlayHandler == nil {
 		unregistered = append(unregistered, "mounts.ListMountsOverlayHandler")
 	}
@@ -294,6 +326,9 @@ func (o *ImageapiAPI) Validate() error {
 	}
 	if o.AttachMapRbdHandler == nil {
 		unregistered = append(unregistered, "attach.MapRbdHandler")
+	}
+	if o.MountsMountHandler == nil {
+		unregistered = append(unregistered, "mounts.MountHandler")
 	}
 	if o.MountsMountOverlayHandler == nil {
 		unregistered = append(unregistered, "mounts.MountOverlayHandler")
@@ -404,6 +439,10 @@ func (o *ImageapiAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/mount"] = mounts.NewDeleteMount(o.context, o.MountsDeleteMountHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
@@ -443,6 +482,10 @@ func (o *ImageapiAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/mount"] = mounts.NewListMounts(o.context, o.MountsListMountsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/mount/overlay"] = mounts.NewListMountsOverlay(o.context, o.MountsListMountsOverlayHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -456,6 +499,10 @@ func (o *ImageapiAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/attach/rbd"] = attach.NewMapRbd(o.context, o.AttachMapRbdHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/mount"] = mounts.NewMount(o.context, o.MountsMountHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

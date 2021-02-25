@@ -13,28 +13,48 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// DeleteContainerBynameNoContentCode is the HTTP code returned for type DeleteContainerBynameNoContent
-const DeleteContainerBynameNoContentCode int = 204
+// DeleteContainerBynameOKCode is the HTTP code returned for type DeleteContainerBynameOK
+const DeleteContainerBynameOKCode int = 200
 
-/*DeleteContainerBynameNoContent Container deleted
+/*DeleteContainerBynameOK Container deleted
 
-swagger:response deleteContainerBynameNoContent
+swagger:response deleteContainerBynameOK
 */
-type DeleteContainerBynameNoContent struct {
+type DeleteContainerBynameOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Container `json:"body,omitempty"`
 }
 
-// NewDeleteContainerBynameNoContent creates DeleteContainerBynameNoContent with default headers values
-func NewDeleteContainerBynameNoContent() *DeleteContainerBynameNoContent {
+// NewDeleteContainerBynameOK creates DeleteContainerBynameOK with default headers values
+func NewDeleteContainerBynameOK() *DeleteContainerBynameOK {
 
-	return &DeleteContainerBynameNoContent{}
+	return &DeleteContainerBynameOK{}
+}
+
+// WithPayload adds the payload to the delete container byname o k response
+func (o *DeleteContainerBynameOK) WithPayload(payload *models.Container) *DeleteContainerBynameOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the delete container byname o k response
+func (o *DeleteContainerBynameOK) SetPayload(payload *models.Container) {
+	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *DeleteContainerBynameNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *DeleteContainerBynameOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*DeleteContainerBynameDefault error

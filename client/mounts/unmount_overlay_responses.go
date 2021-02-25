@@ -23,8 +23,8 @@ type UnmountOverlayReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *UnmountOverlayReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewUnmountOverlayNoContent()
+	case 200:
+		result := NewUnmountOverlayOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,23 +41,35 @@ func (o *UnmountOverlayReader) ReadResponse(response runtime.ClientResponse, con
 	}
 }
 
-// NewUnmountOverlayNoContent creates a UnmountOverlayNoContent with default headers values
-func NewUnmountOverlayNoContent() *UnmountOverlayNoContent {
-	return &UnmountOverlayNoContent{}
+// NewUnmountOverlayOK creates a UnmountOverlayOK with default headers values
+func NewUnmountOverlayOK() *UnmountOverlayOK {
+	return &UnmountOverlayOK{}
 }
 
-/*UnmountOverlayNoContent handles this case with default header values.
+/*UnmountOverlayOK handles this case with default header values.
 
 Unmounted
 */
-type UnmountOverlayNoContent struct {
+type UnmountOverlayOK struct {
+	Payload *models.MountOverlay
 }
 
-func (o *UnmountOverlayNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /mount/overlay/{id}][%d] unmountOverlayNoContent ", 204)
+func (o *UnmountOverlayOK) Error() string {
+	return fmt.Sprintf("[DELETE /mount/overlay/{id}][%d] unmountOverlayOK  %+v", 200, o.Payload)
 }
 
-func (o *UnmountOverlayNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *UnmountOverlayOK) GetPayload() *models.MountOverlay {
+	return o.Payload
+}
+
+func (o *UnmountOverlayOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.MountOverlay)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

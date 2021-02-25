@@ -14,7 +14,14 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// MountRbd mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it (which becomes the mount's ID), and a provided filesystem type.
+// MountRbd mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it
+// (which becomes the mount's ID), and a provided filesystem type.
+//
+// Either `rbd_id` or `rbd` must be specified.  If both are specified, `rbd` will be ignored.
+//
+// If `rbd` is specified and `rbd_id` is omitted, the RBD will first be attached, and will be
+// detached on deletion.
+//
 //
 // swagger:model mount_rbd
 type MountRbd struct {
@@ -23,9 +30,9 @@ type MountRbd struct {
 	// Required: true
 	FsType *string `json:"fs_type"`
 
-	// must be a valid rbd device id
-	// Required: true
-	ID *int64 `json:"id"`
+	// id
+	// Read Only: true
+	ID ID `json:"id,omitempty"`
 
 	// mount options
 	MountOptions []string `json:"mount_options"`
@@ -34,9 +41,15 @@ type MountRbd struct {
 	// Read Only: true
 	Mountpoint string `json:"mountpoint,omitempty"`
 
-	// ref
+	// rbd
+	Rbd *Rbd `json:"rbd,omitempty"`
+
+	// rbd id
+	RbdID ID `json:"rbd_id,omitempty"`
+
+	// refs
 	// Read Only: true
-	Ref int64 `json:"ref,omitempty"`
+	Refs int64 `json:"refs,omitempty"`
 }
 
 // Validate validates this mount rbd
@@ -48,6 +61,14 @@ func (m *MountRbd) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRbd(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRbdID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -67,8 +88,46 @@ func (m *MountRbd) validateFsType(formats strfmt.Registry) error {
 }
 
 func (m *MountRbd) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
 
-	if err := validate.Required("id", "body", m.ID); err != nil {
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *MountRbd) validateRbd(formats strfmt.Registry) error {
+	if swag.IsZero(m.Rbd) { // not required
+		return nil
+	}
+
+	if m.Rbd != nil {
+		if err := m.Rbd.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("rbd")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *MountRbd) validateRbdID(formats strfmt.Registry) error {
+	if swag.IsZero(m.RbdID) { // not required
+		return nil
+	}
+
+	if err := m.RbdID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("rbd_id")
+		}
 		return err
 	}
 
@@ -79,17 +138,41 @@ func (m *MountRbd) validateID(formats strfmt.Registry) error {
 func (m *MountRbd) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateMountpoint(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateRef(ctx, formats); err != nil {
+	if err := m.contextValidateRbd(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRbdID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRefs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *MountRbd) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -102,9 +185,35 @@ func (m *MountRbd) contextValidateMountpoint(ctx context.Context, formats strfmt
 	return nil
 }
 
-func (m *MountRbd) contextValidateRef(ctx context.Context, formats strfmt.Registry) error {
+func (m *MountRbd) contextValidateRbd(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "ref", "body", int64(m.Ref)); err != nil {
+	if m.Rbd != nil {
+		if err := m.Rbd.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("rbd")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *MountRbd) contextValidateRbdID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.RbdID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("rbd_id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *MountRbd) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
 		return err
 	}
 

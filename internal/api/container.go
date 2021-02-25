@@ -19,7 +19,7 @@ import (
 )
 
 type containerStateChange struct {
-	id    int64
+	id    models.ID
 	state models.ContainerState
 }
 
@@ -31,16 +31,16 @@ type container struct {
 }
 
 type ContainersType struct {
-	next  int64
-	ctns  map[int64]*container
-	names map[string]int64
+	next  models.ID
+	ctns  map[models.ID]*container
+	names map[models.Name]models.ID
 	mutex *sync.Mutex
 }
 
 func (c *ContainersType) Init() {
-	c.next = 0
-	c.ctns = make(map[int64]*container)
-	c.names = make(map[string]int64)
+	c.next = 1
+	c.ctns = make(map[models.ID]*container)
+	c.names = make(map[models.Name]models.ID)
 	c.mutex = &sync.Mutex{}
 }
 
@@ -53,7 +53,7 @@ func (c *ContainersType) List() (r []*models.Container) {
 	return
 }
 
-func (c *ContainersType) Get(id int64) (*models.Container, error) {
+func (c *ContainersType) Get(id models.ID) (*models.Container, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if r, ok := c.ctns[id]; ok {
@@ -68,22 +68,16 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	n := &container{
 		ctn: ctn,
 	}
-	switch *ctn.Mount.Kind {
-	case models.MountKindOverlay:
-		mnt, e := MountsOverlay.Get(*ctn.Mount.ID)
-		if e != nil {
-			return nil, fmt.Errorf("failed to get mount for container: %v", e)
+	if ctn.Mount.MountID == 0 {
+		if ctn.Mount, err = Mount(ctn.Mount); err != nil {
+			return nil, fmt.Errorf("mount failed: %v", err)
 		}
-		n.mnt = mnt.Mountpoint
-		MountsOverlay.RefAdd(mnt.ID, 1)
-	case models.MountKindRbd:
-		mnt, e := MountsRbd.Get(*ctn.Mount.ID)
-		if e != nil {
-			return nil, fmt.Errorf("failed to get mount for container: %v", e)
-		}
-		n.mnt = mnt.Mountpoint
-		MountsRbd.RefAdd(*mnt.ID, 1)
 	}
+	if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
+		return nil, fmt.Errorf("could not get mountpoint: %v", err)
+	}
+	MountRefAdd(ctn.Mount, 1)
+
 	// ok, we've got a valid mountpoint
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -130,7 +124,7 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	return ctn, nil
 }
 
-func (c *ContainersType) SetState(id int64, state models.ContainerState) (err error) {
+func (c *ContainersType) SetState(id models.ID, state models.ContainerState) (err error) {
 	var ctn *container
 	var ok bool
 	c.mutex.Lock()
@@ -162,19 +156,21 @@ func (c *ContainersType) SetState(id int64, state models.ContainerState) (err er
 	return
 }
 
-func (c *ContainersType) Delete(id int64) (err error) {
+func (c *ContainersType) Delete(id models.ID) (ret *models.Container, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	var ctn *container
 	var ok bool
 	if ctn, ok = c.ctns[id]; !ok {
-		return fmt.Errorf("invalid container id: %d", id)
+		return nil, fmt.Errorf("invalid container id: %d", id)
 	}
 	switch ctn.ctn.State {
 	//case models.ContainerStatePaused:
 	//case models.ContainerStateRestarting:
 	case models.ContainerStateRunning:
-		c.stop(ctn)
+		return nil, fmt.Errorf("cannot delete a running container")
+	case models.ContainerStateStopping:
+		return nil, fmt.Errorf("cannot delete a container that hasn't fully stopped")
 	}
 	ctn.log.Printf("container deleted")
 	ctn.log.Writer().(io.WriteCloser).Close()
@@ -182,11 +178,12 @@ func (c *ContainersType) Delete(id int64) (err error) {
 	if ctn.ctn.Name != "" {
 		delete(c.names, ctn.ctn.Name)
 	}
-	switch *ctn.ctn.Mount.Kind {
-	case models.MountKindOverlay:
-		MountsOverlay.RefAdd(*ctn.ctn.Mount.ID, -1)
-	case models.MountKindRbd:
-		MountsRbd.RefAdd(*ctn.ctn.Mount.ID, -1)
+	MountRefAdd(ctn.ctn.Mount, -1)
+	if ctn.ctn.Mount.MountID == 0 {
+		// we own this mount, we should unmount it
+		if _, err = Unmount(ctn.ctn.Mount); err != nil {
+			return nil, fmt.Errorf("failed to unmount underlying mount(s): %v", err)
+		}
 	}
 	return
 }
@@ -194,7 +191,7 @@ func (c *ContainersType) Delete(id int64) (err error) {
 // NameGetID will return the ID for a given name
 // This is used to implement the `byname` calls
 // If the name is not found,  it will return -1
-func (c *ContainersType) NameGetID(name string) int64 {
+func (c *ContainersType) NameGetID(name models.Name) models.ID {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if id, ok := c.names[name]; ok {

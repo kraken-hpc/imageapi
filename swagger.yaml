@@ -3,7 +3,18 @@ swagger: "2.0"
 consumes:
 - application/json
 info:
-  description: Mange system image containers
+  description: |
+    This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.
+
+    In general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, 
+    or, they can contain the full specification of those lower objects.
+
+    If an object references another by ID, deletion of that object does not effect the underlying object.
+    
+    If an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.
+
+    For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
+    and detach those lower objects.
   title: Image API
   version: 1.0.0
 produces:
@@ -14,6 +25,21 @@ schemes:
 basePath: /imageapi/v1
 
 definitions:
+  id:
+    description: |
+      An ID is a unique numeric ID that references an object.  
+      IDs are not necessarily unique across object types.
+      IDs are generall readOnly and generated internally.
+    type: integer
+    format: int64
+
+  name:
+    description: |
+      A name is a unique, user-provided identifier for an object.
+
+      A name must consist of numbers, letters, and the symbols in the set { `.`, `-`, `_`}.
+    type: string
+    pattern: "^[A-Za-z0-1.-_]*$"
 
   rbd_options:
     type: object
@@ -89,8 +115,15 @@ definitions:
       - image
     properties:
       id:
+        $ref: "#/definitions/id"
+      device_id:
+        description: The dev_id is the device ID in the rbd subsystem.
         type: integer
         format: int64
+        readOnly: true
+      device_file:
+        description: The device_file is the path to the system device file.
+        type: string
         readOnly: true
       refs:
         type: integer
@@ -113,28 +146,34 @@ definitions:
         type: string
       options:
         $ref: "#/definitions/rbd_options"
-    
+      
   mount_rbd:
-    description:
+    description: |
       mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it
       (which becomes the mount's ID), and a provided filesystem type.
-    type: object
+      
+      Either `rbd_id` or `rbd` must be specified.  If both are specified, `rbd` will be ignored.
+
+      If `rbd` is specified and `rbd_id` is omitted, the RBD will first be attached, and will be
+      detached on deletion.
     required:
-      - id
       - fs_type
     properties:
+      id: 
+        $ref: "#/definitions/id"
+        readOnly: true
       mountpoint:
         type: string
         readOnly: true
-      ref:
+      refs:
         type: integer
         format: int64
         readOnly: true
       # external
-      id: 
-        description: must be a valid rbd device id
-        type: integer
-        format: int64
+      rbd_id:
+        $ref: "#/definitions/id"
+      rbd:
+        $ref: "#/definitions/rbd"
       fs_type:
         type: string
       mount_options:
@@ -148,15 +187,17 @@ definitions:
       At very least, `lower` must be specified.  If `upper` length is zero, no `upper`
       mounts will be used.  `workdir` will be assigned automatically.
 
-      Overlay mounts are identified by their `lower` ID.
+      If the mounts specified in `lower` are specifications and not ID references, they
+      will be recursively mounted/attached.
+
+      Overlay mounts are identified by their uppermost `lower` ID.
     type: object
     required:
       - lower
     properties:
       # internal
       id:
-        type: integer
-        format: int64
+        $ref: "#/definitions/id"
         readOnly: true
       mountpoint:
         type: string
@@ -168,31 +209,37 @@ definitions:
         description:  currently, upperdir is always a directory in mountDir
         type: string
         readOnly: true
-      ref:
+      refs:
         type: integer
         format: int64
         readOnly: true
       # external
       lower:
-        description: This is an array of RBD IDs, interpreted in order for multiple lower dirs. At least one must be specified.
+        description: This is an array of mount specifications to be used (in order) as lower mounts for the overlay.
         type: array
         items:
-          type: integer
-          format: int64
+          $ref: "#/definitions/mount"
 
   mount:
-    description: Generically address mounts by kind and ID
+    description: |
+      Generically address mounts by kind and ID or definition
+      Either an `mount_id` or a mount definition must be supplied.
+      If both are supplied, the mount definition will be ignored.
+      If `mount_id` is specified, then the kind/id will be used to reference that mount.
+      If no `mount_id` is supplied a defition of type `kind` must be present.
     type: object
     required:
       - kind
-      - id
     properties:
-      id:
-        type: integer
-        format: int64
+      mount_id:
+        $ref: "#/definitions/id"
       kind:
         type: string
         enum: [ "overlay", "rbd" ]
+      rbd:
+        $ref: "#/definitions/mount_rbd"
+      overlay:
+        $ref: "#/definitions/mount_overlay"
 
 
   container_namespace:
@@ -207,7 +254,13 @@ definitions:
     enum: [ "created",  "running", "stopping", "exited", "dead" ]
 
   container:
-    description: The `container` option describes a minimally namespaced container.
+    description: |
+      The `container` option describes a minimally namespaced container.
+
+      A container is identified by a service-provided unique numeric `pid`.
+
+      Optionally, a container can be provided with a `name`.  The name must
+      be unique.  Containers can be referenced by `name` if provided.
     type: object
     required:
       - mount
@@ -215,16 +268,14 @@ definitions:
     properties:
       # internal
       id:
-        type: integer
-        format: int64
-        readOnly: true
+        $ref: "#/definitions/id"
       logfile:
         type: string
         readOnly: true
       # external
       name:
         description: name is an optional identifier for the container.  Name must be unique.
-        type: string
+        $ref: "#/definitions/name"
       mount:
         $ref: "#/definitions/mount"
       command:
@@ -250,7 +301,7 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/container_namespace"
-
+  
   error:
     type: object
     required:
@@ -327,13 +378,74 @@ paths:
         - attach
       operationId: unmap_rbd
       responses:
-        204:
+        200:
           description: Unmapped
+          schema:
+            $ref: "#/definitions/rbd"
         default:
           description: error
           schema:
             $ref: "#/definitions/error"
   
+  /mount:
+    get:
+      description: List mounts
+      tags:
+        - mounts
+      operationId: list_mounts
+      responses:
+        200:
+          description: list all mounts
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/mount"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    
+    post:
+      description: Create a new mount by mount specification.
+      tags:
+        - mounts
+      operationId: mount
+      parameters:
+        - name: mount
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/mount"
+      responses:
+        201:
+          description: mount succeed
+          schema:
+            $ref: "#/definitions/mount"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    
+    delete:
+      description: Unmount a specified mount.  Note that mount reference IDs must be specified.
+      tags:
+        - mounts
+      parameters:
+        - name: mount
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/mount"
+      responses:
+        200:
+          description: Unmount succeeded
+          schema:
+            $ref: "#/definitions/mount"
+        default:
+          description: Unmount failed
+          schema:
+            $ref: "#/definitions/error"
+    
   /mount/rbd:
 
     get:
@@ -397,8 +509,10 @@ paths:
         - mounts
       operationId: unmount_rbd
       responses:
-        204:
+        200:
           description: Unmounted
+          schema:
+            $ref: "#/definitions/mount_rbd"
         default:
           description: error
           schema:
@@ -467,8 +581,10 @@ paths:
         - mounts
       operationId: unmount_overlay
       responses:
-        204:
+        200:
           description: Unmounted
+          schema:
+            $ref: "#/definitions/mount_overlay"
         default:
           description: error
           schema:
@@ -544,8 +660,10 @@ paths:
         This will stop running containers.
       operationId: delete_container
       responses:
-        204:
+        200:
           description: Container deleted
+          schema:
+            $ref: "#/definitions/container"
         default:
           description: error
           schema:
@@ -612,8 +730,10 @@ paths:
         This will stop running containers.
       operationId: delete_container_byname
       responses:
-        204:
+        200:
           description: Container deleted
+          schema:
+            $ref: "#/definitions/container"
         default:
           description: error
           schema:

@@ -25,23 +25,62 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	DeleteMount(params *DeleteMountParams) (*DeleteMountOK, error)
+
 	GetMountOverlay(params *GetMountOverlayParams) (*GetMountOverlayOK, error)
 
 	GetMountRbd(params *GetMountRbdParams) (*GetMountRbdOK, error)
+
+	ListMounts(params *ListMountsParams) (*ListMountsOK, error)
 
 	ListMountsOverlay(params *ListMountsOverlayParams) (*ListMountsOverlayOK, error)
 
 	ListMountsRbd(params *ListMountsRbdParams) (*ListMountsRbdOK, error)
 
+	Mount(params *MountParams) (*MountCreated, error)
+
 	MountOverlay(params *MountOverlayParams) (*MountOverlayCreated, error)
 
 	MountRbd(params *MountRbdParams) (*MountRbdCreated, error)
 
-	UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNoContent, error)
+	UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayOK, error)
 
-	UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, error)
+	UnmountRbd(params *UnmountRbdParams) (*UnmountRbdOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+  DeleteMount Unmount a specified mount.  Note that mount reference IDs must be specified.
+*/
+func (a *Client) DeleteMount(params *DeleteMountParams) (*DeleteMountOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteMountParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteMount",
+		Method:             "DELETE",
+		PathPattern:        "/mount",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &DeleteMountReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteMountOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteMountDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -111,6 +150,39 @@ func (a *Client) GetMountRbd(params *GetMountRbdParams) (*GetMountRbdOK, error) 
 }
 
 /*
+  ListMounts List mounts
+*/
+func (a *Client) ListMounts(params *ListMountsParams) (*ListMountsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListMountsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "list_mounts",
+		Method:             "GET",
+		PathPattern:        "/mount",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &ListMountsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListMountsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListMountsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   ListMountsOverlay list mounts overlay API
 */
 func (a *Client) ListMountsOverlay(params *ListMountsOverlayParams) (*ListMountsOverlayOK, error) {
@@ -173,6 +245,39 @@ func (a *Client) ListMountsRbd(params *ListMountsRbdParams) (*ListMountsRbdOK, e
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ListMountsRbdDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  Mount Create a new mount by mount specification.
+*/
+func (a *Client) Mount(params *MountParams) (*MountCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewMountParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "mount",
+		Method:             "POST",
+		PathPattern:        "/mount",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &MountReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*MountCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*MountDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -245,7 +350,7 @@ func (a *Client) MountRbd(params *MountRbdParams) (*MountRbdCreated, error) {
 /*
   UnmountOverlay unmount overlay API
 */
-func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNoContent, error) {
+func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUnmountOverlayParams()
@@ -266,7 +371,7 @@ func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNo
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UnmountOverlayNoContent)
+	success, ok := result.(*UnmountOverlayOK)
 	if ok {
 		return success, nil
 	}
@@ -278,7 +383,7 @@ func (a *Client) UnmountOverlay(params *UnmountOverlayParams) (*UnmountOverlayNo
 /*
   UnmountRbd unmount rbd API
 */
-func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, error) {
+func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewUnmountRbdParams()
@@ -299,7 +404,7 @@ func (a *Client) UnmountRbd(params *UnmountRbdParams) (*UnmountRbdNoContent, err
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UnmountRbdNoContent)
+	success, ok := result.(*UnmountRbdOK)
 	if ok {
 		return success, nil
 	}

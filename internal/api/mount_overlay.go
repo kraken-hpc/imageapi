@@ -12,14 +12,14 @@ import (
 )
 
 type MountsOverlayType struct {
-	last  int64
-	mnts  map[int64]*models.MountOverlay
+	next  models.ID
+	mnts  map[models.ID]*models.MountOverlay
 	mutex *sync.Mutex
 }
 
 func (m *MountsOverlayType) Init() {
-	m.last = 0
-	m.mnts = make(map[int64]*models.MountOverlay)
+	m.next = 1 // 0 == unspecified
+	m.mnts = make(map[models.ID]*models.MountOverlay)
 	m.mutex = &sync.Mutex{}
 }
 
@@ -32,7 +32,7 @@ func (m *MountsOverlayType) List() (r []*models.MountOverlay) {
 	return
 }
 
-func (m *MountsOverlayType) Get(id int64) (*models.MountOverlay, error) {
+func (m *MountsOverlayType) Get(id models.ID) (*models.MountOverlay, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if r, ok := m.mnts[id]; ok {
@@ -52,16 +52,21 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 		return nil, fmt.Errorf("at least one lower mount must be specified")
 	}
 
-	// make sure the lower mounts exists/are ours + assemble list of lower mountpoints
+	// make sure lower mounts exits, or mount them if we need to
 	// warning: there's a possible race here if someone removed these mounts while we're assembling
 	//			we might need an extneral interface to lock them.
 	lmnts := []string{}
-	for _, i := range mnt.Lower {
-		var rmnt *models.MountRbd
-		if rmnt, err = MountsRbd.Get(i); err != nil {
-			return nil, fmt.Errorf("mount failure: %v", err)
+	for i := range mnt.Lower {
+		if mnt.Lower[i].MountID == 0 { // try to mount
+			if mnt.Lower[i], err = Mount(mnt.Lower[i]); err != nil {
+				return nil, fmt.Errorf("failed to mount lower mount: %v", err)
+			}
 		}
-		lmnts = append(lmnts, rmnt.Mountpoint)
+		var mntpt string
+		if mntpt, err = MountGetMountpoint(mnt.Lower[i]); err != nil {
+			return nil, fmt.Errorf("failed to get mountpoint for lower mount: %v", err)
+		}
+		lmnts = append(lmnts, mntpt)
 	}
 
 	// ok, we're good to attempt the mount
@@ -90,57 +95,62 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 	}
 
 	// store
-	m.last++
-	mnt.ID = m.last
+	mnt.ID = m.next
+	m.next++
 	m.mnts[mnt.ID] = mnt
 
 	// add refs
 	for _, i := range mnt.Lower {
-		MountsRbd.RefAdd(i, 1)
+		MountRefAdd(i, 1)
 	}
 	return mnt, nil
 }
 
-func (m *MountsOverlayType) Unmount(id int64) (err error) {
+func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	var mnt *models.MountOverlay
 	var ok bool
 
 	if mnt, ok = m.mnts[id]; !ok {
-		return ERRNOTFOUND
+		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Ref > 0 {
-		return fmt.Errorf("unmount failure: mount is in use")
+	if mnt.Refs > 0 {
+		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
 	// always lazy unmount.  Good idea?
 	if err = mount.Unmount(mnt.Mountpoint, false, true); err != nil {
-		return fmt.Errorf("unmount failure: %v", err)
+		return nil, fmt.Errorf("unmount failure: %v", err)
 	}
 
 	os.Remove(mnt.Mountpoint)  // we shouldn't fail on this. Should we report it anyway?
 	os.RemoveAll(mnt.Workdir)  // option to leave behind?
 	os.RemoveAll(mnt.Upperdir) // option to leave behind? Or store on RBD?
 	delete(m.mnts, id)
-	for _, i := range mnt.Lower {
-		MountsRbd.RefAdd(i, -1)
+	for i, l := range mnt.Lower {
+		MountRefAdd(l, -1)
+		if l.MountID == 0 { // we own the mount
+			// try to unmount
+			if mnt.Lower[i], err = Unmount(l); err != nil {
+				return nil, fmt.Errorf("failed to unmount lower mount: %v", err)
+			}
+		}
 	}
 	return
 }
 
-func (m *MountsOverlayType) RefAdd(id, n int64) {
+func (m *MountsOverlayType) RefAdd(id models.ID, n int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if r, ok := m.mnts[id]; ok {
-		r.Ref += n
+		r.Refs += n
 	}
 }
 
 func (*MountsOverlayType) refAddList(mnts []*models.MountRbd, n int64) {
 	for _, mnt := range mnts {
-		MountsRbd.RefAdd(*mnt.ID, n)
+		MountsRbd.RefAdd(mnt.ID, n)
 	}
 }

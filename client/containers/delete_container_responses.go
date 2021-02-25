@@ -23,8 +23,8 @@ type DeleteContainerReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *DeleteContainerReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 204:
-		result := NewDeleteContainerNoContent()
+	case 200:
+		result := NewDeleteContainerOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -41,23 +41,35 @@ func (o *DeleteContainerReader) ReadResponse(response runtime.ClientResponse, co
 	}
 }
 
-// NewDeleteContainerNoContent creates a DeleteContainerNoContent with default headers values
-func NewDeleteContainerNoContent() *DeleteContainerNoContent {
-	return &DeleteContainerNoContent{}
+// NewDeleteContainerOK creates a DeleteContainerOK with default headers values
+func NewDeleteContainerOK() *DeleteContainerOK {
+	return &DeleteContainerOK{}
 }
 
-/*DeleteContainerNoContent handles this case with default header values.
+/*DeleteContainerOK handles this case with default header values.
 
 Container deleted
 */
-type DeleteContainerNoContent struct {
+type DeleteContainerOK struct {
+	Payload *models.Container
 }
 
-func (o *DeleteContainerNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /container/{id}][%d] deleteContainerNoContent ", 204)
+func (o *DeleteContainerOK) Error() string {
+	return fmt.Sprintf("[DELETE /container/{id}][%d] deleteContainerOK  %+v", 200, o.Payload)
 }
 
-func (o *DeleteContainerNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *DeleteContainerOK) GetPayload() *models.Container {
+	return o.Payload
+}
+
+func (o *DeleteContainerOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Container)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

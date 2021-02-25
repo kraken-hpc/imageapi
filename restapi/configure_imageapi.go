@@ -63,20 +63,22 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.AttachGetRbdHandler = attach.GetRbdHandlerFunc(func(params attach.GetRbdParams) middleware.Responder {
 		var err error
 		var r *models.Rbd
-		if r, err = internal.Rbds.Get(params.ID); err != nil {
+		if r, err = internal.Rbds.Get(models.ID(params.ID)); err != nil {
 			return attach.NewGetRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("rbd not found")})
 		}
 		return attach.NewGetRbdOK().WithPayload(r)
 	})
 
 	api.AttachUnmapRbdHandler = attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
-		if err := internal.Rbds.Unmap(params.ID); err != nil {
+		var err error
+		var r *models.Rbd
+		if r, err = internal.Rbds.Unmap(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return attach.NewUnmapRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("rbd not found")})
 			}
 			return attach.NewUnmapRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return attach.NewUnmapRbdNoContent()
+		return attach.NewUnmapRbdOK().WithPayload(r)
 	})
 
 	// MountsRbd
@@ -97,20 +99,22 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.MountsGetMountRbdHandler = mounts.GetMountRbdHandlerFunc(func(params mounts.GetMountRbdParams) middleware.Responder {
 		var err error
 		var r *models.MountRbd
-		if r, err = internal.MountsRbd.Get(params.ID); err != nil {
+		if r, err = internal.MountsRbd.Get(models.ID(params.ID)); err != nil {
 			return mounts.NewGetMountRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String(err.Error())})
 		}
 		return mounts.NewGetMountRbdOK().WithPayload(r)
 	})
 
 	api.MountsUnmountRbdHandler = mounts.UnmountRbdHandlerFunc(func(params mounts.UnmountRbdParams) middleware.Responder {
-		if err := internal.MountsRbd.Unmount(params.ID); err != nil {
+		var err error
+		var r *models.MountRbd
+		if r, err = internal.MountsRbd.Unmount(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return mounts.NewUnmountRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
 			}
 			return mounts.NewUnmountRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return mounts.NewUnmountRbdNoContent()
+		return mounts.NewUnmountRbdOK().WithPayload(r)
 	})
 
 	// MountsOverlay
@@ -131,20 +135,22 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.MountsGetMountOverlayHandler = mounts.GetMountOverlayHandlerFunc(func(params mounts.GetMountOverlayParams) middleware.Responder {
 		var err error
 		var r *models.MountOverlay
-		if r, err = internal.MountsOverlay.Get(params.ID); err != nil {
+		if r, err = internal.MountsOverlay.Get(models.ID(params.ID)); err != nil {
 			return mounts.NewGetMountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
 		}
 		return mounts.NewGetMountOverlayOK().WithPayload(r)
 	})
 
 	api.MountsUnmountOverlayHandler = mounts.UnmountOverlayHandlerFunc(func(params mounts.UnmountOverlayParams) middleware.Responder {
-		if err := internal.MountsOverlay.Unmount(params.ID); err != nil {
+		var err error
+		var r *models.MountOverlay
+		if r, err = internal.MountsOverlay.Unmount(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return mounts.NewUnmountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
 			}
 			return mounts.NewUnmountOverlayDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return mounts.NewUnmountOverlayNoContent()
+		return mounts.NewUnmountOverlayOK().WithPayload(r)
 	})
 
 	// Containers
@@ -158,19 +164,21 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	})
 
 	api.ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
-		if err := internal.Containers.Delete(params.ID); err != nil {
+		var ctn *models.Container
+		var err error
+		if ctn, err = internal.Containers.Delete(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return containers.NewDeleteContainerDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
 			}
 			return containers.NewDeleteContainerDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return containers.NewDeleteContainerNoContent()
+		return containers.NewDeleteContainerOK().WithPayload(ctn)
 	})
 
 	api.ContainersGetContainerHandler = containers.GetContainerHandlerFunc(func(params containers.GetContainerParams) middleware.Responder {
 		var ctn *models.Container
 		var err error
-		if ctn, err = internal.Containers.Get(params.ID); err != nil {
+		if ctn, err = internal.Containers.Get(models.ID(params.ID)); err != nil {
 			return containers.NewGetContainerDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
 		}
 		return containers.NewGetContainerOK().WithPayload(ctn)
@@ -181,38 +189,63 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	})
 
 	api.ContainersSetContainerStateHandler = containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
-		if err := internal.Containers.SetState(params.ID, models.ContainerState(params.State)); err != nil {
+		if err := internal.Containers.SetState(models.ID(params.ID), models.ContainerState(params.State)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return containers.NewSetContainerStateDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("container not found")})
 			}
 			return containers.NewSetContainerStateDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		ctn, _ := internal.Containers.Get(params.ID)
+		ctn, _ := internal.Containers.Get(models.ID(params.ID))
 		return containers.NewSetContainerStateOK().WithPayload(ctn)
 	})
 
+	// containers byname
 	api.ContainersGetContainerBynameHandler = containers.GetContainerBynameHandlerFunc(func(params containers.GetContainerBynameParams) middleware.Responder {
-		id := internal.Containers.NameGetID(params.Name)
+		id := internal.Containers.NameGetID(models.Name(params.Name))
 		if id < 0 {
 			return containers.NewGetContainerBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
 		}
-		return api.ContainersGetContainerHandler.Handle(containers.GetContainerParams{HTTPRequest: params.HTTPRequest, ID: id})
+		return api.ContainersGetContainerHandler.Handle(containers.GetContainerParams{HTTPRequest: params.HTTPRequest, ID: int64(id)})
 	})
 
 	api.ContainersDeleteContainerBynameHandler = containers.DeleteContainerBynameHandlerFunc(func(params containers.DeleteContainerBynameParams) middleware.Responder {
-		id := internal.Containers.NameGetID(params.Name)
+		id := internal.Containers.NameGetID(models.Name(params.Name))
 		if id < 0 {
 			return containers.NewDeleteContainerBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
 		}
-		return api.ContainersDeleteContainerHandler.Handle(containers.DeleteContainerParams{HTTPRequest: params.HTTPRequest, ID: id})
+		return api.ContainersDeleteContainerHandler.Handle(containers.DeleteContainerParams{HTTPRequest: params.HTTPRequest, ID: int64(id)})
 	})
 
 	api.ContainersSetContainerStateBynameHandler = containers.SetContainerStateBynameHandlerFunc(func(params containers.SetContainerStateBynameParams) middleware.Responder {
-		id := internal.Containers.NameGetID(params.Name)
+		id := internal.Containers.NameGetID(models.Name(params.Name))
 		if id < 0 {
 			return containers.NewSetContainerStateBynameDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("no container by name: " + params.Name)})
 		}
-		return api.ContainersSetContainerStateHandler.Handle(containers.SetContainerStateParams{HTTPRequest: params.HTTPRequest, State: params.State, ID: id})
+		return api.ContainersSetContainerStateHandler.Handle(containers.SetContainerStateParams{HTTPRequest: params.HTTPRequest, State: params.State, ID: int64(id)})
+	})
+
+	// generic mounts
+
+	api.MountsListMountsHandler = mounts.ListMountsHandlerFunc(func(params mounts.ListMountsParams) middleware.Responder {
+		return mounts.NewListMountsOK().WithPayload(internal.ListMounts())
+	})
+
+	api.MountsMountHandler = mounts.MountHandlerFunc(func(params mounts.MountParams) middleware.Responder {
+		var mnt *models.Mount
+		var err error
+		if mnt, err = internal.Mount(params.Mount); err != nil {
+			return mounts.NewMountDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return mounts.NewMountCreated().WithPayload(mnt)
+	})
+
+	api.MountsDeleteMountHandler = mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
+		var mnt *models.Mount
+		var err error
+		if mnt, err = internal.Unmount(params.Mount); err != nil {
+			return mounts.NewDeleteMountDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return mounts.NewDeleteMountOK().WithPayload(mnt)
 	})
 
 	//////////////////////////////

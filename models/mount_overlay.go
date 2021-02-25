@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -18,7 +19,10 @@ import (
 // At very least, `lower` must be specified.  If `upper` length is zero, no `upper`
 // mounts will be used.  `workdir` will be assigned automatically.
 //
-// Overlay mounts are identified by their `lower` ID.
+// If the mounts specified in `lower` are specifications and not ID references, they
+// will be recursively mounted/attached.
+//
+// Overlay mounts are identified by their uppermost `lower` ID.
 //
 //
 // swagger:model mount_overlay
@@ -26,19 +30,19 @@ type MountOverlay struct {
 
 	// id
 	// Read Only: true
-	ID int64 `json:"id,omitempty"`
+	ID ID `json:"id,omitempty"`
 
-	// This is an array of RBD IDs, interpreted in order for multiple lower dirs. At least one must be specified.
+	// This is an array of mount specifications to be used (in order) as lower mounts for the overlay.
 	// Required: true
-	Lower []int64 `json:"lower"`
+	Lower []*Mount `json:"lower"`
 
 	// mountpoint
 	// Read Only: true
 	Mountpoint string `json:"mountpoint,omitempty"`
 
-	// ref
+	// refs
 	// Read Only: true
-	Ref int64 `json:"ref,omitempty"`
+	Refs int64 `json:"refs,omitempty"`
 
 	// currently, upperdir is always a directory in mountDir
 	// Read Only: true
@@ -53,6 +57,10 @@ type MountOverlay struct {
 func (m *MountOverlay) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateLower(formats); err != nil {
 		res = append(res, err)
 	}
@@ -63,10 +71,41 @@ func (m *MountOverlay) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *MountOverlay) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (m *MountOverlay) validateLower(formats strfmt.Registry) error {
 
 	if err := validate.Required("lower", "body", m.Lower); err != nil {
 		return err
+	}
+
+	for i := 0; i < len(m.Lower); i++ {
+		if swag.IsZero(m.Lower[i]) { // not required
+			continue
+		}
+
+		if m.Lower[i] != nil {
+			if err := m.Lower[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("lower" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -80,11 +119,15 @@ func (m *MountOverlay) ContextValidate(ctx context.Context, formats strfmt.Regis
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateLower(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateMountpoint(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateRef(ctx, formats); err != nil {
+	if err := m.contextValidateRefs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -104,8 +147,29 @@ func (m *MountOverlay) ContextValidate(ctx context.Context, formats strfmt.Regis
 
 func (m *MountOverlay) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *MountOverlay) contextValidateLower(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Lower); i++ {
+
+		if m.Lower[i] != nil {
+			if err := m.Lower[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("lower" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -120,9 +184,9 @@ func (m *MountOverlay) contextValidateMountpoint(ctx context.Context, formats st
 	return nil
 }
 
-func (m *MountOverlay) contextValidateRef(ctx context.Context, formats strfmt.Registry) error {
+func (m *MountOverlay) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "ref", "body", int64(m.Ref)); err != nil {
+	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
 		return err
 	}
 

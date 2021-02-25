@@ -30,7 +30,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Mange system image containers",
+    "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
     "version": "1.0.0"
   },
@@ -118,8 +118,11 @@ func init() {
         ],
         "operationId": "unmap_rbd",
         "responses": {
-          "204": {
-            "description": "Unmapped"
+          "200": {
+            "description": "Unmapped",
+            "schema": {
+              "$ref": "#/definitions/rbd"
+            }
           },
           "default": {
             "description": "error",
@@ -225,8 +228,11 @@ func init() {
         ],
         "operationId": "delete_container_byname",
         "responses": {
-          "204": {
-            "description": "Container deleted"
+          "200": {
+            "description": "Container deleted",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
           },
           "default": {
             "description": "error",
@@ -317,8 +323,11 @@ func init() {
         ],
         "operationId": "delete_container",
         "responses": {
-          "204": {
-            "description": "Container deleted"
+          "200": {
+            "description": "Container deleted",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
           },
           "default": {
             "description": "error",
@@ -379,6 +388,93 @@ func init() {
           "required": true
         }
       ]
+    },
+    "/mount": {
+      "get": {
+        "description": "List mounts",
+        "tags": [
+          "mounts"
+        ],
+        "operationId": "list_mounts",
+        "responses": {
+          "200": {
+            "description": "list all mounts",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/mount"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new mount by mount specification.",
+        "tags": [
+          "mounts"
+        ],
+        "operationId": "mount",
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "mount succeed",
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Unmount a specified mount.  Note that mount reference IDs must be specified.",
+        "tags": [
+          "mounts"
+        ],
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unmount succeeded",
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          },
+          "default": {
+            "description": "Unmount failed",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     },
     "/mount/overlay": {
       "get": {
@@ -462,8 +558,11 @@ func init() {
         ],
         "operationId": "unmount_overlay",
         "responses": {
-          "204": {
-            "description": "Unmounted"
+          "200": {
+            "description": "Unmounted",
+            "schema": {
+              "$ref": "#/definitions/mount_overlay"
+            }
           },
           "default": {
             "description": "error",
@@ -565,8 +664,11 @@ func init() {
         ],
         "operationId": "unmount_rbd",
         "responses": {
-          "204": {
-            "description": "Unmounted"
+          "200": {
+            "description": "Unmounted",
+            "schema": {
+              "$ref": "#/definitions/mount_rbd"
+            }
           },
           "default": {
             "description": "error",
@@ -589,7 +691,7 @@ func init() {
   },
   "definitions": {
     "container": {
-      "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.",
+      "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.\n\nA container is identified by a service-provided unique numeric ` + "`" + `pid` + "`" + `.\n\nOptionally, a container can be provided with a ` + "`" + `name` + "`" + `.  The name must\nbe unique.  Containers can be referenced by ` + "`" + `name` + "`" + ` if provided.\n",
       "type": "object",
       "required": [
         "mount",
@@ -600,9 +702,7 @@ func init() {
           "type": "string"
         },
         "id": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
+          "$ref": "#/definitions/id"
         },
         "logfile": {
           "type": "string",
@@ -613,7 +713,7 @@ func init() {
         },
         "name": {
           "description": "name is an optional identifier for the container.  Name must be unique.",
-          "type": "string"
+          "$ref": "#/definitions/name"
         },
         "namespaces": {
           "description": "A list of Linux namespaces to use.\n\nNote: This is currently unused.  All containers currently get ` + "`" + `mnt` + "`" + ` and ` + "`" + `pid` + "`" + `.\n      It's here as a placeholder for future use.\n",
@@ -672,52 +772,59 @@ func init() {
         }
       }
     },
+    "id": {
+      "description": "An ID is a unique numeric ID that references an object.  \nIDs are not necessarily unique across object types.\nIDs are generall readOnly and generated internally.\n",
+      "type": "integer",
+      "format": "int64"
+    },
     "mount": {
-      "description": "Generically address mounts by kind and ID",
+      "description": "Generically address mounts by kind and ID or definition\nEither an ` + "`" + `mount_id` + "`" + ` or a mount definition must be supplied.\nIf both are supplied, the mount definition will be ignored.\nIf ` + "`" + `mount_id` + "`" + ` is specified, then the kind/id will be used to reference that mount.\nIf no ` + "`" + `mount_id` + "`" + ` is supplied a defition of type ` + "`" + `kind` + "`" + ` must be present.\n",
       "type": "object",
       "required": [
-        "kind",
-        "id"
+        "kind"
       ],
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        },
         "kind": {
           "type": "string",
           "enum": [
             "overlay",
             "rbd"
           ]
+        },
+        "mount_id": {
+          "$ref": "#/definitions/id"
+        },
+        "overlay": {
+          "$ref": "#/definitions/mount_overlay"
+        },
+        "rbd": {
+          "$ref": "#/definitions/mount_rbd"
         }
       }
     },
     "mount_overlay": {
-      "description": "` + "`" + `mount_overlay` + "`" + ` describes an Overlayfs mount.  All mount points must be RBD ID's.\nAt very least, ` + "`" + `lower` + "`" + ` must be specified.  If ` + "`" + `upper` + "`" + ` length is zero, no ` + "`" + `upper` + "`" + `\nmounts will be used.  ` + "`" + `workdir` + "`" + ` will be assigned automatically.\n\nOverlay mounts are identified by their ` + "`" + `lower` + "`" + ` ID.\n",
+      "description": "` + "`" + `mount_overlay` + "`" + ` describes an Overlayfs mount.  All mount points must be RBD ID's.\nAt very least, ` + "`" + `lower` + "`" + ` must be specified.  If ` + "`" + `upper` + "`" + ` length is zero, no ` + "`" + `upper` + "`" + `\nmounts will be used.  ` + "`" + `workdir` + "`" + ` will be assigned automatically.\n\nIf the mounts specified in ` + "`" + `lower` + "`" + ` are specifications and not ID references, they\nwill be recursively mounted/attached.\n\nOverlay mounts are identified by their uppermost ` + "`" + `lower` + "`" + ` ID.\n",
       "type": "object",
       "required": [
         "lower"
       ],
       "properties": {
         "id": {
-          "type": "integer",
-          "format": "int64",
+          "$ref": "#/definitions/id",
           "readOnly": true
         },
         "lower": {
-          "description": "This is an array of RBD IDs, interpreted in order for multiple lower dirs. At least one must be specified.",
+          "description": "This is an array of mount specifications to be used (in order) as lower mounts for the overlay.",
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/definitions/mount"
           }
         },
         "mountpoint": {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -734,10 +841,8 @@ func init() {
       }
     },
     "mount_rbd": {
-      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it (which becomes the mount's ID), and a provided filesystem type.",
-      "type": "object",
+      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it\n(which becomes the mount's ID), and a provided filesystem type.\n\nEither ` + "`" + `rbd_id` + "`" + ` or ` + "`" + `rbd` + "`" + ` must be specified.  If both are specified, ` + "`" + `rbd` + "`" + ` will be ignored.\n\nIf ` + "`" + `rbd` + "`" + ` is specified and ` + "`" + `rbd_id` + "`" + ` is omitted, the RBD will first be attached, and will be\ndetached on deletion.\n",
       "required": [
-        "id",
         "fs_type"
       ],
       "properties": {
@@ -745,9 +850,8 @@ func init() {
           "type": "string"
         },
         "id": {
-          "description": "must be a valid rbd device id",
-          "type": "integer",
-          "format": "int64"
+          "$ref": "#/definitions/id",
+          "readOnly": true
         },
         "mount_options": {
           "type": "array",
@@ -759,12 +863,23 @@ func init() {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "rbd": {
+          "$ref": "#/definitions/rbd"
+        },
+        "rbd_id": {
+          "$ref": "#/definitions/id"
+        },
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
         }
       }
+    },
+    "name": {
+      "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
+      "type": "string",
+      "pattern": "^[A-Za-z0-1.-_]*$"
     },
     "rbd": {
       "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
@@ -775,10 +890,19 @@ func init() {
         "image"
       ],
       "properties": {
-        "id": {
+        "device_file": {
+          "description": "The device_file is the path to the system device file.",
+          "type": "string",
+          "readOnly": true
+        },
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id"
         },
         "image": {
           "type": "string",
@@ -916,7 +1040,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Mange system image containers",
+    "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
     "version": "1.0.0"
   },
@@ -1004,8 +1128,11 @@ func init() {
         ],
         "operationId": "unmap_rbd",
         "responses": {
-          "204": {
-            "description": "Unmapped"
+          "200": {
+            "description": "Unmapped",
+            "schema": {
+              "$ref": "#/definitions/rbd"
+            }
           },
           "default": {
             "description": "error",
@@ -1111,8 +1238,11 @@ func init() {
         ],
         "operationId": "delete_container_byname",
         "responses": {
-          "204": {
-            "description": "Container deleted"
+          "200": {
+            "description": "Container deleted",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
           },
           "default": {
             "description": "error",
@@ -1203,8 +1333,11 @@ func init() {
         ],
         "operationId": "delete_container",
         "responses": {
-          "204": {
-            "description": "Container deleted"
+          "200": {
+            "description": "Container deleted",
+            "schema": {
+              "$ref": "#/definitions/container"
+            }
           },
           "default": {
             "description": "error",
@@ -1265,6 +1398,93 @@ func init() {
           "required": true
         }
       ]
+    },
+    "/mount": {
+      "get": {
+        "description": "List mounts",
+        "tags": [
+          "mounts"
+        ],
+        "operationId": "list_mounts",
+        "responses": {
+          "200": {
+            "description": "list all mounts",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/mount"
+              }
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new mount by mount specification.",
+        "tags": [
+          "mounts"
+        ],
+        "operationId": "mount",
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "mount succeed",
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Unmount a specified mount.  Note that mount reference IDs must be specified.",
+        "tags": [
+          "mounts"
+        ],
+        "parameters": [
+          {
+            "name": "mount",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unmount succeeded",
+            "schema": {
+              "$ref": "#/definitions/mount"
+            }
+          },
+          "default": {
+            "description": "Unmount failed",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     },
     "/mount/overlay": {
       "get": {
@@ -1348,8 +1568,11 @@ func init() {
         ],
         "operationId": "unmount_overlay",
         "responses": {
-          "204": {
-            "description": "Unmounted"
+          "200": {
+            "description": "Unmounted",
+            "schema": {
+              "$ref": "#/definitions/mount_overlay"
+            }
           },
           "default": {
             "description": "error",
@@ -1451,8 +1674,11 @@ func init() {
         ],
         "operationId": "unmount_rbd",
         "responses": {
-          "204": {
-            "description": "Unmounted"
+          "200": {
+            "description": "Unmounted",
+            "schema": {
+              "$ref": "#/definitions/mount_rbd"
+            }
           },
           "default": {
             "description": "error",
@@ -1475,7 +1701,7 @@ func init() {
   },
   "definitions": {
     "container": {
-      "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.",
+      "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.\n\nA container is identified by a service-provided unique numeric ` + "`" + `pid` + "`" + `.\n\nOptionally, a container can be provided with a ` + "`" + `name` + "`" + `.  The name must\nbe unique.  Containers can be referenced by ` + "`" + `name` + "`" + ` if provided.\n",
       "type": "object",
       "required": [
         "mount",
@@ -1486,9 +1712,7 @@ func init() {
           "type": "string"
         },
         "id": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
+          "$ref": "#/definitions/id"
         },
         "logfile": {
           "type": "string",
@@ -1499,7 +1723,7 @@ func init() {
         },
         "name": {
           "description": "name is an optional identifier for the container.  Name must be unique.",
-          "type": "string"
+          "$ref": "#/definitions/name"
         },
         "namespaces": {
           "description": "A list of Linux namespaces to use.\n\nNote: This is currently unused.  All containers currently get ` + "`" + `mnt` + "`" + ` and ` + "`" + `pid` + "`" + `.\n      It's here as a placeholder for future use.\n",
@@ -1558,52 +1782,59 @@ func init() {
         }
       }
     },
+    "id": {
+      "description": "An ID is a unique numeric ID that references an object.  \nIDs are not necessarily unique across object types.\nIDs are generall readOnly and generated internally.\n",
+      "type": "integer",
+      "format": "int64"
+    },
     "mount": {
-      "description": "Generically address mounts by kind and ID",
+      "description": "Generically address mounts by kind and ID or definition\nEither an ` + "`" + `mount_id` + "`" + ` or a mount definition must be supplied.\nIf both are supplied, the mount definition will be ignored.\nIf ` + "`" + `mount_id` + "`" + ` is specified, then the kind/id will be used to reference that mount.\nIf no ` + "`" + `mount_id` + "`" + ` is supplied a defition of type ` + "`" + `kind` + "`" + ` must be present.\n",
       "type": "object",
       "required": [
-        "kind",
-        "id"
+        "kind"
       ],
       "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        },
         "kind": {
           "type": "string",
           "enum": [
             "overlay",
             "rbd"
           ]
+        },
+        "mount_id": {
+          "$ref": "#/definitions/id"
+        },
+        "overlay": {
+          "$ref": "#/definitions/mount_overlay"
+        },
+        "rbd": {
+          "$ref": "#/definitions/mount_rbd"
         }
       }
     },
     "mount_overlay": {
-      "description": "` + "`" + `mount_overlay` + "`" + ` describes an Overlayfs mount.  All mount points must be RBD ID's.\nAt very least, ` + "`" + `lower` + "`" + ` must be specified.  If ` + "`" + `upper` + "`" + ` length is zero, no ` + "`" + `upper` + "`" + `\nmounts will be used.  ` + "`" + `workdir` + "`" + ` will be assigned automatically.\n\nOverlay mounts are identified by their ` + "`" + `lower` + "`" + ` ID.\n",
+      "description": "` + "`" + `mount_overlay` + "`" + ` describes an Overlayfs mount.  All mount points must be RBD ID's.\nAt very least, ` + "`" + `lower` + "`" + ` must be specified.  If ` + "`" + `upper` + "`" + ` length is zero, no ` + "`" + `upper` + "`" + `\nmounts will be used.  ` + "`" + `workdir` + "`" + ` will be assigned automatically.\n\nIf the mounts specified in ` + "`" + `lower` + "`" + ` are specifications and not ID references, they\nwill be recursively mounted/attached.\n\nOverlay mounts are identified by their uppermost ` + "`" + `lower` + "`" + ` ID.\n",
       "type": "object",
       "required": [
         "lower"
       ],
       "properties": {
         "id": {
-          "type": "integer",
-          "format": "int64",
+          "$ref": "#/definitions/id",
           "readOnly": true
         },
         "lower": {
-          "description": "This is an array of RBD IDs, interpreted in order for multiple lower dirs. At least one must be specified.",
+          "description": "This is an array of mount specifications to be used (in order) as lower mounts for the overlay.",
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/definitions/mount"
           }
         },
         "mountpoint": {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
@@ -1620,10 +1851,8 @@ func init() {
       }
     },
     "mount_rbd": {
-      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it (which becomes the mount's ID), and a provided filesystem type.",
-      "type": "object",
+      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it\n(which becomes the mount's ID), and a provided filesystem type.\n\nEither ` + "`" + `rbd_id` + "`" + ` or ` + "`" + `rbd` + "`" + ` must be specified.  If both are specified, ` + "`" + `rbd` + "`" + ` will be ignored.\n\nIf ` + "`" + `rbd` + "`" + ` is specified and ` + "`" + `rbd_id` + "`" + ` is omitted, the RBD will first be attached, and will be\ndetached on deletion.\n",
       "required": [
-        "id",
         "fs_type"
       ],
       "properties": {
@@ -1631,9 +1860,8 @@ func init() {
           "type": "string"
         },
         "id": {
-          "description": "must be a valid rbd device id",
-          "type": "integer",
-          "format": "int64"
+          "$ref": "#/definitions/id",
+          "readOnly": true
         },
         "mount_options": {
           "type": "array",
@@ -1645,12 +1873,23 @@ func init() {
           "type": "string",
           "readOnly": true
         },
-        "ref": {
+        "rbd": {
+          "$ref": "#/definitions/rbd"
+        },
+        "rbd_id": {
+          "$ref": "#/definitions/id"
+        },
+        "refs": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
         }
       }
+    },
+    "name": {
+      "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
+      "type": "string",
+      "pattern": "^[A-Za-z0-1.-_]*$"
     },
     "rbd": {
       "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
@@ -1661,10 +1900,19 @@ func init() {
         "image"
       ],
       "properties": {
-        "id": {
+        "device_file": {
+          "description": "The device_file is the path to the system device file.",
+          "type": "string",
+          "readOnly": true
+        },
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id"
         },
         "image": {
           "type": "string",

@@ -17,6 +17,12 @@ import (
 
 // Container The `container` option describes a minimally namespaced container.
 //
+// A container is identified by a service-provided unique numeric `pid`.
+//
+// Optionally, a container can be provided with a `name`.  The name must
+// be unique.  Containers can be referenced by `name` if provided.
+//
+//
 // swagger:model container
 type Container struct {
 
@@ -25,8 +31,7 @@ type Container struct {
 	Command *string `json:"command"`
 
 	// id
-	// Read Only: true
-	ID int64 `json:"id,omitempty"`
+	ID ID `json:"id,omitempty"`
 
 	// logfile
 	// Read Only: true
@@ -37,7 +42,7 @@ type Container struct {
 	Mount *Mount `json:"mount"`
 
 	// name is an optional identifier for the container.  Name must be unique.
-	Name string `json:"name,omitempty"`
+	Name Name `json:"name,omitempty"`
 
 	// A list of Linux namespaces to use.
 	//
@@ -63,7 +68,15 @@ func (m *Container) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateMount(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -90,6 +103,21 @@ func (m *Container) validateCommand(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Container) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (m *Container) validateMount(formats strfmt.Registry) error {
 
 	if err := validate.Required("mount", "body", m.Mount); err != nil {
@@ -103,6 +131,21 @@ func (m *Container) validateMount(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *Container) validateName(formats strfmt.Registry) error {
+	if swag.IsZero(m.Name) { // not required
+		return nil
+	}
+
+	if err := m.Name.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("name")
+		}
+		return err
 	}
 
 	return nil
@@ -158,6 +201,10 @@ func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateName(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateNamespaces(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -174,7 +221,10 @@ func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry
 
 func (m *Container) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 
@@ -199,6 +249,18 @@ func (m *Container) contextValidateMount(ctx context.Context, formats strfmt.Reg
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *Container) contextValidateName(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Name.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("name")
+		}
+		return err
 	}
 
 	return nil

@@ -13,28 +13,48 @@ import (
 	"github.com/jlowellwofford/imageapi/models"
 )
 
-// UnmountRbdNoContentCode is the HTTP code returned for type UnmountRbdNoContent
-const UnmountRbdNoContentCode int = 204
+// UnmountRbdOKCode is the HTTP code returned for type UnmountRbdOK
+const UnmountRbdOKCode int = 200
 
-/*UnmountRbdNoContent Unmounted
+/*UnmountRbdOK Unmounted
 
-swagger:response unmountRbdNoContent
+swagger:response unmountRbdOK
 */
-type UnmountRbdNoContent struct {
+type UnmountRbdOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.MountRbd `json:"body,omitempty"`
 }
 
-// NewUnmountRbdNoContent creates UnmountRbdNoContent with default headers values
-func NewUnmountRbdNoContent() *UnmountRbdNoContent {
+// NewUnmountRbdOK creates UnmountRbdOK with default headers values
+func NewUnmountRbdOK() *UnmountRbdOK {
 
-	return &UnmountRbdNoContent{}
+	return &UnmountRbdOK{}
+}
+
+// WithPayload adds the payload to the unmount rbd o k response
+func (o *UnmountRbdOK) WithPayload(payload *models.MountRbd) *UnmountRbdOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the unmount rbd o k response
+func (o *UnmountRbdOK) SetPayload(payload *models.MountRbd) {
+	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *UnmountRbdNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *UnmountRbdOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
-	rw.WriteHeader(204)
+	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*UnmountRbdDefault error

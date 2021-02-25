@@ -2,10 +2,11 @@ module github.com/jlowellwofford/imageapi
 
 go 1.15
 
-replace github.com/bensallen/rbd v0.0.0-20201123204607-9b994a7784d0 => github.com/jlowellwofford/rbd v0.0.0-20210209155714-708f1b8f8fd7
+replace github.com/bensallen/rbd v0.0.0-20201123204607-9b994a7784d0 => github.com/jlowellwofford/rbd v0.0.0-20210223212442-49c9daa0fe7a
 
 require (
 	github.com/bensallen/rbd v0.0.0-20201123204607-9b994a7784d0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-openapi/errors v0.20.0
 	github.com/go-openapi/loads v0.20.2
 	github.com/go-openapi/runtime v0.19.26
@@ -17,5 +18,5 @@ require (
 	github.com/jlowellwofford/go-fork v0.0.0-20210209224922-a21cf871a9f3
 	github.com/jlowellwofford/uinit v0.0.0-20210105192521-a5a9b4f1edb7
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/sys v0.0.0-20201119102817-f84b799fce68
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 )

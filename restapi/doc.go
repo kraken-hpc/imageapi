@@ -2,7 +2,18 @@
 
 // Package restapi Image API
 //
-//  Mange system image containers
+//  This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.
+//
+//  In general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID,
+//  or, they can contain the full specification of those lower objects.
+//
+//  If an object references another by ID, deletion of that object does not effect the underlying object.
+//
+//  If an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.
+//
+//  For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
+//  and detach those lower objects.
+//
 //  Schemes:
 //    http
 //    https
