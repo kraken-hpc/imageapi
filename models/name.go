@@ -25,7 +25,7 @@ type Name string
 func (m Name) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := validate.Pattern("", "body", string(m), `^[A-Za-z0-1.-_]*$`); err != nil {
+	if err := validate.Pattern("", "body", string(m), `^[A-Za-z0-1.\-_]*$`); err != nil {
 		return err
 	}
 

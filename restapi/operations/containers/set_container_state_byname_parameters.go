@@ -32,7 +32,7 @@ type SetContainerStateBynameParams struct {
 
 	/*
 	  Required: true
-	  Pattern: ^[a-zA-Z0-9._-]*$
+	  Pattern: ^[a-zA-Z0-9.\-_]*$
 	  In: path
 	*/
 	Name string
@@ -90,7 +90,7 @@ func (o *SetContainerStateBynameParams) bindName(rawData []string, hasKey bool, 
 // validateName carries on validations for parameter Name
 func (o *SetContainerStateBynameParams) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Pattern("name", "path", o.Name, `^[a-zA-Z0-9._-]*$`); err != nil {
+	if err := validate.Pattern("name", "path", o.Name, `^[a-zA-Z0-9.\-_]*$`); err != nil {
 		return err
 	}
 

@@ -276,7 +276,7 @@ func init() {
       },
       "parameters": [
         {
-          "pattern": "^[a-zA-Z0-9._-]*$",
+          "pattern": "^[a-zA-Z0-9.\\-_]*$",
           "type": "string",
           "name": "name",
           "in": "path",
@@ -879,7 +879,7 @@ func init() {
     "name": {
       "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
       "type": "string",
-      "pattern": "^[A-Za-z0-1.-_]*$"
+      "pattern": "^[A-Za-z0-1.\\-_]*$"
     },
     "rbd": {
       "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
@@ -1286,7 +1286,7 @@ func init() {
       },
       "parameters": [
         {
-          "pattern": "^[a-zA-Z0-9._-]*$",
+          "pattern": "^[a-zA-Z0-9.\\-_]*$",
           "type": "string",
           "name": "name",
           "in": "path",
@@ -1889,7 +1889,7 @@ func init() {
     "name": {
       "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
       "type": "string",
-      "pattern": "^[A-Za-z0-1.-_]*$"
+      "pattern": "^[A-Za-z0-1.\\-_]*$"
     },
     "rbd": {
       "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
