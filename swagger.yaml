@@ -39,7 +39,7 @@ definitions:
 
       A name must consist of numbers, letters, and the symbols in the set { `.`, `-`, `_`}.
     type: string
-    pattern: "^[A-Za-z0-1.-_]*$"
+    pattern: "^[A-Za-z0-1.\\-_]*$"
 
   rbd_options:
     type: object
@@ -742,7 +742,7 @@ paths:
   /container/byname/{name}/{state}:
     parameters:
       - type: string
-        pattern: '^[a-zA-Z0-9._-]*$'
+        pattern: "^[a-zA-Z0-9.\\-_]*$"
         name: name
         in: path
         required: true
