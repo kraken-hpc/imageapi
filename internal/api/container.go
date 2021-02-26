@@ -336,6 +336,8 @@ func containerInit(mountpoint string, systemd bool, args []string) {
 	if systemd {
 		specialMounts = append(specialMounts, systemdMounts...)
 	}
+	// we want our perms to be absolute (i.e. no umask) for the next steps
+	oldUmask := unix.Umask(int(os.FileMode(0000)))
 	for _, m := range specialMounts {
 		if err := containerMount(l, m.dev, m.path, m.fstype, m.flags); err != nil {
 			l.Fatalf("mount failed for %s: %v", m.path, err)
@@ -349,6 +351,7 @@ func containerInit(mountpoint string, systemd bool, args []string) {
 			l.Fatalf("failed to create device %s: %v", d.path, err)
 		}
 	}
+	unix.Umask(oldUmask)
 
 	// 5. Setup special symlinks
 	for _, s := range specialLinks {

@@ -77,12 +77,15 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 	if mnt.Mountpoint, err = ioutil.TempDir(mountDir, "mount_"); err != nil {
 		return nil, fmt.Errorf("could not create mountpoint: %v", err)
 	}
+	os.Chmod(mnt.Mountpoint, os.FileMode(0755))
 	if mnt.Upperdir, err = ioutil.TempDir(mountDir, "upper_"); err != nil {
 		return nil, fmt.Errorf("could not create upperdir: %v", err)
 	}
+	os.Chmod(mnt.Upperdir, os.FileMode(0755))
 	if mnt.Workdir, err = ioutil.TempDir(mountDir, "work_"); err != nil {
 		return nil, fmt.Errorf("could not create workdir: %v", err)
 	}
+	os.Chmod(mnt.Workdir, os.FileMode(0755))
 
 	// try the mounmt
 	opts := []string{
