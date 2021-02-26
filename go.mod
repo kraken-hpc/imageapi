@@ -12,8 +12,9 @@ require (
 	github.com/go-openapi/swag v0.19.14
 	github.com/go-openapi/validate v0.20.2
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/jlowellwofford/go-fork v0.0.0-20210209224922-a21cf871a9f3
-	github.com/jlowellwofford/uinit v0.0.0-20210105192521-a5a9b4f1edb7
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+	github.com/jlowellwofford/go-fork v0.1.0
+	github.com/jlowellwofford/uinit v0.1.0
+	github.com/mailru/easyjson v0.7.7 // indirect
+	golang.org/x/net v0.0.0-20210226101413-39120d07d75e
+	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073
 )
