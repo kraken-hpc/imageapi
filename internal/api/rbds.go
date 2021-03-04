@@ -62,20 +62,23 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 			Namespace: rbd.Options.Namespace,
 		},
 	}
+	// make sure ID doesn't already exist
+	dev := krbd.Device{Image: i.Image, Pool: i.Pool, Namespace: i.Options.Namespace, Snapshot: i.Snapshot}
 
+	if err := dev.Find(); err == nil {
+		return nil, fmt.Errorf("rbd device already exists")
+	}
 	// map the rbd
 	if err := i.Map(w); err != nil {
 		return nil, fmt.Errorf("krbd error: %v", err)
 	}
 
 	// now go find our ID
-	dev := krbd.Device{Image: i.Image, Pool: i.Pool, Namespace: i.Options.Namespace, Snapshot: i.Snapshot}
-
 	if err := dev.Find(); err != nil {
 		return nil, fmt.Errorf("could not find device ID: %v", err)
 	}
 	rbd.DeviceID = dev.ID
-	rbd.DeviceFile = fmt.Sprintf("/dev/rbd%d", dev.ID)
+	rbd.DeviceFile = dev.DevPath()
 	rbd.ID = r.next
 	r.next++
 	r.rbds[rbd.ID] = rbd
