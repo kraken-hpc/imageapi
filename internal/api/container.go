@@ -76,7 +76,7 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
 		return nil, fmt.Errorf("could not get mountpoint: %v", err)
 	}
-	MountRefAdd(ctn.Mount, 1)
+	MountRefAdd(ctn.Mount, 2)
 
 	// ok, we've got a valid mountpoint
 	c.mutex.Lock()
@@ -178,7 +178,7 @@ func (c *ContainersType) Delete(id models.ID) (ret *models.Container, err error)
 	if ctn.ctn.Name != "" {
 		delete(c.names, ctn.ctn.Name)
 	}
-	MountRefAdd(ctn.ctn.Mount, -1)
+	MountRefAdd(ctn.ctn.Mount, -2)
 	if ctn.ctn.Mount.MountID == 0 {
 		// we own this mount, we should unmount it
 		if _, err = Unmount(ctn.ctn.Mount); err != nil {
@@ -393,6 +393,14 @@ func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Fu
 			f.Process.Kill()
 		}
 		ctn.log.Printf("process killed")
+	}
+	// don't report that we're done until fs is synced
+	fd, err := unix.Open(ctn.mnt, unix.O_RDWR|unix.O_DIRECTORY, 0)
+	if err != nil {
+		log.Printf("failed to open mount for sync: %v", err)
+	} else {
+		unix.Syncfs(fd)
+		unix.Close(fd)
 	}
 	// process is over, set the state
 	c.mutex.Lock()

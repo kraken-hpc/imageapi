@@ -57,6 +57,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		if r, err = internal.Rbds.Map(params.Rbd); err != nil {
 			return attach.NewMapRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
+		internal.Rbds.RefAdd(r.ID, 1)
 		return attach.NewMapRbdCreated().WithPayload(r)
 	})
 
@@ -93,6 +94,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		if r, err = internal.MountsRbd.Mount(params.Mount); err != nil {
 			return mounts.NewMountRbdDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
+		internal.MountsRbd.RefAdd(r.ID, 1)
 		return mounts.NewMountRbdCreated().WithPayload(r)
 	})
 
@@ -129,6 +131,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 		if r, err = internal.MountsOverlay.Mount(params.Mount); err != nil {
 			return mounts.NewMountOverlayDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
+		internal.MountsOverlay.RefAdd(r.ID, 1)
 		return mounts.NewMountOverlayCreated().WithPayload(r)
 	})
 

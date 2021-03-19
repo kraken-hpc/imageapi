@@ -104,7 +104,7 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 
 	// add refs
 	for _, i := range mnt.Lower {
-		MountRefAdd(i, 1)
+		MountRefAdd(i, 2)
 	}
 	return mnt, nil
 }
@@ -119,7 +119,7 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Refs > 0 {
+	if mnt.Refs > 1 {
 		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
@@ -133,7 +133,7 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 	os.RemoveAll(mnt.Upperdir) // option to leave behind? Or store on RBD?
 	delete(m.mnts, id)
 	for i, l := range mnt.Lower {
-		MountRefAdd(l, -1)
+		MountRefAdd(l, -2)
 		if l.MountID == 0 { // we own the mount
 			// try to unmount
 			if mnt.Lower[i], err = Unmount(l); err != nil {
@@ -155,5 +155,21 @@ func (m *MountsOverlayType) RefAdd(id models.ID, n int64) {
 func (*MountsOverlayType) refAddList(mnts []*models.MountRbd, n int64) {
 	for _, mnt := range mnts {
 		MountsRbd.RefAdd(mnt.ID, n)
+	}
+}
+
+// Collect will run garbage collection on any RBDs with ref == 0
+func (m *MountsOverlayType) Collect() {
+	list := []models.ID{}
+	m.mutex.Lock()
+	for _, mnt := range m.mnts {
+		if mnt.Refs == 0 {
+			// let's collect
+			list = append(list, mnt.ID)
+		}
+	}
+	m.mutex.Unlock()
+	for _, id := range list {
+		m.Unmount(id)
 	}
 }

@@ -54,7 +54,7 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	if err = mount.Mount(rbd.DeviceFile, mnt.Mountpoint, *mnt.FsType, mnt.MountOptions); err != nil {
 		return nil, fmt.Errorf("mount failure: %v", err)
 	}
-	Rbds.RefAdd(rbd.ID, 1)
+	Rbds.RefAdd(rbd.ID, 2)
 	mnt.ID = m.next
 	m.next++
 	m.mnts[mnt.ID] = mnt
@@ -72,7 +72,7 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Refs > 0 {
+	if mnt.Refs > 1 {
 		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
@@ -82,7 +82,7 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 	}
 	os.Remove(mnt.Mountpoint) // we shouldn't fail on this. Should we report it anyway?
 	delete(m.mnts, id)
-	Rbds.RefAdd(mnt.RbdID, -1)
+	Rbds.RefAdd(mnt.RbdID, -2)
 	if mnt.Rbd != nil { // we own the attach point
 		if _, err = Rbds.Unmap(mnt.Rbd.ID); err != nil {
 			return nil, fmt.Errorf("failed to detach underlying rbd: %v", err)
@@ -113,5 +113,21 @@ func (m *MountsRBDType) RefAdd(id models.ID, n int64) {
 	defer m.mutex.Unlock()
 	if mnt, ok := m.mnts[id]; ok {
 		mnt.Refs += n
+	}
+}
+
+// Collect will run garbage collection on any RBDs with ref == 0
+func (m *MountsRBDType) Collect() {
+	list := []models.ID{}
+	m.mutex.Lock()
+	for _, mnt := range m.mnts {
+		if mnt.Refs == 0 {
+			// let's collect
+			list = append(list, mnt.ID)
+		}
+	}
+	m.mutex.Unlock()
+	for _, id := range list {
+		m.Unmount(id)
 	}
 }

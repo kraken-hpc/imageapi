@@ -108,7 +108,7 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	}
 
 	// should we be able to force this?
-	if rbd.Refs > 0 {
+	if rbd.Refs > 1 {
 		return nil, fmt.Errorf("device %d is in use, cannot unmap", id)
 	}
 
@@ -138,5 +138,21 @@ func (r *RbdsType) RefAdd(id models.ID, n int64) {
 	defer r.mutex.Unlock()
 	if rbd, ok := r.rbds[id]; ok {
 		rbd.Refs += n
+	}
+}
+
+// Collect will run garbage collection on any RBDs with ref == 0
+func (r *RbdsType) Collect() {
+	list := []models.ID{}
+	r.mutex.Lock()
+	for _, rbd := range r.rbds {
+		if rbd.Refs == 0 {
+			// let's collect
+			list = append(list, rbd.ID)
+		}
+	}
+	r.mutex.Unlock()
+	for _, id := range list {
+		r.Unmap(id)
 	}
 }
