@@ -123,13 +123,16 @@ func MountGetMountpoint(mnt *models.Mount) (mntpt string, err error) {
 }
 
 func MountRefAdd(mnt *models.Mount, n int64) {
-	if mnt.MountID == 0 { // we only support doing this by MountID, but we silently fail
-		return
-	}
 	switch *mnt.Kind {
 	case "rbd":
+		if mnt.MountID == 0 {
+			mnt.MountID = mnt.Rbd.ID
+		}
 		MountsRbd.RefAdd(mnt.MountID, n)
 	case "overlay":
+		if mnt.MountID == 0 {
+			mnt.MountID = mnt.Overlay.ID
+		}
 		MountsOverlay.RefAdd(mnt.MountID, n)
 	}
 }
