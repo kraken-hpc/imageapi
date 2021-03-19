@@ -33,7 +33,7 @@ func (r *RbdsType) List() (result []*models.Rbd) {
 	for _, m := range r.rbds {
 		result = append(result, m)
 	}
-	l.WithField("entries", len(result)).Trace("listing rbd entries")
+	l.WithField("entries", len(result)).Trace("listing entries")
 	return
 }
 
@@ -194,7 +194,7 @@ func (r *RbdsType) Collect() {
 	list := []models.ID{}
 	r.mutex.Lock()
 	for _, rbd := range r.rbds {
-		if rbd.Refs == 0 {
+		if rbd.Refs <= 0 {
 			// let's collect
 			list = append(list, rbd.ID)
 		}
