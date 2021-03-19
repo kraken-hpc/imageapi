@@ -24,6 +24,7 @@ func (m *MountsOverlayType) Init() {
 	m.mnts = make(map[models.ID]*models.MountOverlay)
 	m.mutex = &sync.Mutex{}
 	m.log = Log.WithField("subsys", "mount_overlay")
+	m.log.Trace("initialized")
 }
 
 func (m *MountsOverlayType) List() (r []*models.MountOverlay) {
@@ -76,7 +77,7 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 				for j := 0; j < i; j++ {
 					MountRefAdd(mnt.Lower[i], -1)
 				}
-				l.WithField("err", err).Error("lower mount failed")
+				l.WithError(err).Error("lower mount failed")
 				return nil, fmt.Errorf("failed to mount lower mount: %v", err)
 			}
 		} else {
@@ -88,7 +89,7 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 			for j := 0; j < i; j++ {
 				MountRefAdd(mnt.Lower[i], -1)
 			}
-			l.WithField("err", err).Error("failed to get mountpoint for lower mount")
+			l.WithError(err).Error("failed to get mountpoint for lower mount")
 			return nil, fmt.Errorf("failed to get mountpoint for lower mount: %v", err)
 		}
 		lmnts = append(lmnts, mntpt)
@@ -104,21 +105,21 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 	// ok, we're good to attempt the mount
 	// make a mountpoint/upperdir/workdir
 	if err = os.MkdirAll(mountDir, 0700); err != nil {
-		l.WithField("err", err).Error("could not create base directory")
+		l.WithError(err).Error("could not create base directory")
 		return nil, fmt.Errorf("could not create base mount directory: %v", err)
 	}
 	if mnt.Mountpoint, err = ioutil.TempDir(mountDir, "mount_"); err != nil {
-		l.WithField("err", err).Error("could not create mountpoint")
+		l.WithError(err).Error("could not create mountpoint")
 		return nil, fmt.Errorf("could not create mountpoint: %v", err)
 	}
 	os.Chmod(mnt.Mountpoint, os.FileMode(0755))
 	if mnt.Upperdir, err = ioutil.TempDir(mountDir, "upper_"); err != nil {
-		l.WithField("err", err).Error("could not create upperdir")
+		l.WithError(err).Error("could not create upperdir")
 		return nil, fmt.Errorf("could not create upperdir: %v", err)
 	}
 	os.Chmod(mnt.Upperdir, os.FileMode(0755))
 	if mnt.Workdir, err = ioutil.TempDir(mountDir, "work_"); err != nil {
-		l.WithField("err", err).Error("could not create workdir")
+		l.WithError(err).Error("could not create workdir")
 		return nil, fmt.Errorf("could not create workdir: %v", err)
 	}
 	os.Chmod(mnt.Workdir, os.FileMode(0755))
@@ -131,7 +132,7 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 	}
 	l.WithField("opts", opts)
 	if err = mount.Mount("overlay", mnt.Mountpoint, "overlay", opts); err != nil {
-		l.WithField("err", err).Error("mount failed")
+		l.WithError(err).Error("mount failed")
 		return nil, fmt.Errorf("mount failure: %v", err)
 	}
 
@@ -167,7 +168,7 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 
 	// always lazy unmount.  Good idea?
 	if err = mount.Unmount(mnt.Mountpoint, false, true); err != nil {
-		l.WithField("err", err).Error("unmount failed")
+		l.WithError(err).Error("unmount failed")
 		return nil, fmt.Errorf("unmount failure: %v", err)
 	}
 

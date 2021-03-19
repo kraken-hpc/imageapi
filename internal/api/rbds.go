@@ -54,7 +54,7 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	})
 	w, err := krbd.RBDBusAddWriter()
 	if err != nil {
-		l.WithField("err", err).Error("failed to get krbd bus writer")
+		l.WithError(err).Error("failed to get krbd bus writer")
 		return nil, fmt.Errorf("krbd error: %v", err)
 	}
 	defer w.Close()
@@ -86,13 +86,13 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	}
 	// map the rbd
 	if err := i.Map(w); err != nil {
-		l.WithField("err", err).Error("map failed")
+		l.WithError(err).Error("map failed")
 		return nil, fmt.Errorf("krbd error: %v", err)
 	}
 
 	// now go find our ID
 	if err := dev.Find(); err != nil {
-		l.WithField("err", err).Error("mapped device was not found")
+		l.WithError(err).Error("mapped device was not found")
 		return nil, fmt.Errorf("could not find device ID: %v", err)
 	}
 	rbd.DeviceID = dev.ID
@@ -151,7 +151,7 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 
 	wc, err := krbd.RBDBusRemoveWriter()
 	if err != nil {
-		l.WithField("err", err).Error("couldn't get remove writer")
+		l.WithError(err).Error("couldn't get remove writer")
 		return nil, err
 	}
 	defer wc.Close()
@@ -164,7 +164,7 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	}
 
 	if err := i.Unmap(wc); err != nil {
-		l.WithField("err", err).Error("unmap failed")
+		l.WithError(err).Error("unmap failed")
 		return nil, fmt.Errorf("krbd error: %v", err)
 	}
 	// remove from our map
