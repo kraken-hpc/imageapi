@@ -31,7 +31,7 @@ func garbageCollect() {
 func init() {
 	Log = logrus.New()
 	// fixme: read from os.Env?
-	Log.Level = logrus.TraceLevel
+	Log.Level = logrus.DebugLevel
 	Log.Info("initializing imageapi-server")
 	Rbds = &RbdsType{}
 	Rbds.Init()
