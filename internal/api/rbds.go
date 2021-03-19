@@ -36,7 +36,7 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	defer r.mutex.Unlock()
 	// sanity check
 	if len(rbd.Monitors) == 0 || *rbd.Pool == "" || *rbd.Image == "" || rbd.Options.Name == "" || rbd.Options.Secret == "" {
-		return nil, fmt.Errorf("The following are required: 1 or more monitors, pool, image, options/name, options/secret")
+		return nil, fmt.Errorf("the following are required: 1 or more monitors, pool, image, options/name, options/secret")
 	}
 	w, err := krbd.RBDBusAddWriter()
 	if err != nil {
@@ -80,6 +80,7 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	rbd.DeviceID = dev.ID
 	rbd.DeviceFile = dev.DevPath()
 	rbd.ID = r.next
+	rbd.Refs = 1
 	r.next++
 	r.rbds[rbd.ID] = rbd
 
@@ -108,11 +109,14 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	}
 
 	// should we be able to force this?
-	if rbd.Refs > 1 {
+	if rbd.Refs > 0 {
 		return nil, fmt.Errorf("device %d is in use, cannot unmap", id)
 	}
 
 	wc, err := krbd.RBDBusRemoveWriter()
+	if err != nil {
+		return nil, err
+	}
 	defer wc.Close()
 
 	i := krbd.Image{

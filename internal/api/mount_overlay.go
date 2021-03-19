@@ -61,6 +61,8 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 			if mnt.Lower[i], err = Mount(mnt.Lower[i]); err != nil {
 				return nil, fmt.Errorf("failed to mount lower mount: %v", err)
 			}
+		} else {
+			MountRefAdd(mnt.Lower[i], 1) // we allow this to silently fail
 		}
 		var mntpt string
 		if mntpt, err = MountGetMountpoint(mnt.Lower[i]); err != nil {
@@ -68,6 +70,13 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 		}
 		lmnts = append(lmnts, mntpt)
 	}
+	defer func() {
+		if err != nil {
+			for _, m := range mnt.Lower {
+				MountRefAdd(m, -1)
+			}
+		}
+	}()
 
 	// ok, we're good to attempt the mount
 	// make a mountpoint/upperdir/workdir
@@ -99,13 +108,10 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 
 	// store
 	mnt.ID = m.next
+	mnt.Refs = 1
 	m.next++
 	m.mnts[mnt.ID] = mnt
 
-	// add refs
-	for _, i := range mnt.Lower {
-		MountRefAdd(i, 2)
-	}
 	return mnt, nil
 }
 
@@ -132,14 +138,9 @@ func (m *MountsOverlayType) Unmount(id models.ID) (mnt *models.MountOverlay, err
 	os.RemoveAll(mnt.Workdir)  // option to leave behind?
 	os.RemoveAll(mnt.Upperdir) // option to leave behind? Or store on RBD?
 	delete(m.mnts, id)
-	for i, l := range mnt.Lower {
-		MountRefAdd(l, -2)
-		if l.MountID == 0 { // we own the mount
-			// try to unmount
-			if mnt.Lower[i], err = Unmount(l); err != nil {
-				return nil, fmt.Errorf("failed to unmount lower mount: %v", err)
-			}
-		}
+	for _, l := range mnt.Lower {
+		MountRefAdd(l, -1)
+		// garbage collection will handle cleanup
 	}
 	return
 }
@@ -149,12 +150,6 @@ func (m *MountsOverlayType) RefAdd(id models.ID, n int64) {
 	defer m.mutex.Unlock()
 	if r, ok := m.mnts[id]; ok {
 		r.Refs += n
-	}
-}
-
-func (*MountsOverlayType) refAddList(mnts []*models.MountRbd, n int64) {
-	for _, mnt := range mnts {
-		MountsRbd.RefAdd(mnt.ID, n)
 	}
 }
 

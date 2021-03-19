@@ -18,11 +18,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type containerStateChange struct {
-	id    models.ID
-	state models.ContainerState
-}
-
 type container struct {
 	ctn    *models.Container
 	log    *log.Logger
@@ -72,18 +67,22 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 		if ctn.Mount, err = Mount(ctn.Mount); err != nil {
 			return nil, fmt.Errorf("mount failed: %v", err)
 		}
+		if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
+			return nil, fmt.Errorf("could not get mountpoint: %v", err)
+		}
+	} else {
+		if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
+			return nil, fmt.Errorf("could not get mountpoint: %v", err)
+		}
+		MountRefAdd(ctn.Mount, 1)
 	}
-	if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
-		return nil, fmt.Errorf("could not get mountpoint: %v", err)
-	}
-	MountRefAdd(ctn.Mount, 2)
 
 	// ok, we've got a valid mountpoint
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	// fail early on non-unique name
 	if _, ok := c.names[ctn.Name]; ctn.Name != "" && ok {
-		return nil, fmt.Errorf("container with name %s already exists.", ctn.Name)
+		return nil, fmt.Errorf("container with name %s already exists", ctn.Name)
 	}
 	ctn.ID = c.next
 
@@ -178,13 +177,8 @@ func (c *ContainersType) Delete(id models.ID) (ret *models.Container, err error)
 	if ctn.ctn.Name != "" {
 		delete(c.names, ctn.ctn.Name)
 	}
-	MountRefAdd(ctn.ctn.Mount, -2)
-	if ctn.ctn.Mount.MountID == 0 {
-		// we own this mount, we should unmount it
-		if _, err = Unmount(ctn.ctn.Mount); err != nil {
-			return nil, fmt.Errorf("failed to unmount underlying mount(s): %v", err)
-		}
-	}
+	MountRefAdd(ctn.ctn.Mount, -1)
+	// garbage collection should take care of our mount if it's now unused
 	return
 }
 
@@ -318,7 +312,7 @@ var specialLinks = []symlinkType{
 // this is run as a separate process
 func containerInit(mountpoint string, systemd bool, args []string) {
 	// 0. setup logging
-	l := log.New(os.Stdout, fmt.Sprintf("init: "), log.Ldate|log.Ltime|log.Lmsgprefix)
+	l := log.New(os.Stdout, "init: ", log.Ldate|log.Ltime|log.Lmsgprefix)
 
 	// 1. Make sure mounts are marked as private, necessary for moving mounts
 	l.Print("making all mounts private")
@@ -366,7 +360,6 @@ func containerInit(mountpoint string, systemd bool, args []string) {
 	if err := unix.Exec(args[0], args, []string{}); err != nil {
 		l.Fatalf("containerInit: exec failed: %v", err)
 	}
-	return
 }
 
 func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Function) {

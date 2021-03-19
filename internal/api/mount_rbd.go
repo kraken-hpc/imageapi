@@ -35,6 +35,7 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 		if rbd, err = Rbds.Get(mnt.RbdID); err != nil {
 			return nil, ERRNOTFOUND
 		}
+		Rbds.RefAdd(rbd.ID, 1)
 	} else if mnt.Rbd != nil { // try to attach it
 		if rbd, err = Rbds.Map(mnt.Rbd); err != nil {
 			return nil, fmt.Errorf("failed to attach underlying RBD image: %v", err)
@@ -43,6 +44,11 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	} else { // unspecified
 		return nil, fmt.Errorf("no rbd specified")
 	}
+	defer func() {
+		if err != nil {
+			Rbds.RefAdd(rbd.ID, -1)
+		}
+	}()
 	// ok, we're good to attempt the mount
 	// make a mountpoint
 	if err = os.MkdirAll(mountDir, 0700); err != nil {
@@ -54,8 +60,8 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	if err = mount.Mount(rbd.DeviceFile, mnt.Mountpoint, *mnt.FsType, mnt.MountOptions); err != nil {
 		return nil, fmt.Errorf("mount failure: %v", err)
 	}
-	Rbds.RefAdd(rbd.ID, 2)
 	mnt.ID = m.next
+	mnt.Refs = 1
 	m.next++
 	m.mnts[mnt.ID] = mnt
 	return mnt, nil
@@ -72,7 +78,7 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 		return nil, ERRNOTFOUND
 	}
 
-	if mnt.Refs > 1 {
+	if mnt.Refs > 0 {
 		return nil, fmt.Errorf("unmount failure: mount is in use")
 	}
 
@@ -82,12 +88,8 @@ func (m *MountsRBDType) Unmount(id models.ID) (ret *models.MountRbd, err error) 
 	}
 	os.Remove(mnt.Mountpoint) // we shouldn't fail on this. Should we report it anyway?
 	delete(m.mnts, id)
-	Rbds.RefAdd(mnt.RbdID, -2)
-	if mnt.Rbd != nil { // we own the attach point
-		if _, err = Rbds.Unmap(mnt.Rbd.ID); err != nil {
-			return nil, fmt.Errorf("failed to detach underlying rbd: %v", err)
-		}
-	}
+	Rbds.RefAdd(mnt.RbdID, -1)
+	// garbage collection should do our cleanup
 	return
 }
 

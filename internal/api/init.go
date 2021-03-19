@@ -12,7 +12,7 @@ var Containers ContainersType
 
 const mountDir = "/var/run/imageapi/mounts"
 const logDir = "/var/run/imageapi/logs"
-const collectTime = time.Second * 2
+const collectTime = time.Second * 1
 
 var ERRNOTFOUND = errors.New("not found")
 
