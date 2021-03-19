@@ -15,6 +15,7 @@ require (
 	github.com/jlowellwofford/go-fork v0.1.0
 	github.com/jlowellwofford/uinit v0.1.0
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	golang.org/x/net v0.0.0-20210226101413-39120d07d75e
 	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073
 )
