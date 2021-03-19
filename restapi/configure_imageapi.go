@@ -72,6 +72,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.AttachUnmapRbdHandler = attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
 		var err error
 		var r *models.Rbd
+		internal.Rbds.RefAdd(models.ID(params.ID), -1)
 		if r, err = internal.Rbds.Unmap(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return attach.NewUnmapRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("rbd not found")})
@@ -108,6 +109,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.MountsUnmountRbdHandler = mounts.UnmountRbdHandlerFunc(func(params mounts.UnmountRbdParams) middleware.Responder {
 		var err error
 		var r *models.MountRbd
+		internal.MountsRbd.RefAdd(models.ID(params.ID), -1)
 		if r, err = internal.MountsRbd.Unmount(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return mounts.NewUnmountRbdDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
@@ -144,6 +146,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.MountsUnmountOverlayHandler = mounts.UnmountOverlayHandlerFunc(func(params mounts.UnmountOverlayParams) middleware.Responder {
 		var err error
 		var r *models.MountOverlay
+		internal.MountsOverlay.RefAdd(models.ID(params.ID), -1)
 		if r, err = internal.MountsOverlay.Unmount(models.ID(params.ID)); err != nil {
 			if err == internal.ERRNOTFOUND {
 				return mounts.NewUnmountOverlayDefault(404).WithPayload(&models.Error{Code: 404, Message: swag.String("mount not found")})
@@ -242,6 +245,7 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	api.MountsDeleteMountHandler = mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
 		var mnt *models.Mount
 		var err error
+		internal.MountRefAdd(params.Mount, -1)
 		if mnt, err = internal.Unmount(params.Mount); err != nil {
 			return mounts.NewDeleteMountDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
