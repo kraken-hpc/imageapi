@@ -15,6 +15,7 @@ import (
 	"github.com/jlowellwofford/go-fork"
 	"github.com/jlowellwofford/imageapi/models"
 	"github.com/jlowellwofford/uinit"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -30,6 +31,7 @@ type ContainersType struct {
 	ctns  map[models.ID]*container
 	names map[models.Name]models.ID
 	mutex *sync.Mutex
+	log   *logrus.Entry
 }
 
 func (c *ContainersType) Init() {
@@ -37,27 +39,41 @@ func (c *ContainersType) Init() {
 	c.ctns = make(map[models.ID]*container)
 	c.names = make(map[models.Name]models.ID)
 	c.mutex = &sync.Mutex{}
+	c.log = Log.WithField("subsys", "container")
+	c.log.Trace("initialized")
 }
 
 func (c *ContainersType) List() (r []*models.Container) {
+	l := c.log.WithField("operation", "list")
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	for _, ctn := range c.ctns {
 		r = append(r, ctn.ctn)
 	}
+	l.WithField("entries", len(r)).Trace("listing entries")
 	return
 }
 
 func (c *ContainersType) Get(id models.ID) (*models.Container, error) {
+	l := c.log.WithFields(logrus.Fields{
+		"operation": "get",
+		"id":        id,
+	})
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if r, ok := c.ctns[id]; ok {
+		l.Trace("found")
 		return r.ctn, nil
 	}
+	l.Trace("not found")
 	return nil, fmt.Errorf("no container by id %d", id)
 }
 
 func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err error) {
+	l := c.log.WithFields(logrus.Fields{
+		"operation": "create",
+		"name":      ctn.Name,
+	})
 	// This creates a container in our list, and activates its initial state
 	// find the mount
 	n := &container{
@@ -65,9 +81,12 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	}
 	if ctn.Mount.MountID == 0 {
 		if ctn.Mount, err = Mount(ctn.Mount); err != nil {
+			l.WithError(err).Error("failed to mount")
 			return nil, fmt.Errorf("mount failed: %v", err)
 		}
 		if n.mnt, err = MountGetMountpoint(ctn.Mount); err != nil {
+			l.WithError(err).Error("failed to get mountpoint")
+			MountRefAdd(ctn.Mount, -1)
 			return nil, fmt.Errorf("could not get mountpoint: %v", err)
 		}
 	} else {
@@ -77,23 +96,34 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 		MountRefAdd(ctn.Mount, 1)
 	}
 
+	defer func() {
+		if err != nil {
+			MountRefAdd(ctn.Mount, -1)
+		}
+	}()
+	l = l.WithField("mount_point", n.mnt)
+
 	// ok, we've got a valid mountpoint
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	// fail early on non-unique name
 	if _, ok := c.names[ctn.Name]; ctn.Name != "" && ok {
-		return nil, fmt.Errorf("container with name %s already exists", ctn.Name)
+		err := fmt.Errorf("container with name %s already exists", ctn.Name)
+		l.Debug("non-unique name")
+		return nil, err
 	}
 	ctn.ID = c.next
 
 	// set up logger
 	if err = os.MkdirAll(logDir, 0700); err != nil {
+		l.WithError(err).Error("could not make log directory")
 		return nil, fmt.Errorf("could not create log directory: %v", err)
 	}
 	ctn.Logfile = path.Join(logDir, fmt.Sprintf("%d-%d.log", ctn.ID, time.Now().Unix()))
-	f, e := os.Create(ctn.Logfile)
-	if e != nil {
-		return nil, fmt.Errorf("could not create log file: %v", e)
+	f, err := os.Create(ctn.Logfile)
+	if err != nil {
+		l.WithError(err).Error("failed to creat elog file")
+		return nil, fmt.Errorf("could not create log file: %v", err)
 	}
 	n.log = log.New(f, fmt.Sprintf("container(%d): ", ctn.ID), log.Ldate|log.Ltime|log.Lmsgprefix)
 	n.log.Printf("container created")
@@ -102,13 +132,16 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	switch ctn.State {
 	case models.ContainerStateRunning:
 		if err := c.run(n); err != nil {
+			l.WithError(err).Error("failed to start container")
 			return nil, fmt.Errorf("failed to start container: %v", err)
 		}
 		ctn.State = models.ContainerStateRunning
 	case models.ContainerStateStopping,
 		models.ContainerStateExited,
 		models.ContainerStateDead:
-		return nil, fmt.Errorf("requested invalid initial container state: %s.  valid initial states: [ %s, %s ]", ctn.State, models.ContainerStateCreated, models.ContainerStateRunning)
+		err = fmt.Errorf("requested invalid initial container state: %s.  valid initial states: [ %s, %s ]", ctn.State, models.ContainerStateCreated, models.ContainerStateRunning)
+		l.WithError(err).Debug("invalid initial state")
+		return nil, err
 	case models.ContainerStateCreated:
 		fallthrough
 	default: // wasn't specified
@@ -120,15 +153,21 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	c.next++
 	c.names[ctn.Name] = ctn.ID
 
+	l.Info("successfully created")
 	return ctn, nil
 }
 
 func (c *ContainersType) SetState(id models.ID, state models.ContainerState) (err error) {
+	l := c.log.WithFields(logrus.Fields{
+		"operation": "setstate",
+		"id":        id,
+	})
 	var ctn *container
 	var ok bool
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if ctn, ok = c.ctns[id]; !ok {
+		l.Error("not found")
 		return fmt.Errorf("invalid container id: %d", id)
 	}
 	// handle state request
@@ -138,7 +177,9 @@ func (c *ContainersType) SetState(id models.ID, state models.ContainerState) (er
 			return
 		}
 		ctn.ctn.State = models.ContainerStateRunning
+		l.Info("starting container")
 		if err = c.run(ctn); err != nil {
+			l.WithError(err).Error("failed to start")
 			ctn.ctn.State = models.ContainerStateDead
 			return
 		}
@@ -146,29 +187,39 @@ func (c *ContainersType) SetState(id models.ID, state models.ContainerState) (er
 		if ctn.ctn.State == state {
 			return
 		}
+		l.Info("stopping container")
 		c.stop(ctn)
 	default: // something not valid
-		return fmt.Errorf("can't set state to: %s.  valid states to request: [ %s, %s ]", state,
+		err := fmt.Errorf("can't set state to: %s.  valid states to request: [ %s, %s ]", state,
 			models.ContainerStateRunning,
 			models.ContainerStateExited)
+		l.WithError(err).Error("failed")
+		return err
 	}
 	return
 }
 
 func (c *ContainersType) Delete(id models.ID) (ret *models.Container, err error) {
+	l := c.log.WithFields(logrus.Fields{
+		"operation": "setstate",
+		"id":        id,
+	})
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	var ctn *container
 	var ok bool
 	if ctn, ok = c.ctns[id]; !ok {
+		l.Error("container not found")
 		return nil, fmt.Errorf("invalid container id: %d", id)
 	}
 	switch ctn.ctn.State {
 	//case models.ContainerStatePaused:
 	//case models.ContainerStateRestarting:
 	case models.ContainerStateRunning:
+		l.Trace("attempt to delete running container")
 		return nil, fmt.Errorf("cannot delete a running container")
 	case models.ContainerStateStopping:
+		l.Trace("attempt to delete stopping container")
 		return nil, fmt.Errorf("cannot delete a container that hasn't fully stopped")
 	}
 	ctn.log.Printf("container deleted")
@@ -178,6 +229,7 @@ func (c *ContainersType) Delete(id models.ID) (ret *models.Container, err error)
 		delete(c.names, ctn.ctn.Name)
 	}
 	MountRefAdd(ctn.ctn.Mount, -1)
+	l.Info("container deleted")
 	// garbage collection should take care of our mount if it's now unused
 	return
 }
@@ -363,15 +415,22 @@ func containerInit(mountpoint string, systemd bool, args []string) {
 }
 
 func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Function) {
+	l := c.log.WithFields(logrus.Fields{
+		"operation": "watcher",
+		"id":        ctn.ctn.ID,
+		"name":      ctn.ctn.Name,
+	})
 	end := make(chan error)
 	go func() {
 		e := f.Wait()
+		l.Trace("exited")
 		end <- e
 	}()
 	state := models.ContainerStateExited
 	select {
 	case e := <-end:
 		if e != nil {
+			l.WithError(e).Debug("process ended in error state")
 			ctn.log.Printf("process ended in error state: %v", e)
 			state = models.ContainerStateDead
 		}
@@ -379,6 +438,7 @@ func (c *ContainersType) watcher(ctx context.Context, ctn *container, f *fork.Fu
 	case <-ctx.Done():
 		// signal the process to stop
 		// TODO: be smarter about the signals we send
+		l.Debug("sending kill signal")
 		if ctn.ctn.Systemd {
 			// SIGRTMIN+3
 			f.Process.Signal(syscall.Signal(37))
