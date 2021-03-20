@@ -10,9 +10,9 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/jlowellwofford/imageapi/client/attach"
-	"github.com/jlowellwofford/imageapi/client/containers"
-	"github.com/jlowellwofford/imageapi/client/mounts"
+	"github.com/kraken-hpc/imageapi/client/attach"
+	"github.com/kraken-hpc/imageapi/client/containers"
+	"github.com/kraken-hpc/imageapi/client/mounts"
 )
 
 // Default imageapi HTTP client.

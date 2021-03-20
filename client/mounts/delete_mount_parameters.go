@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // NewDeleteMountParams creates a new DeleteMountParams object

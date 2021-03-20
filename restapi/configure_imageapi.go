@@ -11,12 +11,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 
-	internal "github.com/jlowellwofford/imageapi/internal/api"
-	"github.com/jlowellwofford/imageapi/models"
-	"github.com/jlowellwofford/imageapi/restapi/operations"
-	"github.com/jlowellwofford/imageapi/restapi/operations/attach"
-	"github.com/jlowellwofford/imageapi/restapi/operations/containers"
-	"github.com/jlowellwofford/imageapi/restapi/operations/mounts"
+	internal "github.com/kraken-hpc/imageapi/internal/api"
+	"github.com/kraken-hpc/imageapi/models"
+	"github.com/kraken-hpc/imageapi/restapi/operations"
+	"github.com/kraken-hpc/imageapi/restapi/operations/attach"
+	"github.com/kraken-hpc/imageapi/restapi/operations/containers"
+	"github.com/kraken-hpc/imageapi/restapi/operations/mounts"
 )
 
 //go:generate swagger generate server --target ../../imageapi --name Imageapi --spec ../swagger.yaml --principal interface{}

@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jlowellwofford/go-fork"
-	"github.com/jlowellwofford/imageapi/models"
-	"github.com/jlowellwofford/uinit"
+	"github.com/kraken-hpc/go-fork"
+	"github.com/kraken-hpc/imageapi/models"
+	"github.com/kraken-hpc/uinit"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )

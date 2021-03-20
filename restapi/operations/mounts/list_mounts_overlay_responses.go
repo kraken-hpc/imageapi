@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // ListMountsOverlayOKCode is the HTTP code returned for type ListMountsOverlayOK

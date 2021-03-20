@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // NewMapRbdParams creates a new MapRbdParams object

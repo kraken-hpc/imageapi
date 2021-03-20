@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // NewDeleteMountParams creates a new DeleteMountParams object

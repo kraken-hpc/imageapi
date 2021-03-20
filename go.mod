@@ -1,4 +1,4 @@
-module github.com/jlowellwofford/imageapi
+module github.com/kraken-hpc/imageapi
 
 go 1.15
 
@@ -12,8 +12,8 @@ require (
 	github.com/go-openapi/swag v0.19.14
 	github.com/go-openapi/validate v0.20.2
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/jlowellwofford/go-fork v0.1.0
-	github.com/jlowellwofford/uinit v0.1.0
+	github.com/kraken-hpc/go-fork v0.1.1
+	github.com/kraken-hpc/uinit v0.1.1
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	golang.org/x/net v0.0.0-20210226101413-39120d07d75e

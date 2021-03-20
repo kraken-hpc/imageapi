@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // DeleteContainerBynameReader is a Reader for the DeleteContainerByname structure.

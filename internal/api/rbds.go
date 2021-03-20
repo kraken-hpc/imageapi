@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/bensallen/rbd/pkg/krbd"
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 	"github.com/sirupsen/logrus"
 )
 

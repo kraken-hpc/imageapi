@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 
-	"github.com/jlowellwofford/imageapi/models"
+	"github.com/kraken-hpc/imageapi/models"
 )
 
 // API operations on generic mountpoints

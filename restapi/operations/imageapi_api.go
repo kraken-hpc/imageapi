@@ -19,9 +19,9 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/jlowellwofford/imageapi/restapi/operations/attach"
-	"github.com/jlowellwofford/imageapi/restapi/operations/containers"
-	"github.com/jlowellwofford/imageapi/restapi/operations/mounts"
+	"github.com/kraken-hpc/imageapi/restapi/operations/attach"
+	"github.com/kraken-hpc/imageapi/restapi/operations/containers"
+	"github.com/kraken-hpc/imageapi/restapi/operations/mounts"
 )
 
 // NewImageapiAPI creates a new Imageapi instance
