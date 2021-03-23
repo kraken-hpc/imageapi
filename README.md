@@ -8,7 +8,7 @@ This service is likely much more useful when combined with a tool like [Kraken](
 
 The API specification is contained in [swagger.yaml](swagger.yaml) .
 
-It can also be browsed on [SwaggerHub](https://swaggerhub.com).
+It can also be browsed on [SwaggerHub](https://app.swaggerhub.com/apis/jlowellwofford/image-api/1.0.0).
 
 # Example interaction
 
