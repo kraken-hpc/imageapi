@@ -231,3 +231,78 @@ It can also be browsed on [SwaggerHub](https://swaggerhub.com).
 
    ```
 
+   Note: The ImageAPI will refuse to deleted a running resouce, so you'll want to request the `exited` state, and wait for `stopping` to complete before issuing `-XDELETE` on a container, for instance.
+
+10. Ok, so that was fun... but what if we want to define everything at once?
+   
+   The ImageAPI supports (as of `v0.1.0`) the ability to definte nested resources.  For instance, you could define an overaly that includes an underlying RBD with:
+
+   ```javascript
+  {
+    "lower": [
+      {
+        "kind": "rbd",
+        "rbd": {
+          "fs_type": "squashfs",
+          "mount_options": [
+            "ro"
+          ],
+          "rbd": {
+            "monitors": [
+              "192.168.1.48"
+            ],
+            "pool": "rbd",
+            "image": "systemd.sqsh",
+            "options": {
+              "ro": true,
+              "name": "admin",
+              "secret": "XXX"
+            }
+          }
+        }
+      }
+    ]
+  }
+   ```
+
+More inteteresting is a container comletely specified with mounts and attachments:
+
+The following posted to `/imageapi/v1/container` would attach an RBD, mount it, mount an overalay, define a container on top of it, and run that container in a single definition:
+```javascript
+{
+  "mount": {
+    "kind": "overlay",
+    "overlay": {
+      "lower": [
+        {
+          "kind": "rbd",
+          "rbd": {
+            "fs_type": "squashfs",
+            "mount_options": [
+              "ro"
+            ],
+            "rbd": {
+              "monitors": [
+                "192.168.1.48"
+              ],
+              "pool": "rbd",
+              "image": "systemd.sqsh",
+              "options": {
+                "ro": true,
+                "name": "admin",
+                "secret": "AQC71s9fOrv9KxAAmH7vB3vQGyVmwbBd005B4A=="
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "command": "/usr/lib/systemd/systemd",
+  "systemd" true,
+  "name": "systemd.sqsh",
+  "state": "running"
+}
+```
+
+Because this container is named, it could be exited with a single call to `/imageapi/v1/container/byname/systemd.sqsh/exited`, and then deleted.  The ImageAPI will track refererences to any object (RBD, mount, ...) and will regularly garbage collect any unused resources, so if you delete this container, the ImageAPI will automatically unmount the overlay, unmount the squashfs, and unmap the RBD. If the resources were created through a nested call like this, deleting the top-level resource will delete all references to the next level down, which will lead to its garbage collection.  This will cascade until all resources are collected.
