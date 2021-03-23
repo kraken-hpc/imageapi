@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.4] - 2021-03-22
 ### Added
-- Set log level through environment variable `IMAGEA_LOGLEVEL`
+- Set log level through environment variable `IMAGEAPI_LOGLEVEL`
 - CirceCI integration (initial build recipe)
 - CodeFactor integration
-### Fixec
+### Fixed
 - Readme reflects current API, including nesting
 
 ## [0.1.3] - 2021-03-19
