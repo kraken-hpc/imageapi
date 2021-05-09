@@ -104,21 +104,21 @@ func (m *MountsOverlayType) Mount(mnt *models.MountOverlay) (r *models.MountOver
 
 	// ok, we're good to attempt the mount
 	// make a mountpoint/upperdir/workdir
-	if err = os.MkdirAll(mountDir, 0700); err != nil {
+	if err = os.MkdirAll(MountDir, 0700); err != nil {
 		l.WithError(err).Error("could not create base directory")
 		return nil, fmt.Errorf("could not create base mount directory: %v", err)
 	}
-	if mnt.Mountpoint, err = ioutil.TempDir(mountDir, "mount_"); err != nil {
+	if mnt.Mountpoint, err = ioutil.TempDir(MountDir, "mount_"); err != nil {
 		l.WithError(err).Error("could not create mountpoint")
 		return nil, fmt.Errorf("could not create mountpoint: %v", err)
 	}
 	os.Chmod(mnt.Mountpoint, os.FileMode(0755))
-	if mnt.Upperdir, err = ioutil.TempDir(mountDir, "upper_"); err != nil {
+	if mnt.Upperdir, err = ioutil.TempDir(MountDir, "upper_"); err != nil {
 		l.WithError(err).Error("could not create upperdir")
 		return nil, fmt.Errorf("could not create upperdir: %v", err)
 	}
 	os.Chmod(mnt.Upperdir, os.FileMode(0755))
-	if mnt.Workdir, err = ioutil.TempDir(mountDir, "work_"); err != nil {
+	if mnt.Workdir, err = ioutil.TempDir(MountDir, "work_"); err != nil {
 		l.WithError(err).Error("could not create workdir")
 		return nil, fmt.Errorf("could not create workdir: %v", err)
 	}
