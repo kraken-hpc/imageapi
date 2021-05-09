@@ -62,11 +62,11 @@ func (m *MountsRBDType) Mount(mnt *models.MountRbd) (ret *models.MountRbd, err e
 	// HERE!!!!
 	// ok, we're good to attempt the mount
 	// make a mountpoint
-	if err = os.MkdirAll(mountDir, 0700); err != nil {
+	if err = os.MkdirAll(MountDir, 0700); err != nil {
 		l.WithError(err).Error("failed to make mount directory")
 		return nil, fmt.Errorf("could not create base mount directory: %v", err)
 	}
-	if mnt.Mountpoint, err = ioutil.TempDir(mountDir, "mount_"); err != nil {
+	if mnt.Mountpoint, err = ioutil.TempDir(MountDir, "mount_"); err != nil {
 		l.WithError(err).Error("failed to make pointpoint")
 		return nil, fmt.Errorf("could not create mountpoint: %v", err)
 	}

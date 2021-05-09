@@ -115,11 +115,11 @@ func (c *ContainersType) Create(ctn *models.Container) (r *models.Container, err
 	ctn.ID = c.next
 
 	// set up logger
-	if err = os.MkdirAll(logDir, 0700); err != nil {
+	if err = os.MkdirAll(LogDir, 0700); err != nil {
 		l.WithError(err).Error("could not make log directory")
 		return nil, fmt.Errorf("could not create log directory: %v", err)
 	}
-	ctn.Logfile = path.Join(logDir, fmt.Sprintf("%d-%d.log", ctn.ID, time.Now().Unix()))
+	ctn.Logfile = path.Join(LogDir, fmt.Sprintf("%d-%d.log", ctn.ID, time.Now().Unix()))
 	f, err := os.Create(ctn.Logfile)
 	if err != nil {
 		l.WithError(err).Error("failed to creat elog file")
@@ -653,7 +653,7 @@ func validateImage(newRoot string) (err error) {
 	return
 }
 
-func init() {
+func ForkInit() {
 	fork.RegisterFunc("containerInit", containerInit)
 	fork.Init()
 }
