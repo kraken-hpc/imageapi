@@ -46,7 +46,7 @@ func NewMountCreated() *MountCreated {
 	return &MountCreated{}
 }
 
-/*MountCreated handles this case with default header values.
+/* MountCreated describes a response with status code 201, with default header values.
 
 mount succeed
 */
@@ -57,7 +57,6 @@ type MountCreated struct {
 func (o *MountCreated) Error() string {
 	return fmt.Sprintf("[POST /mount][%d] mountCreated  %+v", 201, o.Payload)
 }
-
 func (o *MountCreated) GetPayload() *models.Mount {
 	return o.Payload
 }
@@ -81,7 +80,7 @@ func NewMountDefault(code int) *MountDefault {
 	}
 }
 
-/*MountDefault handles this case with default header values.
+/* MountDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -99,7 +98,6 @@ func (o *MountDefault) Code() int {
 func (o *MountDefault) Error() string {
 	return fmt.Sprintf("[POST /mount][%d] mount default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *MountDefault) GetPayload() *models.Error {
 	return o.Payload
 }

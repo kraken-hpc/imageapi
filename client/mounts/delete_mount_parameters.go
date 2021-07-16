@@ -18,56 +18,70 @@ import (
 	"github.com/kraken-hpc/imageapi/models"
 )
 
-// NewDeleteMountParams creates a new DeleteMountParams object
-// with the default values initialized.
+// NewDeleteMountParams creates a new DeleteMountParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteMountParams() *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewDeleteMountParamsWithTimeout creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewDeleteMountParamsWithTimeout(timeout time.Duration) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewDeleteMountParamsWithContext creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewDeleteMountParamsWithContext(ctx context.Context) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		Context: ctx,
 	}
 }
 
 // NewDeleteMountParamsWithHTTPClient creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewDeleteMountParamsWithHTTPClient(client *http.Client) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
 		HTTPClient: client,
 	}
 }
 
-/*DeleteMountParams contains all the parameters to send to the API endpoint
-for the delete mount operation typically these are written to a http.Request
+/* DeleteMountParams contains all the parameters to send to the API endpoint
+   for the delete mount operation.
+
+   Typically these are written to a http.Request.
 */
 type DeleteMountParams struct {
 
-	/*Mount*/
+	// Mount.
 	Mount *models.Mount
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the delete mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteMountParams) WithDefaults() *DeleteMountParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the delete mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteMountParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the delete mount params
@@ -121,7 +135,6 @@ func (o *DeleteMountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 		return err
 	}
 	var res []error
-
 	if o.Mount != nil {
 		if err := r.SetBodyParam(o.Mount); err != nil {
 			return err

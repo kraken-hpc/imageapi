@@ -29,10 +29,12 @@ func NewSetContainerState(ctx *middleware.Context, handler SetContainerStateHand
 	return &SetContainerState{Context: ctx, Handler: handler}
 }
 
-/*SetContainerState swagger:route GET /container/{id}/{state} containers setContainerState
+/* SetContainerState swagger:route PATCH /container containers setContainerState
 
 Request a (valid) state for a container.
 Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
+
+Either a valid Name or ID must be passed as a query parameter, along with a valid state parameter.
 
 
 */
@@ -44,7 +46,7 @@ type SetContainerState struct {
 func (o *SetContainerState) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewSetContainerStateParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -322,6 +322,10 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/container_namespace"
+      refs:
+        type: integer
+        format: int64
+        readOnly: true
   
   error:
     type: object

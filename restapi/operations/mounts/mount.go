@@ -29,7 +29,7 @@ func NewMount(ctx *middleware.Context, handler MountHandler) *Mount {
 	return &Mount{Context: ctx, Handler: handler}
 }
 
-/*Mount swagger:route POST /mount mounts mount
+/* Mount swagger:route POST /mount mounts mount
 
 Create a new mount by mount specification.
 
@@ -42,7 +42,7 @@ type Mount struct {
 func (o *Mount) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewMountParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

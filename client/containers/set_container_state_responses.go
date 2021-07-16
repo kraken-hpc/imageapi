@@ -46,7 +46,7 @@ func NewSetContainerStateOK() *SetContainerStateOK {
 	return &SetContainerStateOK{}
 }
 
-/*SetContainerStateOK handles this case with default header values.
+/* SetContainerStateOK describes a response with status code 200, with default header values.
 
 Container state changed
 */
@@ -55,9 +55,8 @@ type SetContainerStateOK struct {
 }
 
 func (o *SetContainerStateOK) Error() string {
-	return fmt.Sprintf("[GET /container/{id}/{state}][%d] setContainerStateOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[PATCH /container][%d] setContainerStateOK  %+v", 200, o.Payload)
 }
-
 func (o *SetContainerStateOK) GetPayload() *models.Container {
 	return o.Payload
 }
@@ -81,7 +80,7 @@ func NewSetContainerStateDefault(code int) *SetContainerStateDefault {
 	}
 }
 
-/*SetContainerStateDefault handles this case with default header values.
+/* SetContainerStateDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -97,9 +96,8 @@ func (o *SetContainerStateDefault) Code() int {
 }
 
 func (o *SetContainerStateDefault) Error() string {
-	return fmt.Sprintf("[GET /container/{id}/{state}][%d] set_container_state default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[PATCH /container][%d] set_container_state default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *SetContainerStateDefault) GetPayload() *models.Error {
 	return o.Payload
 }

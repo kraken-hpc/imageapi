@@ -10,7 +10,7 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/kraken-hpc/imageapi/client/attach"
+	"github.com/kraken-hpc/imageapi/client/attachments"
 	"github.com/kraken-hpc/imageapi/client/containers"
 	"github.com/kraken-hpc/imageapi/client/mounts"
 )
@@ -57,7 +57,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Imageapi {
 
 	cli := new(Imageapi)
 	cli.Transport = transport
-	cli.Attach = attach.New(transport, formats)
+	cli.Attachments = attachments.New(transport, formats)
 	cli.Containers = containers.New(transport, formats)
 	cli.Mounts = mounts.New(transport, formats)
 	return cli
@@ -104,7 +104,7 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // Imageapi is a client for imageapi
 type Imageapi struct {
-	Attach attach.ClientService
+	Attachments attachments.ClientService
 
 	Containers containers.ClientService
 
@@ -116,7 +116,7 @@ type Imageapi struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *Imageapi) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-	c.Attach.SetTransport(transport)
+	c.Attachments.SetTransport(transport)
 	c.Containers.SetTransport(transport)
 	c.Mounts.SetTransport(transport)
 }

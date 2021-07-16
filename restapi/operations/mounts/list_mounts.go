@@ -29,7 +29,7 @@ func NewListMounts(ctx *middleware.Context, handler ListMountsHandler) *ListMoun
 	return &ListMounts{Context: ctx, Handler: handler}
 }
 
-/*ListMounts swagger:route GET /mount mounts listMounts
+/* ListMounts swagger:route GET /mount mounts listMounts
 
 List mounts
 
@@ -42,7 +42,7 @@ type ListMounts struct {
 func (o *ListMounts) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewListMountsParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -19,7 +19,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/kraken-hpc/imageapi/restapi/operations/attach"
+	"github.com/kraken-hpc/imageapi/restapi/operations/attachments"
 	"github.com/kraken-hpc/imageapi/restapi/operations/containers"
 	"github.com/kraken-hpc/imageapi/restapi/operations/mounts"
 )
@@ -46,8 +46,14 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		AttachmentsDeleteAttachHandler: attachments.DeleteAttachHandlerFunc(func(params attachments.DeleteAttachParams) middleware.Responder {
+			return middleware.NotImplemented("operation attachments.DeleteAttach has not yet been implemented")
+		}),
 		MountsDeleteMountHandler: mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.DeleteMount has not yet been implemented")
+		}),
+		AttachmentsAttachHandler: attachments.AttachHandlerFunc(func(params attachments.AttachParams) middleware.Responder {
+			return middleware.NotImplemented("operation attachments.Attach has not yet been implemented")
 		}),
 		ContainersCreateContainerHandler: containers.CreateContainerHandlerFunc(func(params containers.CreateContainerParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.CreateContainer has not yet been implemented")
@@ -55,23 +61,8 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		ContainersDeleteContainerHandler: containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.DeleteContainer has not yet been implemented")
 		}),
-		ContainersDeleteContainerBynameHandler: containers.DeleteContainerBynameHandlerFunc(func(params containers.DeleteContainerBynameParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.DeleteContainerByname has not yet been implemented")
-		}),
-		ContainersGetContainerHandler: containers.GetContainerHandlerFunc(func(params containers.GetContainerParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.GetContainer has not yet been implemented")
-		}),
-		ContainersGetContainerBynameHandler: containers.GetContainerBynameHandlerFunc(func(params containers.GetContainerBynameParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.GetContainerByname has not yet been implemented")
-		}),
-		MountsGetMountOverlayHandler: mounts.GetMountOverlayHandlerFunc(func(params mounts.GetMountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.GetMountOverlay has not yet been implemented")
-		}),
-		MountsGetMountRbdHandler: mounts.GetMountRbdHandlerFunc(func(params mounts.GetMountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.GetMountRbd has not yet been implemented")
-		}),
-		AttachGetRbdHandler: attach.GetRbdHandlerFunc(func(params attach.GetRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.GetRbd has not yet been implemented")
+		AttachmentsListAttachmentsHandler: attachments.ListAttachmentsHandlerFunc(func(params attachments.ListAttachmentsParams) middleware.Responder {
+			return middleware.NotImplemented("operation attachments.ListAttachments has not yet been implemented")
 		}),
 		ContainersListContainersHandler: containers.ListContainersHandlerFunc(func(params containers.ListContainersParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.ListContainers has not yet been implemented")
@@ -79,41 +70,11 @@ func NewImageapiAPI(spec *loads.Document) *ImageapiAPI {
 		MountsListMountsHandler: mounts.ListMountsHandlerFunc(func(params mounts.ListMountsParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.ListMounts has not yet been implemented")
 		}),
-		MountsListMountsOverlayHandler: mounts.ListMountsOverlayHandlerFunc(func(params mounts.ListMountsOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.ListMountsOverlay has not yet been implemented")
-		}),
-		MountsListMountsRbdHandler: mounts.ListMountsRbdHandlerFunc(func(params mounts.ListMountsRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.ListMountsRbd has not yet been implemented")
-		}),
-		AttachListRbdsHandler: attach.ListRbdsHandlerFunc(func(params attach.ListRbdsParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.ListRbds has not yet been implemented")
-		}),
-		AttachMapRbdHandler: attach.MapRbdHandlerFunc(func(params attach.MapRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.MapRbd has not yet been implemented")
-		}),
 		MountsMountHandler: mounts.MountHandlerFunc(func(params mounts.MountParams) middleware.Responder {
 			return middleware.NotImplemented("operation mounts.Mount has not yet been implemented")
 		}),
-		MountsMountOverlayHandler: mounts.MountOverlayHandlerFunc(func(params mounts.MountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.MountOverlay has not yet been implemented")
-		}),
-		MountsMountRbdHandler: mounts.MountRbdHandlerFunc(func(params mounts.MountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.MountRbd has not yet been implemented")
-		}),
 		ContainersSetContainerStateHandler: containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
 			return middleware.NotImplemented("operation containers.SetContainerState has not yet been implemented")
-		}),
-		ContainersSetContainerStateBynameHandler: containers.SetContainerStateBynameHandlerFunc(func(params containers.SetContainerStateBynameParams) middleware.Responder {
-			return middleware.NotImplemented("operation containers.SetContainerStateByname has not yet been implemented")
-		}),
-		AttachUnmapRbdHandler: attach.UnmapRbdHandlerFunc(func(params attach.UnmapRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation attach.UnmapRbd has not yet been implemented")
-		}),
-		MountsUnmountOverlayHandler: mounts.UnmountOverlayHandlerFunc(func(params mounts.UnmountOverlayParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.UnmountOverlay has not yet been implemented")
-		}),
-		MountsUnmountRbdHandler: mounts.UnmountRbdHandlerFunc(func(params mounts.UnmountRbdParams) middleware.Responder {
-			return middleware.NotImplemented("operation mounts.UnmountRbd has not yet been implemented")
 		}),
 	}
 }
@@ -145,9 +106,11 @@ type ImageapiAPI struct {
 	// BasicAuthenticator generates a runtime.Authenticator from the supplied basic auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BasicAuthenticator func(security.UserPassAuthentication) runtime.Authenticator
+
 	// APIKeyAuthenticator generates a runtime.Authenticator from the supplied token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	APIKeyAuthenticator func(string, string, security.TokenAuthentication) runtime.Authenticator
+
 	// BearerAuthenticator generates a runtime.Authenticator from the supplied bearer token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BearerAuthenticator func(string, security.ScopedTokenAuthentication) runtime.Authenticator
@@ -160,52 +123,27 @@ type ImageapiAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// AttachmentsDeleteAttachHandler sets the operation handler for the delete attach operation
+	AttachmentsDeleteAttachHandler attachments.DeleteAttachHandler
 	// MountsDeleteMountHandler sets the operation handler for the delete mount operation
 	MountsDeleteMountHandler mounts.DeleteMountHandler
+	// AttachmentsAttachHandler sets the operation handler for the attach operation
+	AttachmentsAttachHandler attachments.AttachHandler
 	// ContainersCreateContainerHandler sets the operation handler for the create container operation
 	ContainersCreateContainerHandler containers.CreateContainerHandler
 	// ContainersDeleteContainerHandler sets the operation handler for the delete container operation
 	ContainersDeleteContainerHandler containers.DeleteContainerHandler
-	// ContainersDeleteContainerBynameHandler sets the operation handler for the delete container byname operation
-	ContainersDeleteContainerBynameHandler containers.DeleteContainerBynameHandler
-	// ContainersGetContainerHandler sets the operation handler for the get container operation
-	ContainersGetContainerHandler containers.GetContainerHandler
-	// ContainersGetContainerBynameHandler sets the operation handler for the get container byname operation
-	ContainersGetContainerBynameHandler containers.GetContainerBynameHandler
-	// MountsGetMountOverlayHandler sets the operation handler for the get mount overlay operation
-	MountsGetMountOverlayHandler mounts.GetMountOverlayHandler
-	// MountsGetMountRbdHandler sets the operation handler for the get mount rbd operation
-	MountsGetMountRbdHandler mounts.GetMountRbdHandler
-	// AttachGetRbdHandler sets the operation handler for the get rbd operation
-	AttachGetRbdHandler attach.GetRbdHandler
+	// AttachmentsListAttachmentsHandler sets the operation handler for the list attachments operation
+	AttachmentsListAttachmentsHandler attachments.ListAttachmentsHandler
 	// ContainersListContainersHandler sets the operation handler for the list containers operation
 	ContainersListContainersHandler containers.ListContainersHandler
 	// MountsListMountsHandler sets the operation handler for the list mounts operation
 	MountsListMountsHandler mounts.ListMountsHandler
-	// MountsListMountsOverlayHandler sets the operation handler for the list mounts overlay operation
-	MountsListMountsOverlayHandler mounts.ListMountsOverlayHandler
-	// MountsListMountsRbdHandler sets the operation handler for the list mounts rbd operation
-	MountsListMountsRbdHandler mounts.ListMountsRbdHandler
-	// AttachListRbdsHandler sets the operation handler for the list rbds operation
-	AttachListRbdsHandler attach.ListRbdsHandler
-	// AttachMapRbdHandler sets the operation handler for the map rbd operation
-	AttachMapRbdHandler attach.MapRbdHandler
 	// MountsMountHandler sets the operation handler for the mount operation
 	MountsMountHandler mounts.MountHandler
-	// MountsMountOverlayHandler sets the operation handler for the mount overlay operation
-	MountsMountOverlayHandler mounts.MountOverlayHandler
-	// MountsMountRbdHandler sets the operation handler for the mount rbd operation
-	MountsMountRbdHandler mounts.MountRbdHandler
 	// ContainersSetContainerStateHandler sets the operation handler for the set container state operation
 	ContainersSetContainerStateHandler containers.SetContainerStateHandler
-	// ContainersSetContainerStateBynameHandler sets the operation handler for the set container state byname operation
-	ContainersSetContainerStateBynameHandler containers.SetContainerStateBynameHandler
-	// AttachUnmapRbdHandler sets the operation handler for the unmap rbd operation
-	AttachUnmapRbdHandler attach.UnmapRbdHandler
-	// MountsUnmountOverlayHandler sets the operation handler for the unmount overlay operation
-	MountsUnmountOverlayHandler mounts.UnmountOverlayHandler
-	// MountsUnmountRbdHandler sets the operation handler for the unmount rbd operation
-	MountsUnmountRbdHandler mounts.UnmountRbdHandler
+
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -282,8 +220,14 @@ func (o *ImageapiAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.AttachmentsDeleteAttachHandler == nil {
+		unregistered = append(unregistered, "attachments.DeleteAttachHandler")
+	}
 	if o.MountsDeleteMountHandler == nil {
 		unregistered = append(unregistered, "mounts.DeleteMountHandler")
+	}
+	if o.AttachmentsAttachHandler == nil {
+		unregistered = append(unregistered, "attachments.AttachHandler")
 	}
 	if o.ContainersCreateContainerHandler == nil {
 		unregistered = append(unregistered, "containers.CreateContainerHandler")
@@ -291,23 +235,8 @@ func (o *ImageapiAPI) Validate() error {
 	if o.ContainersDeleteContainerHandler == nil {
 		unregistered = append(unregistered, "containers.DeleteContainerHandler")
 	}
-	if o.ContainersDeleteContainerBynameHandler == nil {
-		unregistered = append(unregistered, "containers.DeleteContainerBynameHandler")
-	}
-	if o.ContainersGetContainerHandler == nil {
-		unregistered = append(unregistered, "containers.GetContainerHandler")
-	}
-	if o.ContainersGetContainerBynameHandler == nil {
-		unregistered = append(unregistered, "containers.GetContainerBynameHandler")
-	}
-	if o.MountsGetMountOverlayHandler == nil {
-		unregistered = append(unregistered, "mounts.GetMountOverlayHandler")
-	}
-	if o.MountsGetMountRbdHandler == nil {
-		unregistered = append(unregistered, "mounts.GetMountRbdHandler")
-	}
-	if o.AttachGetRbdHandler == nil {
-		unregistered = append(unregistered, "attach.GetRbdHandler")
+	if o.AttachmentsListAttachmentsHandler == nil {
+		unregistered = append(unregistered, "attachments.ListAttachmentsHandler")
 	}
 	if o.ContainersListContainersHandler == nil {
 		unregistered = append(unregistered, "containers.ListContainersHandler")
@@ -315,41 +244,11 @@ func (o *ImageapiAPI) Validate() error {
 	if o.MountsListMountsHandler == nil {
 		unregistered = append(unregistered, "mounts.ListMountsHandler")
 	}
-	if o.MountsListMountsOverlayHandler == nil {
-		unregistered = append(unregistered, "mounts.ListMountsOverlayHandler")
-	}
-	if o.MountsListMountsRbdHandler == nil {
-		unregistered = append(unregistered, "mounts.ListMountsRbdHandler")
-	}
-	if o.AttachListRbdsHandler == nil {
-		unregistered = append(unregistered, "attach.ListRbdsHandler")
-	}
-	if o.AttachMapRbdHandler == nil {
-		unregistered = append(unregistered, "attach.MapRbdHandler")
-	}
 	if o.MountsMountHandler == nil {
 		unregistered = append(unregistered, "mounts.MountHandler")
 	}
-	if o.MountsMountOverlayHandler == nil {
-		unregistered = append(unregistered, "mounts.MountOverlayHandler")
-	}
-	if o.MountsMountRbdHandler == nil {
-		unregistered = append(unregistered, "mounts.MountRbdHandler")
-	}
 	if o.ContainersSetContainerStateHandler == nil {
 		unregistered = append(unregistered, "containers.SetContainerStateHandler")
-	}
-	if o.ContainersSetContainerStateBynameHandler == nil {
-		unregistered = append(unregistered, "containers.SetContainerStateBynameHandler")
-	}
-	if o.AttachUnmapRbdHandler == nil {
-		unregistered = append(unregistered, "attach.UnmapRbdHandler")
-	}
-	if o.MountsUnmountOverlayHandler == nil {
-		unregistered = append(unregistered, "mounts.UnmountOverlayHandler")
-	}
-	if o.MountsUnmountRbdHandler == nil {
-		unregistered = append(unregistered, "mounts.UnmountRbdHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -442,7 +341,15 @@ func (o *ImageapiAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/attach"] = attachments.NewDeleteAttach(o.context, o.AttachmentsDeleteAttachHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/mount"] = mounts.NewDeleteMount(o.context, o.MountsDeleteMountHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/attach"] = attachments.NewAttach(o.context, o.AttachmentsAttachHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
@@ -450,31 +357,11 @@ func (o *ImageapiAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/container/{id}"] = containers.NewDeleteContainer(o.context, o.ContainersDeleteContainerHandler)
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/container/byname/{name}"] = containers.NewDeleteContainerByname(o.context, o.ContainersDeleteContainerBynameHandler)
+	o.handlers["DELETE"]["/container"] = containers.NewDeleteContainer(o.context, o.ContainersDeleteContainerHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/container/{id}"] = containers.NewGetContainer(o.context, o.ContainersGetContainerHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/container/byname/{name}"] = containers.NewGetContainerByname(o.context, o.ContainersGetContainerBynameHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/mount/overlay/{id}"] = mounts.NewGetMountOverlay(o.context, o.MountsGetMountOverlayHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/mount/rbd/{id}"] = mounts.NewGetMountRbd(o.context, o.MountsGetMountRbdHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/attach/rbd/{id}"] = attach.NewGetRbd(o.context, o.AttachGetRbdHandler)
+	o.handlers["GET"]["/attach"] = attachments.NewListAttachments(o.context, o.AttachmentsListAttachmentsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -483,54 +370,14 @@ func (o *ImageapiAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/mount"] = mounts.NewListMounts(o.context, o.MountsListMountsHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/mount/overlay"] = mounts.NewListMountsOverlay(o.context, o.MountsListMountsOverlayHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/mount/rbd"] = mounts.NewListMountsRbd(o.context, o.MountsListMountsRbdHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/attach/rbd"] = attach.NewListRbds(o.context, o.AttachListRbdsHandler)
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/attach/rbd"] = attach.NewMapRbd(o.context, o.AttachMapRbdHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/mount"] = mounts.NewMount(o.context, o.MountsMountHandler)
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
+	if o.handlers["PATCH"] == nil {
+		o.handlers["PATCH"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/mount/overlay"] = mounts.NewMountOverlay(o.context, o.MountsMountOverlayHandler)
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/mount/rbd"] = mounts.NewMountRbd(o.context, o.MountsMountRbdHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/container/{id}/{state}"] = containers.NewSetContainerState(o.context, o.ContainersSetContainerStateHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/container/byname/{name}/{state}"] = containers.NewSetContainerStateByname(o.context, o.ContainersSetContainerStateBynameHandler)
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/attach/rbd/{id}"] = attach.NewUnmapRbd(o.context, o.AttachUnmapRbdHandler)
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/mount/overlay/{id}"] = mounts.NewUnmountOverlay(o.context, o.MountsUnmountOverlayHandler)
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/mount/rbd/{id}"] = mounts.NewUnmountRbd(o.context, o.MountsUnmountRbdHandler)
+	o.handlers["PATCH"]["/container"] = containers.NewSetContainerState(o.context, o.ContainersSetContainerStateHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

@@ -19,7 +19,8 @@ import (
 )
 
 // NewDeleteMountParams creates a new DeleteMountParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteMountParams() DeleteMountParams {
 
 	return DeleteMountParams{}

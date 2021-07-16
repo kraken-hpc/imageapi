@@ -46,7 +46,7 @@ func NewListMountsOK() *ListMountsOK {
 	return &ListMountsOK{}
 }
 
-/*ListMountsOK handles this case with default header values.
+/* ListMountsOK describes a response with status code 200, with default header values.
 
 list all mounts
 */
@@ -57,7 +57,6 @@ type ListMountsOK struct {
 func (o *ListMountsOK) Error() string {
 	return fmt.Sprintf("[GET /mount][%d] listMountsOK  %+v", 200, o.Payload)
 }
-
 func (o *ListMountsOK) GetPayload() []*models.Mount {
 	return o.Payload
 }
@@ -79,7 +78,7 @@ func NewListMountsDefault(code int) *ListMountsDefault {
 	}
 }
 
-/*ListMountsDefault handles this case with default header values.
+/* ListMountsDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -97,7 +96,6 @@ func (o *ListMountsDefault) Code() int {
 func (o *ListMountsDefault) Error() string {
 	return fmt.Sprintf("[GET /mount][%d] list_mounts default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *ListMountsDefault) GetPayload() *models.Error {
 	return o.Payload
 }

@@ -19,7 +19,8 @@ import (
 )
 
 // NewCreateContainerParams creates a new CreateContainerParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewCreateContainerParams() CreateContainerParams {
 
 	return CreateContainerParams{}

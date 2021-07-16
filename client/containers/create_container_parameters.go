@@ -18,56 +18,70 @@ import (
 	"github.com/kraken-hpc/imageapi/models"
 )
 
-// NewCreateContainerParams creates a new CreateContainerParams object
-// with the default values initialized.
+// NewCreateContainerParams creates a new CreateContainerParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewCreateContainerParams() *CreateContainerParams {
-	var ()
 	return &CreateContainerParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCreateContainerParamsWithTimeout creates a new CreateContainerParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewCreateContainerParamsWithTimeout(timeout time.Duration) *CreateContainerParams {
-	var ()
 	return &CreateContainerParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewCreateContainerParamsWithContext creates a new CreateContainerParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewCreateContainerParamsWithContext(ctx context.Context) *CreateContainerParams {
-	var ()
 	return &CreateContainerParams{
-
 		Context: ctx,
 	}
 }
 
 // NewCreateContainerParamsWithHTTPClient creates a new CreateContainerParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewCreateContainerParamsWithHTTPClient(client *http.Client) *CreateContainerParams {
-	var ()
 	return &CreateContainerParams{
 		HTTPClient: client,
 	}
 }
 
-/*CreateContainerParams contains all the parameters to send to the API endpoint
-for the create container operation typically these are written to a http.Request
+/* CreateContainerParams contains all the parameters to send to the API endpoint
+   for the create container operation.
+
+   Typically these are written to a http.Request.
 */
 type CreateContainerParams struct {
 
-	/*Container*/
+	// Container.
 	Container *models.Container
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the create container params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CreateContainerParams) WithDefaults() *CreateContainerParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the create container params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CreateContainerParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the create container params
@@ -121,7 +135,6 @@ func (o *CreateContainerParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		return err
 	}
 	var res []error
-
 	if o.Container != nil {
 		if err := r.SetBodyParam(o.Container); err != nil {
 			return err

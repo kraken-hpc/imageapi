@@ -19,7 +19,7 @@
 //    https
 //  Host: localhost
 //  BasePath: /imageapi/v1
-//  Version: 1.0.0
+//  Version: 0.2.0
 //
 //  Consumes:
 //    - application/json

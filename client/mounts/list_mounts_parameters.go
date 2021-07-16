@@ -14,54 +14,84 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
-// NewListMountsParams creates a new ListMountsParams object
-// with the default values initialized.
+// NewListMountsParams creates a new ListMountsParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewListMountsParams() *ListMountsParams {
-
 	return &ListMountsParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewListMountsParamsWithTimeout creates a new ListMountsParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewListMountsParamsWithTimeout(timeout time.Duration) *ListMountsParams {
-
 	return &ListMountsParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewListMountsParamsWithContext creates a new ListMountsParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewListMountsParamsWithContext(ctx context.Context) *ListMountsParams {
-
 	return &ListMountsParams{
-
 		Context: ctx,
 	}
 }
 
 // NewListMountsParamsWithHTTPClient creates a new ListMountsParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewListMountsParamsWithHTTPClient(client *http.Client) *ListMountsParams {
-
 	return &ListMountsParams{
 		HTTPClient: client,
 	}
 }
 
-/*ListMountsParams contains all the parameters to send to the API endpoint
-for the list mounts operation typically these are written to a http.Request
+/* ListMountsParams contains all the parameters to send to the API endpoint
+   for the list mounts operation.
+
+   Typically these are written to a http.Request.
 */
 type ListMountsParams struct {
+
+	/* ID.
+
+	   ID of a single mount to query.
+
+	   Format: int64
+	*/
+	ID *int64
+
+	/* Kind.
+
+	   Kind of mounts to query.
+	*/
+	Kind *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the list mounts params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ListMountsParams) WithDefaults() *ListMountsParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the list mounts params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ListMountsParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the list mounts params
@@ -97,6 +127,28 @@ func (o *ListMountsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithID adds the id to the list mounts params
+func (o *ListMountsParams) WithID(id *int64) *ListMountsParams {
+	o.SetID(id)
+	return o
+}
+
+// SetID adds the id to the list mounts params
+func (o *ListMountsParams) SetID(id *int64) {
+	o.ID = id
+}
+
+// WithKind adds the kind to the list mounts params
+func (o *ListMountsParams) WithKind(kind *string) *ListMountsParams {
+	o.SetKind(kind)
+	return o
+}
+
+// SetKind adds the kind to the list mounts params
+func (o *ListMountsParams) SetKind(kind *string) {
+	o.Kind = kind
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListMountsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +156,40 @@ func (o *ListMountsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 		return err
 	}
 	var res []error
+
+	if o.ID != nil {
+
+		// query param id
+		var qrID int64
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := swag.FormatInt64(qrID)
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Kind != nil {
+
+		// query param kind
+		var qrKind string
+
+		if o.Kind != nil {
+			qrKind = *o.Kind
+		}
+		qKind := qrKind
+		if qKind != "" {
+
+			if err := r.SetQueryParam("kind", qKind); err != nil {
+				return err
+			}
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
