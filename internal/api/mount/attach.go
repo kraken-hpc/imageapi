@@ -1,4 +1,5 @@
-package api
+// mounts attachments
+package mount
 
 import (
 	"fmt"
@@ -11,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type MountsRBDType struct {
+type MountsAttachType struct {
 	next  models.ID
 	mnts  map[models.ID]*models.MountRbd
 	mutex *sync.Mutex

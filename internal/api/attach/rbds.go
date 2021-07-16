@@ -1,4 +1,4 @@
-package api
+package attach
 
 // API operations on rbd maps
 
@@ -7,37 +7,63 @@ import (
 	"sync"
 
 	"github.com/bensallen/rbd/pkg/krbd"
+	"github.com/kraken-hpc/imageapi/internal/api/types"
 	"github.com/kraken-hpc/imageapi/models"
 	"github.com/sirupsen/logrus"
 )
 
+var _ types.AttachModel = (*RbdModel)(nil)
+
+type RbdModel models.Rbd
+
+// ID for the attachment
+func (m *RbdModel) GetID() models.ID {
+	return m.ID
+}
+
+// Refs for the attachment
+func (m *RbdModel) GetRefs() int64 {
+	return m.Refs
+}
+
+// Device file for the attachment
+func (m *RbdModel) GetDevice() string {
+	return m.DeviceFile
+}
+
+var _ types.Attach = (*RbdsType)(nil)
+
 type RbdsType struct {
 	next  models.ID
-	rbds  map[models.ID]*models.Rbd
+	rbds  map[models.ID]*RbdModel
 	mutex *sync.Mutex
 	log   *logrus.Entry
 }
 
 func (r *RbdsType) Init() {
 	r.next = 1 // starting from 1 means 0 == unspecified
-	r.rbds = make(map[models.ID]*models.Rbd)
+	r.rbds = make(map[models.ID]*RbdModel)
 	r.mutex = &sync.Mutex{}
 	r.log = Log.WithField("subsys", "rbd")
 	r.log.Trace("initialized")
 }
 
-func (r *RbdsType) List() (result []*models.Rbd) {
+func (r *RbdsType) List() (result []types.Model) {
 	l := r.log.WithField("operation", "list")
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	for _, m := range r.rbds {
-		result = append(result, m)
+		result = append(result, (*RbdModel)(m))
 	}
 	l.WithField("entries", len(result)).Trace("listing entries")
 	return
 }
 
-func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
+func (r *RbdsType) Attach(rbdm types.AttachModel) (m types.AttachModel, err error) {
+	rbd, ok := rbdm.(*RbdModel)
+	if !ok {
+		return nil, types.ERRINVALDAT
+	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	// sanity check
@@ -105,7 +131,7 @@ func (r *RbdsType) Map(rbd *models.Rbd) (m *models.Rbd, err error) {
 	return rbd, err
 }
 
-func (r *RbdsType) Get(id models.ID) (m *models.Rbd, err error) {
+func (r *RbdsType) Get(id models.ID) (m types.Model, err error) {
 	l := r.log.WithFields(logrus.Fields{
 		"operation": "get",
 		"id":        id,
@@ -118,10 +144,10 @@ func (r *RbdsType) Get(id models.ID) (m *models.Rbd, err error) {
 		return
 	}
 	l.Trace("not found")
-	return nil, ERRNOTFOUND
+	return nil, types.ERRNOTFOUND
 }
 
-func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
+func (r *RbdsType) Detach(id models.ID) (m types.AttachModel, err error) {
 	l := r.log.WithFields(logrus.Fields{
 		"operation": "unmap",
 		"id":        id,
@@ -129,12 +155,12 @@ func (r *RbdsType) Unmap(id models.ID) (m *models.Rbd, err error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	var rbd *models.Rbd
+	var rbd *RbdModel
 	var ok bool
 
 	if rbd, ok = r.rbds[id]; !ok {
 		l.Debug("not found")
-		return nil, ERRNOTFOUND
+		return nil, types.ERRNOTFOUND
 	}
 	l = l.WithFields(logrus.Fields{
 		"image":    *rbd.Image,
@@ -203,7 +229,7 @@ func (r *RbdsType) Collect() {
 	if len(list) > 0 {
 		l.WithField("collectIDs", list).Debug("collecting")
 		for _, id := range list {
-			r.Unmap(id)
+			r.Detach(id)
 		}
 	}
 }

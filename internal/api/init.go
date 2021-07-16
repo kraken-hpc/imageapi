@@ -1,8 +1,8 @@
+// initialization for internal data structures & processes
 package api
 
 import (
-	"errors"
-
+	"github.com/kraken-hpc/imageapi/internal/api/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,20 +15,10 @@ var Log *logrus.Logger
 var MountDir string = "/var/run/imageapi/mounts"
 var LogDir string = "/var/run/imageapi/logs"
 
-var ERRNOTFOUND = errors.New("not found")
+var Collections = []types.Collectable{}
 
 func GarbageCollect() {
 	MountsOverlay.Collect()
 	MountsRbd.Collect()
 	Rbds.Collect()
-}
-
-var LogStringToLL = map[string]logrus.Level{
-	"PANIC": logrus.PanicLevel,
-	"FATAL": logrus.FatalLevel,
-	"ERROR": logrus.ErrorLevel,
-	"WARN":  logrus.WarnLevel,
-	"INFO":  logrus.InfoLevel,
-	"DEBUG": logrus.DebugLevel,
-	"TRACE": logrus.TraceLevel,
 }
