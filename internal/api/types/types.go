@@ -14,49 +14,14 @@ type Collectable interface {
 }
 
 type Listable interface {
-	List() []Model
-	Get(models.ID) (Model, error)
+	List() []models.EndpointObject
+	Get(models.ID) (models.EndpointObject, error)
 }
 
 type Endpoint interface {
 	Init()
 	Listable
 	Collectable
-}
-
-type AttachTypeEnum uint8
-
-// Any Model
-type Model interface {
-	GetID() models.ID
-	GetRefs() int64
-}
-
-// Models for attachment objects
-type AttachModel interface {
-	Model
-	GetDevice() string
-}
-
-type Attach interface {
-	Attach(AttachModel) (AttachModel, error)
-	Detach(models.ID) (AttachModel, error)
-	Endpoint
-}
-
-type MountModel interface {
-	GetMountpoint() string
-	Model
-}
-
-type Mount interface {
-	Mount(MountModel)
-	Unmount(models.ID)
-	Endpoint
-}
-
-type Container interface {
-	Endpoint
 }
 
 var ERRNOTFOUND = errors.New("not found")
