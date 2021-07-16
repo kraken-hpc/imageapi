@@ -16,7 +16,7 @@ info:
     For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
     and detach those lower objects.
   title: Image API
-  version: 1.0.0
+  version: 0.2.0
 produces:
 - application/json
 schemes:
@@ -104,9 +104,9 @@ definitions:
       namespace:
         type: string
 
-  rbd:
+  attach_rbd:
     description: |
-      rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.
+      attach_rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.
       Additionally, you will need options.name and options.secret specified.
     type: object
     required:
@@ -114,18 +114,8 @@ definitions:
       - pool
       - image
     properties:
-      id:
-        $ref: "#/definitions/id"
       device_id:
         description: The dev_id is the device ID in the rbd subsystem.
-        type: integer
-        format: int64
-        readOnly: true
-      device_file:
-        description: The device_file is the path to the system device file.
-        type: string
-        readOnly: true
-      refs:
         type: integer
         format: int64
         readOnly: true
@@ -146,37 +136,61 @@ definitions:
         type: string
       options:
         $ref: "#/definitions/rbd_options"
-      
-  mount_rbd:
-    description: |
-      mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it
-      (which becomes the mount's ID), and a provided filesystem type.
-      
-      Either `rbd_id` or `rbd` must be specified.  If both are specified, `rbd` will be ignored.
 
-      If `rbd` is specified and `rbd_id` is omitted, the RBD will first be attached, and will be
-      detached on deletion.
-    required:
-      - fs_type
+  attach:
+    description: |
+      Generically address attachments.  Attachments are objects that ultimately provide a block device file.    
     properties:
-      id: 
+      id:
         $ref: "#/definitions/id"
         readOnly: true
-      mountpoint:
+      kind:
+        type: string
+        enum: [ "iscsi", "local", "loopback", "rbd" ]
+        description: |
+          Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.
+
+          Currently known kinds:
+
+          iscsi - attach an iscsi lun
+          local - create an attachment reference to an existing block device (specifying a non-block device will fail)
+          loopback - create a loopback device referencing a file in a mount
+          rbd - attach a Ceph/RBD object
+
+          All kinds may or may not be fully supported by the implementation.
+      device_file:
+        description: The device_file is the path to the system device file.
         type: string
         readOnly: true
       refs:
         type: integer
         format: int64
         readOnly: true
-      # external
-      rbd_id:
-        $ref: "#/definitions/id"
       rbd:
-        $ref: "#/definitions/rbd"
+        $ref: "#/definitions/attach_rbd"
+
+  mount_attach:
+    description: |
+      `mount_attach` describes an attach mount.  This must have at least attach ID associated with it, 
+      and a provided filesystem type.
+      
+      Either `attach_id` or `attach` must be specified.  If both are specified, `attach` will be ignored.
+
+      If `attach` is specified and `attach_id` is omitted, the specified attach will first be attached, and will be
+      detached on deletion.
+    required:
+      - fs_type
+    properties:
+      # internal
+      # external
+      attach_id:
+        $ref: "#/definitions/id"
+      attach:
+        $ref: "#/definitions/attach"
       fs_type:
         type: string
       mount_options:
+        description: these mount options will be passed to the mount syscall. Supported options depend on filesystem type.
         type: array
         items:
           type: string
@@ -196,22 +210,12 @@ definitions:
       - lower
     properties:
       # internal
-      id:
-        $ref: "#/definitions/id"
-        readOnly: true
-      mountpoint:
-        type: string
-        readOnly: true
       workdir:
         type: string
         readOnly: true
       upperdir:
         description:  currently, upperdir is always a directory in mountDir
         type: string
-        readOnly: true
-      refs:
-        type: integer
-        format: int64
         readOnly: true
       # external
       lower:
@@ -228,16 +232,33 @@ definitions:
       If `mount_id` is specified, then the kind/id will be used to reference that mount.
       If no `mount_id` is supplied a defition of type `kind` must be present.
     type: object
-    required:
-      - kind
     properties:
-      mount_id:
+      id:
         $ref: "#/definitions/id"
       kind:
         type: string
-        enum: [ "overlay", "rbd" ]
-      rbd:
-        $ref: "#/definitions/mount_rbd"
+        enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+        description: |
+          Kind specifies the kind of mount.  Each kind has corresponding kind-specific options.
+
+          Currently known kinds:
+
+          attach - mount a device specified by an attachment.
+          bind - bind mount a local directory
+          nfs - mount an NFS filesystem
+          overlay - overlay mount over an existing mount
+          uri - download a file from a URI and extract it into a ramdisk mount
+
+          All kinds may or may not be fully supported by the implementation.
+      mountpoint:
+        type: string
+        readOnly: true
+      refs:
+        type: integer
+        format: int64
+        readOnly: true
+      attach:
+        $ref: "#/definitions/mount_attach"
       overlay:
         $ref: "#/definitions/mount_overlay"
 
@@ -316,79 +337,91 @@ definitions:
   
 paths:
 
-  /attach/rbd:
-    # get a list of rbds
+  /attach:
     get:
+      description: List attachments
+      parameters:
+        - in: query
+          name: id
+          type: integer
+          format: int64
+          required: false
+          description: ID of a single attachment to query.
+        - in: query
+          name: kind
+          type: string
+          enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+          required: false
+          description: Kind of attachments to query.
       tags:
-        - attach
-      operationId: list_rbds
+        - attachments
+      operationId: list_attachments
       responses:
         200:
-          description: list of rbd maps
+          description: list all attachments
           schema:
             type: array
             items:
-              $ref: "#/definitions/rbd"
-        default:
-          description: generic error response
-          schema:
-            $ref: "#/definitions/error"
-    post:
-      tags:
-        - attach
-      operationId: map_rbd
-      parameters:
-        - name: rbd
-          in: body
-          required: true
-          schema:
-            $ref: "#/definitions/rbd"
-      responses:
-        201:
-          description: RBD attach succeed
-          schema:
-            $ref: "#/definitions/rbd"
+              $ref: "#/definitions/attach"
         default:
           description: error
           schema:
             $ref: "#/definitions/error"
-
-  /attach/rbd/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-    get:
+    post:
+      description: Create a new attachment based on attach specification
       tags:
-        - attach
-      operationId: get_rbd
-      responses:
-        200:
-          description: RBD entry
+        - attachments
+      operationId: attach
+      parameters:
+        - name: attach
+          in: body
+          required: true
           schema:
-            $ref: "#/definitions/rbd"
+            $ref: "#/definitions/attach"
+      responses:
+        201:
+          description: attach succeed
+          schema:
+            $ref: "#/definitions/attach"
         default:
           description: error
           schema:
             $ref: "#/definitions/error"
     delete:
+      description: Detach a specified attachment.
       tags:
-        - attach
-      operationId: unmap_rbd
+        - attachments
+      parameters:
+        - name: attach
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/attach"
       responses:
         200:
-          description: Unmapped
+          description: Detach succeed
           schema:
-            $ref: "#/definitions/rbd"
+            $ref: "#/definitions/attach"
         default:
-          description: error
+          description: Detach failed
           schema:
             $ref: "#/definitions/error"
-  
+
   /mount:
     get:
+      parameters:
+        - in: query
+          name: id
+          type: integer
+          format: int64
+          required: false
+          description: ID of a single mount to query.
+        - in: query
+          name: kind
+          type: string
+          enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+          required: false
+          description: Kind of mounts to query.
       description: List mounts
       tags:
         - mounts
@@ -404,7 +437,6 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-    
     post:
       description: Create a new mount by mount specification.
       tags:
@@ -425,7 +457,6 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-    
     delete:
       description: Unmount a specified mount.  Note that mount reference IDs must be specified.
       tags:
@@ -445,153 +476,27 @@ paths:
           description: Unmount failed
           schema:
             $ref: "#/definitions/error"
-    
-  /mount/rbd:
-
-    get:
-      tags:
-        - mounts
-      operationId: list_mounts_rbd
-      responses:
-        200:
-          description: list of rbd mounts
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/mount_rbd"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-    post:
-      tags:
-        - mounts
-      operationId: mount_rbd
-      parameters:
-        - name: mount
-          in: body
-          required: true
-          schema:
-            $ref: "#/definitions/mount_rbd"
-      responses:
-        201:
-          description: RBD mount succeed
-          schema:
-            $ref: "#/definitions/mount_rbd"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-  /mount/rbd/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-    get:
-      tags:
-        - mounts
-      operationId: get_mount_rbd
-      responses:
-        200:
-          description: RBD mount entry
-          schema:
-            $ref: "#/definitions/mount_rbd"
-        default: 
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-    delete:
-      tags:
-        - mounts
-      operationId: unmount_rbd
-      responses:
-        200:
-          description: Unmounted
-          schema:
-            $ref: "#/definitions/mount_rbd"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-  
-  /mount/overlay:
-
-    get:
-      tags:
-        - mounts
-      operationId: list_mounts_overlay
-      responses:
-        200:
-          description: list of overlay mounts
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/mount_overlay"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-    post:
-      tags:
-        - mounts
-      operationId: mount_overlay
-      parameters:
-        - name: mount
-          in: body
-          required: true
-          schema:
-            $ref: "#/definitions/mount_overlay"
-      responses:
-        201:
-          description: Overlay mount succeed
-          schema:
-            $ref: "#/definitions/mount_overlay"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-  /mount/overlay/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-    get:
-      tags:
-        - mounts
-      operationId: get_mount_overlay
-      responses:
-        200:
-          description: Overlay mount entry
-          schema:
-            $ref: "#/definitions/mount_overlay"
-        default: 
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-    delete:
-      tags:
-        - mounts
-      operationId: unmount_overlay
-      responses:
-        200:
-          description: Unmounted
-          schema:
-            $ref: "#/definitions/mount_overlay"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
   
   /container:
     get:
+      parameters:
+        - in: query
+          name: id
+          type: integer
+          format: int64
+          description: Query containers by ID
+          required: false
+        - in: query
+          name: name
+          type: string
+          required: false
+          description: Query containers by name
+        - in: query
+          name: state
+          type: string
+          enum: [ "created",  "running", "stopping", "exited", "dead" ]
+          required: false
+          description: Query containers by state
       tags:
         - containers
       description: Get a list of containers
@@ -628,36 +533,24 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-
-  /container/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-
-    get:
-      tags:
-        - containers
-      description: Get a container definition
-      operationId: get_container
-      responses:
-        200:
-          description: Container entry
-          schema:
-            $ref: "#/definitions/container"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
     delete:
+      parameters:
+        - in: query
+          name: id
+          type: integer
+          format: int64
+          description: Delete by ID
+          required: false
+        - in: query
+          name: name
+          type: string
+          required: false
+          description: Delete by Name
       tags:
         - containers
       description: |
         Delete a container defition.  
-        This will stop running containers.
+        Either `id` or `name` query parameter must be specified.
       operationId: delete_container
       responses:
         200:
@@ -668,97 +561,33 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-
-  /container/{id}/{state}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-      - type: string
-        enum: [ "running", "exited" ]
-        in: path
-        name: state
-        required: true
-
-    get:
+    patch:
       tags:
         - containers
+      parameters:
+        - in: query
+          name: state
+          type: string
+          enum: [ "running", "exited", "paused" ]
+          required: true
+          description: Desired container state
+        - in: query
+          name: id
+          type: integer
+          format: int64
+          required: false
+          description: ID of container
+        - in: query
+          name: name
+          type: string
+          required: false
+          description: Name of container
       description: |
         Request a (valid) state for a container. 
         Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
+
+        Either a valid Name or ID must be passed as a query parameter, along with a valid state parameter.
       operationId: set_container_state
-      responses:
-        200:
-          description: Container state changed
-          schema:
-            $ref: "#/definitions/container"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-  /container/byname/{name}:
-    parameters:
-      - type: string
-        pattern: '^[a-zA-Z0-9._-]*$'
-        name: name
-        in: path
-        required: true
-
-    get:
-      tags:
-        - containers
-      description: Get a container definition
-      operationId: get_container_byname
-      responses:
-        200:
-          description: Container entry
-          schema:
-            $ref: "#/definitions/container"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-
-    delete:
-      tags:
-        - containers
-      description: |
-        Delete a container defition.  
-        This will stop running containers.
-      operationId: delete_container_byname
-      responses:
-        200:
-          description: Container deleted
-          schema:
-            $ref: "#/definitions/container"
-        default:
-          description: error
-          schema:
-            $ref:  "#/definitions/error"
-
-  /container/byname/{name}/{state}:
-    parameters:
-      - type: string
-        pattern: "^[a-zA-Z0-9.\\-_]*$"
-        name: name
-        in: path
-        required: true
-      - type: string
-        enum: [ "running", "exited" ]
-        in: path
-        name: state
-        required: true
-
-    get:
-      tags:
-        - containers
-      description: |
-        Request a (valid) state for a container. 
-        Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
-      operationId: set_container_state_byname
       responses:
         200:
           description: Container state changed
