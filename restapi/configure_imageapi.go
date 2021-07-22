@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/kraken-hpc/imageapi/internal/api"
+	internal "github.com/kraken-hpc/imageapi/internal/api"
 	"github.com/kraken-hpc/imageapi/restapi/operations"
 	"github.com/kraken-hpc/imageapi/restapi/operations/attachments"
 	"github.com/kraken-hpc/imageapi/restapi/operations/containers"
@@ -32,6 +32,32 @@ func configureAPI(api *operations.ImageapiAPI) http.Handler {
 	//
 	// Example:
 	// api.Logger = log.Printf
+
+	/////////////////////////
+	// BEGIN: custom code //
+	///////////////////////
+
+	// init the internals
+	internal.Init()
+	api.Logger = internal.API.Log.Infof
+
+	// define our handlers
+	api.AttachmentsAttachHandler = internal.AttachmentsAttachHandler
+	api.AttachmentsDeleteAttachHandler = internal.AttachmentsDeleteAttachHandler
+	api.AttachmentsListAttachmentsHandler = internal.AttachmentsListAttachmentsHandler
+
+	api.MountsMountHandler = internal.MountsMountHandler
+	api.MountsDeleteMountHandler = internal.MountsDeleteMountHandler
+	api.MountsListMountsHandler = internal.MountsListMountsHandler
+
+	api.ContainersCreateContainerHandler = internal.ContainersCreateContainerHandler
+	api.ContainersDeleteContainerHandler = internal.ContainersDeleteContainerHandler
+	api.ContainersListContainersHandler = internal.ContainersListContainersHandler
+	api.ContainersSetContainerStateHandler = internal.ContainersSetContainerStateHandler
+
+	///////////////////////
+	// END: custom code //
+	/////////////////////
 
 	api.UseSwaggerUI()
 	// To continue using redoc as your UI, uncomment the following line
@@ -109,7 +135,6 @@ func configureTLS(tlsConfig *tls.Config) {
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix".
 func configureServer(s *http.Server, scheme, addr string) {
-	api.Init()
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.

@@ -150,7 +150,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	return n, nil
 }
 
-func (c *Containers) SetState(id models.ID, state models.ContainerState) (err error) {
+func (c *Containers) SetState(id models.ID, state models.ContainerState) (ret *Container, err error) {
 	l := c.log.WithFields(logrus.Fields{
 		"operation": "setstate",
 		"id":        id,
@@ -158,9 +158,10 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (err er
 	ctn := c.Get(id)
 	if ctn == nil {
 		l.Debug("requested setstate on non-existant container")
-		return ERRNOTFOUND
+		return nil, ERRNOTFOUND
 	}
 	defer func() {
+		API.Store.Update(ctn)
 		API.Store.RefAdd(id, -1) // clear our hold
 	}()
 
@@ -168,18 +169,18 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (err er
 	switch state {
 	case models.ContainerStateRunning:
 		if ctn.Container.State == state {
-			return
+			return ctn, nil
 		}
 		ctn.Container.State = models.ContainerStateRunning
 		l.Info("starting container")
 		if err = c.run(ctn); err != nil {
 			l.WithError(err).Error("failed to start")
 			ctn.Container.State = models.ContainerStateDead
-			return ERRFAIL
+			return nil, ERRFAIL
 		}
 	case models.ContainerStateExited:
 		if ctn.Container.State == state {
-			return
+			return ctn, nil
 		}
 		l.Info("stopping container")
 		c.stop(ctn)
@@ -188,7 +189,7 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (err er
 			models.ContainerStateRunning,
 			models.ContainerStateExited)
 		l.WithError(err).Error("failed")
-		return ERRINVALDAT
+		return nil, ERRINVALDAT
 	}
 	return
 }

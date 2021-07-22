@@ -54,6 +54,15 @@ var ERRNODRV = errors.New("no driver found for this object type")
 var ERRSRV = errors.New("internal server error")
 var ERRFAIL = errors.New("operation failed")
 
+var errorToHTTP = map[error]int{
+	ERRNOTFOUND: 404,
+	ERRINVALDAT: 400,
+	ERRBUSY:     409,
+	ERRNODRV:    501,
+	ERRSRV:      500,
+	ERRFAIL:     500,
+}
+
 var LogStringToLL = map[string]logrus.Level{
 	"PANIC": logrus.PanicLevel,
 	"FATAL": logrus.FatalLevel,
