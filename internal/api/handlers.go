@@ -43,7 +43,7 @@ var AttachmentsDeleteAttachHandler = attachments.DeleteAttachHandlerFunc(func(pa
 
 var AttachmentsListAttachmentsHandler = attachments.ListAttachmentsHandlerFunc(func(params attachments.ListAttachmentsParams) middleware.Responder {
 	as := []*models.Attach{}
-	if *params.ID != 0 {
+	if params.ID != nil {
 		// Get
 		a := API.Attachments.Get((models.ID)(*params.ID))
 		if a == nil {
@@ -54,7 +54,7 @@ var AttachmentsListAttachmentsHandler = attachments.ListAttachmentsHandlerFunc(f
 		// List
 		ia := API.Attachments.List()
 		for _, a := range ia {
-			if *params.Kind != "" && a.Kind != *params.Kind {
+			if params.Kind != nil && a.Kind != *params.Kind {
 				continue
 			}
 			as = append(as, (*models.Attach)(a))
@@ -86,7 +86,7 @@ var MountsDeleteMountHandler = mounts.DeleteMountHandlerFunc(func(params mounts.
 
 var MountsListMountsHandler = mounts.ListMountsHandlerFunc(func(params mounts.ListMountsParams) middleware.Responder {
 	ms := []*models.Mount{}
-	if *params.ID != 0 {
+	if params.ID != nil {
 		// Get
 		m := API.Mounts.Get((models.ID)(*params.ID))
 		if m == nil {
@@ -120,16 +120,19 @@ var ContainersCreateContainerHandler = containers.CreateContainerHandlerFunc(fun
 var ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(func(params containers.DeleteContainerParams) middleware.Responder {
 	var err error
 	var c *Container
-	if *params.ID == 0 {
-		if *params.Name == "" {
+	var id models.ID
+	if params.ID == nil {
+		if params.Name == nil {
 			return containers.NewDeleteContainerDefault(errorToHTTP[ERRINVALDAT]).WithPayload(&models.Error{Code: int64(errorToHTTP[ERRINVALDAT]), Message: swag.String("either ID or Name must be provided")})
 		}
-		*params.ID = int64(API.Containers.NameGetID((models.Name)(*params.Name)))
+		id = API.Containers.NameGetID((models.Name)(*params.Name))
+	} else {
+		id = models.ID(*params.ID)
 	}
-	if *params.ID < 1 {
+	if id < 1 {
 		return containers.NewDeleteContainerDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
 	}
-	if c, err = API.Containers.Delete((models.ID)(*params.ID)); err != nil {
+	if c, err = API.Containers.Delete(id); err != nil {
 		err = errorSanitize(err)
 		return containers.NewDeleteContainerDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}
@@ -138,15 +141,18 @@ var ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(fun
 
 var ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(params containers.ListContainersParams) middleware.Responder {
 	cs := []*models.Container{}
-	if *params.ID != 0 || *params.Name != "" {
+	if params.ID != nil || params.Name != nil {
 		// Get
-		if *params.ID == 0 {
-			*params.ID = int64(API.Containers.NameGetID((models.Name)(*params.Name)))
+		var id models.ID
+		if params.ID == nil {
+			id = API.Containers.NameGetID((models.Name)(*params.Name))
+		} else {
+			id = models.ID(*params.ID)
 		}
-		if *params.ID < 1 {
+		if id < 1 {
 			return containers.NewListContainersDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
 		}
-		c := API.Containers.Get((models.ID)((*params.ID)))
+		c := API.Containers.Get(id)
 		if c == nil {
 			return containers.NewListContainersDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
 		}
@@ -165,18 +171,21 @@ var ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(
 })
 
 var ContainersSetContainerStateHandler = containers.SetContainerStateHandlerFunc(func(params containers.SetContainerStateParams) middleware.Responder {
-	if *params.ID == 0 {
-		if *params.Name == "" {
+	var id models.ID
+	if params.ID == nil {
+		if params.Name == nil {
 			return containers.NewSetContainerStateDefault(errorToHTTP[ERRINVALDAT]).WithPayload(&models.Error{Code: int64(errorToHTTP[ERRINVALDAT]), Message: swag.String("either ID or Name must be provided")})
 		}
-		*params.ID = int64(API.Containers.NameGetID((models.Name)(*params.Name)))
+		id = API.Containers.NameGetID((models.Name)(*params.Name))
+	} else {
+		id = models.ID(*params.ID)
 	}
-	if *params.ID < 1 {
+	if id < 1 {
 		return containers.NewSetContainerStateDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
 	}
 	var c *Container
 	var err error
-	if c, err = API.Containers.SetState((models.ID)(*params.ID), models.ContainerState(params.State)); err != nil {
+	if c, err = API.Containers.SetState(id, models.ContainerState(params.State)); err != nil {
 		err = errorSanitize(err)
 		return containers.NewCreateContainerDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}
