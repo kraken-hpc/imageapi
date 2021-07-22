@@ -626,14 +626,12 @@ func init() {
     "mount_attach": {
       "description": "` + "`" + `mount_attach` + "`" + ` describes an attach mount.  This must have at least attach ID associated with it, \nand a provided filesystem type.\n\nEither ` + "`" + `attach_id` + "`" + ` or ` + "`" + `attach` + "`" + ` must be specified.  If both are specified, ` + "`" + `attach` + "`" + ` will be ignored.\n\nIf ` + "`" + `attach` + "`" + ` is specified and ` + "`" + `attach_id` + "`" + ` is omitted, the specified attach will first be attached, and will be\ndetached on deletion.\n",
       "required": [
-        "fs_type"
+        "fs_type",
+        "attach"
       ],
       "properties": {
         "attach": {
           "$ref": "#/definitions/attach"
-        },
-        "attach_id": {
-          "$ref": "#/definitions/id"
         },
         "fs_type": {
           "type": "string"
@@ -1380,14 +1378,12 @@ func init() {
     "mount_attach": {
       "description": "` + "`" + `mount_attach` + "`" + ` describes an attach mount.  This must have at least attach ID associated with it, \nand a provided filesystem type.\n\nEither ` + "`" + `attach_id` + "`" + ` or ` + "`" + `attach` + "`" + ` must be specified.  If both are specified, ` + "`" + `attach` + "`" + ` will be ignored.\n\nIf ` + "`" + `attach` + "`" + ` is specified and ` + "`" + `attach_id` + "`" + ` is omitted, the specified attach will first be attached, and will be\ndetached on deletion.\n",
       "required": [
-        "fs_type"
+        "fs_type",
+        "attach"
       ],
       "properties": {
         "attach": {
           "$ref": "#/definitions/attach"
-        },
-        "attach_id": {
-          "$ref": "#/definitions/id"
         },
         "fs_type": {
           "type": "string"

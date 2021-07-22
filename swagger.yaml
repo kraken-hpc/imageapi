@@ -180,11 +180,8 @@ definitions:
       detached on deletion.
     required:
       - fs_type
+      - attach
     properties:
-      # internal
-      # external
-      attach_id:
-        $ref: "#/definitions/id"
       attach:
         $ref: "#/definitions/attach"
       fs_type:

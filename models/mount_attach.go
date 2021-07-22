@@ -27,10 +27,8 @@ import (
 type MountAttach struct {
 
 	// attach
-	Attach *Attach `json:"attach,omitempty"`
-
-	// attach id
-	AttachID ID `json:"attach_id,omitempty"`
+	// Required: true
+	Attach *Attach `json:"attach"`
 
 	// fs type
 	// Required: true
@@ -48,10 +46,6 @@ func (m *MountAttach) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateAttachID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateFsType(formats); err != nil {
 		res = append(res, err)
 	}
@@ -63,8 +57,9 @@ func (m *MountAttach) Validate(formats strfmt.Registry) error {
 }
 
 func (m *MountAttach) validateAttach(formats strfmt.Registry) error {
-	if swag.IsZero(m.Attach) { // not required
-		return nil
+
+	if err := validate.Required("attach", "body", m.Attach); err != nil {
+		return err
 	}
 
 	if m.Attach != nil {
@@ -74,21 +69,6 @@ func (m *MountAttach) validateAttach(formats strfmt.Registry) error {
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *MountAttach) validateAttachID(formats strfmt.Registry) error {
-	if swag.IsZero(m.AttachID) { // not required
-		return nil
-	}
-
-	if err := m.AttachID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("attach_id")
-		}
-		return err
 	}
 
 	return nil
@@ -111,10 +91,6 @@ func (m *MountAttach) ContextValidate(ctx context.Context, formats strfmt.Regist
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateAttachID(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -130,18 +106,6 @@ func (m *MountAttach) contextValidateAttach(ctx context.Context, formats strfmt.
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *MountAttach) contextValidateAttachID(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := m.AttachID.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("attach_id")
-		}
-		return err
 	}
 
 	return nil
