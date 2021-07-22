@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/kraken-hpc/imageapi/models"
+	"github.com/sirupsen/logrus"
 )
 
 // The ObjectStore centralize EndpointObject storage
@@ -115,17 +116,26 @@ func (s *ObjectStore) refAdd(id models.ID, i int64) {
 // in the future it may make sense to abstract this out
 // collect should only be called when a lock is already heald
 func (s *ObjectStore) collect(eo EndpointObject) {
+	l := API.Log.WithFields(logrus.Fields{
+		"subsys":    "store",
+		"operation": "collect",
+		"id":        eo.GetID(),
+	})
 	switch eo.EndpointObjectType() {
 	case EndpointObjectAttach:
 		if _, err := API.Attachments.Detach(eo.(*Attach)); err == nil {
 			s.Unregister(eo)
+			l.Trace("sucessfully collected attachment object")
 			return
 		}
+		l.Debug("failed to collect attachment object")
 	case EndpointObjectMount:
 		if _, err := API.Mounts.Unmount(eo.(*Mount)); err == nil {
 			s.Unregister(eo)
+			l.Trace("sucessfully collected mount object")
 			return
 		}
+		l.Debug("failed to collect mount object")
 	case EndpointObjectContainer:
 		// we don't currently garbage collect these
 	}

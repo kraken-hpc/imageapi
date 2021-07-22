@@ -10,6 +10,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
+	"github.com/kraken-hpc/imageapi/internal/api"
 	"github.com/kraken-hpc/imageapi/restapi/operations"
 	"github.com/kraken-hpc/imageapi/restapi/operations/attachments"
 	"github.com/kraken-hpc/imageapi/restapi/operations/containers"
@@ -108,6 +109,7 @@ func configureTLS(tlsConfig *tls.Config) {
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix".
 func configureServer(s *http.Server, scheme, addr string) {
+	api.Init()
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
