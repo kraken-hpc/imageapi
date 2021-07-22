@@ -2,6 +2,7 @@
 package api
 
 import (
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -18,7 +19,16 @@ var API = &APIType{
 }
 
 func Init() {
-	API.Log = logrus.New().WithField("application", "imageapi")
+	loglevel := logrus.InfoLevel
+	if llstr, ok := os.LookupEnv("IMAGEAPI_LOGLEVEL"); ok {
+		if ll, ok := LogStringToLL[llstr]; ok {
+			loglevel = ll
+		}
+	}
+	l := logrus.New()
+	l.SetLevel(loglevel)
+	API.Log = l.WithField("application", "imageapi")
+	API.Log.Infof("using log level: %s", loglevel)
 	API.Log.Trace("initializing object store")
 	API.Store.Init()
 	API.Log.Trace("initializing mounts subsystem")
