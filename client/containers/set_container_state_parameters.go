@@ -17,58 +17,87 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewSetContainerStateParams creates a new SetContainerStateParams object
-// with the default values initialized.
+// NewSetContainerStateParams creates a new SetContainerStateParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewSetContainerStateParams() *SetContainerStateParams {
-	var ()
 	return &SetContainerStateParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewSetContainerStateParamsWithTimeout creates a new SetContainerStateParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewSetContainerStateParamsWithTimeout(timeout time.Duration) *SetContainerStateParams {
-	var ()
 	return &SetContainerStateParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewSetContainerStateParamsWithContext creates a new SetContainerStateParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewSetContainerStateParamsWithContext(ctx context.Context) *SetContainerStateParams {
-	var ()
 	return &SetContainerStateParams{
-
 		Context: ctx,
 	}
 }
 
 // NewSetContainerStateParamsWithHTTPClient creates a new SetContainerStateParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewSetContainerStateParamsWithHTTPClient(client *http.Client) *SetContainerStateParams {
-	var ()
 	return &SetContainerStateParams{
 		HTTPClient: client,
 	}
 }
 
-/*SetContainerStateParams contains all the parameters to send to the API endpoint
-for the set container state operation typically these are written to a http.Request
+/* SetContainerStateParams contains all the parameters to send to the API endpoint
+   for the set container state operation.
+
+   Typically these are written to a http.Request.
 */
 type SetContainerStateParams struct {
 
-	/*ID*/
-	ID int64
-	/*State*/
+	/* ID.
+
+	   ID of container
+
+	   Format: int64
+	*/
+	ID *int64
+
+	/* Name.
+
+	   Name of container
+	*/
+	Name *string
+
+	/* State.
+
+	   Desired container state
+	*/
 	State string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the set container state params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *SetContainerStateParams) WithDefaults() *SetContainerStateParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the set container state params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *SetContainerStateParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the set container state params
@@ -105,14 +134,25 @@ func (o *SetContainerStateParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithID adds the id to the set container state params
-func (o *SetContainerStateParams) WithID(id int64) *SetContainerStateParams {
+func (o *SetContainerStateParams) WithID(id *int64) *SetContainerStateParams {
 	o.SetID(id)
 	return o
 }
 
 // SetID adds the id to the set container state params
-func (o *SetContainerStateParams) SetID(id int64) {
+func (o *SetContainerStateParams) SetID(id *int64) {
 	o.ID = id
+}
+
+// WithName adds the name to the set container state params
+func (o *SetContainerStateParams) WithName(name *string) *SetContainerStateParams {
+	o.SetName(name)
+	return o
+}
+
+// SetName adds the name to the set container state params
+func (o *SetContainerStateParams) SetName(name *string) {
+	o.Name = name
 }
 
 // WithState adds the state to the set container state params
@@ -134,14 +174,48 @@ func (o *SetContainerStateParams) WriteToRequest(r runtime.ClientRequest, reg st
 	}
 	var res []error
 
-	// path param id
-	if err := r.SetPathParam("id", swag.FormatInt64(o.ID)); err != nil {
-		return err
+	if o.ID != nil {
+
+		// query param id
+		var qrID int64
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := swag.FormatInt64(qrID)
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
 	}
 
-	// path param state
-	if err := r.SetPathParam("state", o.State); err != nil {
-		return err
+	if o.Name != nil {
+
+		// query param name
+		var qrName string
+
+		if o.Name != nil {
+			qrName = *o.Name
+		}
+		qName := qrName
+		if qName != "" {
+
+			if err := r.SetQueryParam("name", qName); err != nil {
+				return err
+			}
+		}
+	}
+
+	// query param state
+	qrState := o.State
+	qState := qrState
+	if qState != "" {
+
+		if err := r.SetQueryParam("state", qState); err != nil {
+			return err
+		}
 	}
 
 	if len(res) > 0 {

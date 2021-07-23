@@ -28,21 +28,9 @@ import (
 // swagger:model mount_overlay
 type MountOverlay struct {
 
-	// id
-	// Read Only: true
-	ID ID `json:"id,omitempty"`
-
 	// This is an array of mount specifications to be used (in order) as lower mounts for the overlay.
 	// Required: true
 	Lower []*Mount `json:"lower"`
-
-	// mountpoint
-	// Read Only: true
-	Mountpoint string `json:"mountpoint,omitempty"`
-
-	// refs
-	// Read Only: true
-	Refs int64 `json:"refs,omitempty"`
 
 	// currently, upperdir is always a directory in mountDir
 	// Read Only: true
@@ -57,10 +45,6 @@ type MountOverlay struct {
 func (m *MountOverlay) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateLower(formats); err != nil {
 		res = append(res, err)
 	}
@@ -68,21 +52,6 @@ func (m *MountOverlay) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *MountOverlay) validateID(formats strfmt.Registry) error {
-	if swag.IsZero(m.ID) { // not required
-		return nil
-	}
-
-	if err := m.ID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
-		return err
-	}
-
 	return nil
 }
 
@@ -115,19 +84,7 @@ func (m *MountOverlay) validateLower(formats strfmt.Registry) error {
 func (m *MountOverlay) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateID(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.contextValidateLower(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateMountpoint(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateRefs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -145,18 +102,6 @@ func (m *MountOverlay) ContextValidate(ctx context.Context, formats strfmt.Regis
 	return nil
 }
 
-func (m *MountOverlay) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := m.ID.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
-		return err
-	}
-
-	return nil
-}
-
 func (m *MountOverlay) contextValidateLower(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Lower); i++ {
@@ -170,24 +115,6 @@ func (m *MountOverlay) contextValidateLower(ctx context.Context, formats strfmt.
 			}
 		}
 
-	}
-
-	return nil
-}
-
-func (m *MountOverlay) contextValidateMountpoint(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := validate.ReadOnly(ctx, "mountpoint", "body", string(m.Mountpoint)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *MountOverlay) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
-
-	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
-		return err
 	}
 
 	return nil

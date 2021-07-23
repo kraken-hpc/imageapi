@@ -19,6 +19,11 @@ import (
 // swagger:model container_state
 type ContainerState string
 
+func NewContainerState(value ContainerState) *ContainerState {
+	v := value
+	return &v
+}
+
 const (
 
 	// ContainerStateCreated captures enum value "created"

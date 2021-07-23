@@ -19,6 +19,11 @@ import (
 // swagger:model container_namespace
 type ContainerNamespace string
 
+func NewContainerNamespace(value ContainerNamespace) *ContainerNamespace {
+	v := value
+	return &v
+}
+
 const (
 
 	// ContainerNamespaceCgroup captures enum value "cgroup"

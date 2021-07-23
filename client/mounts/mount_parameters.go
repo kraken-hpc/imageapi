@@ -18,56 +18,70 @@ import (
 	"github.com/kraken-hpc/imageapi/models"
 )
 
-// NewMountParams creates a new MountParams object
-// with the default values initialized.
+// NewMountParams creates a new MountParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewMountParams() *MountParams {
-	var ()
 	return &MountParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewMountParamsWithTimeout creates a new MountParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewMountParamsWithTimeout(timeout time.Duration) *MountParams {
-	var ()
 	return &MountParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewMountParamsWithContext creates a new MountParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewMountParamsWithContext(ctx context.Context) *MountParams {
-	var ()
 	return &MountParams{
-
 		Context: ctx,
 	}
 }
 
 // NewMountParamsWithHTTPClient creates a new MountParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewMountParamsWithHTTPClient(client *http.Client) *MountParams {
-	var ()
 	return &MountParams{
 		HTTPClient: client,
 	}
 }
 
-/*MountParams contains all the parameters to send to the API endpoint
-for the mount operation typically these are written to a http.Request
+/* MountParams contains all the parameters to send to the API endpoint
+   for the mount operation.
+
+   Typically these are written to a http.Request.
 */
 type MountParams struct {
 
-	/*Mount*/
+	// Mount.
 	Mount *models.Mount
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *MountParams) WithDefaults() *MountParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *MountParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the mount params
@@ -121,7 +135,6 @@ func (o *MountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registr
 		return err
 	}
 	var res []error
-
 	if o.Mount != nil {
 		if err := r.SetBodyParam(o.Mount); err != nil {
 			return err

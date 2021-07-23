@@ -19,7 +19,8 @@ import (
 )
 
 // NewMountParams creates a new MountParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewMountParams() MountParams {
 
 	return MountParams{}

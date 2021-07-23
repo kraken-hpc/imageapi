@@ -1,138 +1,144 @@
 package api
 
 import (
-	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/kraken-hpc/imageapi/models"
+	"github.com/sirupsen/logrus"
 )
 
-// API operations on generic mountpoints
-// This essentially acts as a switcher for rbd/overlay
+var MountDrivers = map[string]MountDriver{}
 
-// List all mounts
-func ListMounts() (ret []*models.Mount) {
-	ret = []*models.Mount{}
-	strRbd := "rbd"
-	for _, m := range MountsRbd.List() {
-		ret = append(ret, &models.Mount{
-			Kind:    &strRbd,
-			MountID: m.ID,
-			Rbd:     m,
-		})
+type Mount models.Mount
+
+// Make sure Mount is an EndpointObject
+var _ EndpointObject = (*Mount)(nil)
+
+func (m *Mount) GetID() models.ID                       { return m.ID }
+func (m *Mount) SetID(id models.ID)                     { m.ID = id }
+func (m *Mount) GetRefs() int64                         { return m.Refs }
+func (m *Mount) RefAdd(i int64)                         { m.Refs += i }
+func (m *Mount) EndpointObjectType() EndpointObjectType { return EndpointObjectMount }
+
+type Mounts struct {
+	log *logrus.Entry
+}
+
+// Init initializes the mounts subsystem
+func (m *Mounts) Init(log *logrus.Entry) {
+	// init driver
+	m.log = log
+	m.log.Info("initializing mount drivers")
+	for name, drv := range MountDrivers {
+		m.log.Debugf("initializing driver: %s", name)
+		drv.Init(m.log.WithField("driver", name))
 	}
-	strOverlay := "overlay"
-	for _, m := range MountsOverlay.List() {
-		ret = append(ret, &models.Mount{
-			Kind:    &strOverlay,
-			MountID: m.ID,
-			Overlay: m,
-		})
+	m.log.Info("mount subsystem initialized")
+}
+
+// List lists all mounts
+func (m *Mounts) List() (ret []*Mount) {
+	ret = []*Mount{}
+	for _, o := range API.Store.ListType(EndpointObjectMount) {
+		ret = append(ret, o.(*Mount))
 	}
 	return
+}
+
+// Get gets a mount by id
+func (m *Mounts) Get(id models.ID) *Mount {
+	if eo := API.Store.Get(id); eo != nil {
+		if ret, ok := eo.(*Mount); ok {
+			return ret
+		}
+	}
+	return nil
 }
 
 // Mount based on a generic specification
-func Mount(mnt *models.Mount) (ret *models.Mount, err error) {
-	if mnt.MountID != 0 { // we can't specify an ID
-		return nil, fmt.Errorf("disallowed mount_id was specified when trying to mount")
+func (m *Mounts) Mount(mnt *Mount) (ret *Mount, err error) {
+	l := m.log.WithField("operation", "mount")
+	if mnt.ID != 0 {
+		l.Errorf("requested a mount with non-zero mount ID")
+		return nil, ERRINVALDAT
 	}
-	switch *mnt.Kind {
-	case "rbd":
-		if mnt.Rbd == nil {
-			return nil, fmt.Errorf("rbd kind was requested, but no rbd specification was provided")
+	if drv, ok := MountDrivers[mnt.Kind]; ok {
+		// we take responsibility for creating the mountpoint
+		if err = os.MkdirAll(API.MountDir, 0700); err != nil {
+			l.WithError(err).Error("could not create base mount directory")
+			return nil, ERRSRV
 		}
-		if mnt.Rbd, err = MountsRbd.Mount(mnt.Rbd); err != nil {
-			return nil, err
+		if mnt.Mountpoint, err = ioutil.TempDir(API.MountDir, "mount_"); err != nil {
+			l.WithError(err).Error("failed to create mountpoint")
+			return nil, ERRSRV
 		}
-	case "overlay":
-		if mnt.Overlay == nil {
-			return nil, fmt.Errorf("overlay kind was requested, but no overlay specification was provided")
+		if chmoderr := os.Chmod(mnt.Mountpoint, os.FileMode(0755)); chmoderr != nil {
+			l.WithError(chmoderr).Error("chmod of mountpoint failed")
 		}
-		if mnt.Overlay, err = MountsOverlay.Mount(mnt.Overlay); err != nil {
-			return nil, err
+		ret, err = drv.Mount(mnt)
+		if err == nil {
+			ret = API.Store.Register(ret).(*Mount)
+		} else {
+			// cleanup mountpoint
+			if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {
+				// not fatal, but we should report it
+				l.WithError(rmerr).Warn("failed to remove mountpoint after failed mount")
+			}
 		}
-	default:
-		return nil, fmt.Errorf("unknown mount kind: %s", *mnt.Kind)
+		return
 	}
-	ret = mnt
-	return
+	return nil, ERRNODRV
+}
+
+// GetOrMount gets a mount if it already exists, if it does not, it attempts to mount
+func (m *Mounts) GetOrMount(mnt *Mount) (ret *Mount, err error) {
+	// existing mount?
+	if mnt.ID != 0 {
+		gm := m.Get(mnt.ID)
+		if gm != nil {
+			return gm, nil
+		}
+		return nil, ERRNOTFOUND
+	}
+	// new mount?
+	return m.Mount(mnt)
 }
 
 // Unmount based on a generic specification
-func Unmount(mnt *models.Mount) (ret *models.Mount, err error) {
-	id := mnt.MountID
-	switch *mnt.Kind {
-	case "rbd":
-		if id == 0 {
-			if mnt.Rbd == nil || mnt.Rbd.ID == 0 {
-				return nil, fmt.Errorf("no mount id specified")
-			}
-			id = mnt.Rbd.ID
-		}
-		if mnt.Rbd, err = MountsRbd.Unmount(id); err != nil {
-			return nil, err
-		}
-	case "overlay":
-		if id == 0 {
-			if mnt.Overlay == nil || mnt.Overlay.ID == 0 {
-				return nil, fmt.Errorf("no mount id specified")
-			}
-			id = mnt.Overlay.ID
-		}
-		if mnt.Overlay, err = MountsOverlay.Unmount(id); err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("unknown mount kind: %s", *mnt.Kind)
+func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
+	l := m.log.WithField("operation", "unmount")
+	if mnt.ID < 1 {
+		l.Trace("unmount called with 0 ID")
+		return nil, ERRNOTFOUND
 	}
-	ret = mnt
-	return
-}
-
-func MountGetMountpoint(mnt *models.Mount) (mntpt string, err error) {
-	id := mnt.MountID
-	switch *mnt.Kind {
-	case "rbd":
-		var rbd *models.MountRbd
-		if id == 0 {
-			if mnt.Rbd == nil || mnt.Rbd.ID == 0 {
-				return "", fmt.Errorf("no mount id specified")
-			}
-			id = mnt.Rbd.ID
-		}
-		if rbd, err = MountsRbd.Get(id); err != nil {
-			return "", err
-		}
-		mntpt = rbd.Mountpoint
-	case "overlay":
-		var overlay *models.MountOverlay
-		if id == 0 {
-			if mnt.Overlay == nil || mnt.Overlay.ID == 0 {
-				return "", fmt.Errorf("no mount id specified")
-			}
-			id = mnt.Overlay.ID
-		}
-		if overlay, err = MountsOverlay.Get(id); err != nil {
-			return "", err
-		}
-		mntpt = overlay.Mountpoint
-	default:
-		return "", fmt.Errorf("unknown mount kind: %s", *mnt.Kind)
+	eo := API.Store.Get(mnt.ID)
+	if eo == nil {
+		l.Tracef("unmount called on non-existent mount ID: %d", mnt.ID)
+		return nil, ERRNOTFOUND
 	}
-	return
-}
-
-func MountRefAdd(mnt *models.Mount, n int64) {
-	switch *mnt.Kind {
-	case "rbd":
-		if mnt.MountID == 0 {
-			mnt.MountID = mnt.Rbd.ID
-		}
-		MountsRbd.RefAdd(mnt.MountID, n)
-	case "overlay":
-		if mnt.MountID == 0 {
-			mnt.MountID = mnt.Overlay.ID
-		}
-		MountsOverlay.RefAdd(mnt.MountID, n)
+	defer func() {
+		API.Store.RefAdd(eo.GetID(), -1)
+	}()
+	var ok bool
+	if mnt, ok = eo.(*Mount); !ok {
+		l.Trace("unmount called on non-mount object")
+		return nil, ERRNOTFOUND
 	}
+	l = l.WithField("id", mnt.ID)
+	if mnt.Refs > 1 && !force { // we hold 1 from our Get above
+		l.Debug("unmount called on mount that is in use")
+		return nil, ERRBUSY
+	}
+	if drv, ok := MountDrivers[mnt.Kind]; ok {
+		ret, err = drv.Unmount(mnt)
+		if err == nil {
+			if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {
+				l.WithError(rmerr).Warn("failed to remove mountpoint on unmount")
+			}
+			API.Store.Unregister(ret)
+		}
+		return ret, err
+	}
+	return nil, ERRNODRV
 }

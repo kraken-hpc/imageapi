@@ -25,38 +25,56 @@ import (
 // swagger:model mount
 type Mount struct {
 
-	// kind
-	// Required: true
-	// Enum: [overlay rbd]
-	Kind *string `json:"kind"`
+	// attach
+	Attach *MountAttach `json:"attach,omitempty"`
 
-	// mount id
-	MountID ID `json:"mount_id,omitempty"`
+	// id
+	ID ID `json:"id,omitempty"`
+
+	// Kind specifies the kind of mount.  Each kind has corresponding kind-specific options.
+	//
+	// Currently known kinds:
+	//
+	// attach - mount a device specified by an attachment.
+	// bind - bind mount a local directory
+	// nfs - mount an NFS filesystem
+	// overlay - overlay mount over an existing mount
+	// uri - download a file from a URI and extract it into a ramdisk mount
+	//
+	// All kinds may or may not be fully supported by the implementation.
+	//
+	// Enum: [attach bind nfs overlay uri]
+	Kind string `json:"kind,omitempty"`
+
+	// mountpoint
+	// Read Only: true
+	Mountpoint string `json:"mountpoint,omitempty"`
 
 	// overlay
 	Overlay *MountOverlay `json:"overlay,omitempty"`
 
-	// rbd
-	Rbd *MountRbd `json:"rbd,omitempty"`
+	// refs
+	// Read Only: true
+	Refs int64 `json:"refs,omitempty"`
 }
 
 // Validate validates this mount
 func (m *Mount) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAttach(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateKind(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateMountID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateOverlay(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRbd(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -66,11 +84,43 @@ func (m *Mount) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Mount) validateAttach(formats strfmt.Registry) error {
+	if swag.IsZero(m.Attach) { // not required
+		return nil
+	}
+
+	if m.Attach != nil {
+		if err := m.Attach.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("attach")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mount) validateID(formats strfmt.Registry) error {
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
 var mountTypeKindPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["overlay","rbd"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["attach","bind","nfs","overlay","uri"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -80,11 +130,20 @@ func init() {
 
 const (
 
+	// MountKindAttach captures enum value "attach"
+	MountKindAttach string = "attach"
+
+	// MountKindBind captures enum value "bind"
+	MountKindBind string = "bind"
+
+	// MountKindNfs captures enum value "nfs"
+	MountKindNfs string = "nfs"
+
 	// MountKindOverlay captures enum value "overlay"
 	MountKindOverlay string = "overlay"
 
-	// MountKindRbd captures enum value "rbd"
-	MountKindRbd string = "rbd"
+	// MountKindURI captures enum value "uri"
+	MountKindURI string = "uri"
 )
 
 // prop value enum
@@ -96,28 +155,12 @@ func (m *Mount) validateKindEnum(path, location string, value string) error {
 }
 
 func (m *Mount) validateKind(formats strfmt.Registry) error {
-
-	if err := validate.Required("kind", "body", m.Kind); err != nil {
-		return err
-	}
-
-	// value enum
-	if err := m.validateKindEnum("kind", "body", *m.Kind); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Mount) validateMountID(formats strfmt.Registry) error {
-	if swag.IsZero(m.MountID) { // not required
+	if swag.IsZero(m.Kind) { // not required
 		return nil
 	}
 
-	if err := m.MountID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("mount_id")
-		}
+	// value enum
+	if err := m.validateKindEnum("kind", "body", m.Kind); err != nil {
 		return err
 	}
 
@@ -141,28 +184,19 @@ func (m *Mount) validateOverlay(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Mount) validateRbd(formats strfmt.Registry) error {
-	if swag.IsZero(m.Rbd) { // not required
-		return nil
-	}
-
-	if m.Rbd != nil {
-		if err := m.Rbd.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("rbd")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
 // ContextValidate validate this mount based on the context it is used
 func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateMountID(ctx, formats); err != nil {
+	if err := m.contextValidateAttach(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMountpoint(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -170,7 +204,7 @@ func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) er
 		res = append(res, err)
 	}
 
-	if err := m.contextValidateRbd(ctx, formats); err != nil {
+	if err := m.contextValidateRefs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -180,12 +214,35 @@ func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) er
 	return nil
 }
 
-func (m *Mount) contextValidateMountID(ctx context.Context, formats strfmt.Registry) error {
+func (m *Mount) contextValidateAttach(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := m.MountID.ContextValidate(ctx, formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("mount_id")
+	if m.Attach != nil {
+		if err := m.Attach.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("attach")
+			}
+			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateMountpoint(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "mountpoint", "body", string(m.Mountpoint)); err != nil {
 		return err
 	}
 
@@ -206,15 +263,10 @@ func (m *Mount) contextValidateOverlay(ctx context.Context, formats strfmt.Regis
 	return nil
 }
 
-func (m *Mount) contextValidateRbd(ctx context.Context, formats strfmt.Registry) error {
+func (m *Mount) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
 
-	if m.Rbd != nil {
-		if err := m.Rbd.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("rbd")
-			}
-			return err
-		}
+	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
+		return err
 	}
 
 	return nil

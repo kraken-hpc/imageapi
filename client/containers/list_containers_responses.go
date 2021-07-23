@@ -46,7 +46,7 @@ func NewListContainersOK() *ListContainersOK {
 	return &ListContainersOK{}
 }
 
-/*ListContainersOK handles this case with default header values.
+/* ListContainersOK describes a response with status code 200, with default header values.
 
 List of containers
 */
@@ -57,7 +57,6 @@ type ListContainersOK struct {
 func (o *ListContainersOK) Error() string {
 	return fmt.Sprintf("[GET /container][%d] listContainersOK  %+v", 200, o.Payload)
 }
-
 func (o *ListContainersOK) GetPayload() []*models.Container {
 	return o.Payload
 }
@@ -79,7 +78,7 @@ func NewListContainersDefault(code int) *ListContainersDefault {
 	}
 }
 
-/*ListContainersDefault handles this case with default header values.
+/* ListContainersDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -97,7 +96,6 @@ func (o *ListContainersDefault) Code() int {
 func (o *ListContainersDefault) Error() string {
 	return fmt.Sprintf("[GET /container][%d] list_containers default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *ListContainersDefault) GetPayload() *models.Error {
 	return o.Payload
 }

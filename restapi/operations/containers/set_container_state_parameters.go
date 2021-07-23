@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -16,7 +17,8 @@ import (
 )
 
 // NewSetContainerStateParams creates a new SetContainerStateParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewSetContainerStateParams() SetContainerStateParams {
 
 	return SetContainerStateParams{}
@@ -31,14 +33,17 @@ type SetContainerStateParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*
-	  Required: true
-	  In: path
+	/*ID of container
+	  In: query
 	*/
-	ID int64
-	/*
+	ID *int64
+	/*Name of container
+	  In: query
+	*/
+	Name *string
+	/*Desired container state
 	  Required: true
-	  In: path
+	  In: query
 	*/
 	State string
 }
@@ -52,51 +57,85 @@ func (o *SetContainerStateParams) BindRequest(r *http.Request, route *middleware
 
 	o.HTTPRequest = r
 
-	rID, rhkID, _ := route.Params.GetOK("id")
-	if err := o.bindID(rID, rhkID, route.Formats); err != nil {
+	qs := runtime.Values(r.URL.Query())
+
+	qID, qhkID, _ := qs.GetOK("id")
+	if err := o.bindID(qID, qhkID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
-	rState, rhkState, _ := route.Params.GetOK("state")
-	if err := o.bindState(rState, rhkState, route.Formats); err != nil {
+	qName, qhkName, _ := qs.GetOK("name")
+	if err := o.bindName(qName, qhkName, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
+	qState, qhkState, _ := qs.GetOK("state")
+	if err := o.bindState(qState, qhkState, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
 }
 
-// bindID binds and validates parameter ID from path.
+// bindID binds and validates parameter ID from query.
 func (o *SetContainerStateParams) bindID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
 
-	// Required: true
-	// Parameter is provided by construction from the route
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
-		return errors.InvalidType("id", "path", "int64", raw)
+		return errors.InvalidType("id", "query", "int64", raw)
 	}
-	o.ID = value
+	o.ID = &value
 
 	return nil
 }
 
-// bindState binds and validates parameter State from path.
+// bindName binds and validates parameter Name from query.
+func (o *SetContainerStateParams) bindName(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Name = &raw
+
+	return nil
+}
+
+// bindState binds and validates parameter State from query.
 func (o *SetContainerStateParams) bindState(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("state", "query", rawData)
+	}
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
 
 	// Required: true
-	// Parameter is provided by construction from the route
+	// AllowEmptyValue: false
 
+	if err := validate.RequiredString("state", "query", raw); err != nil {
+		return err
+	}
 	o.State = raw
 
 	if err := o.validateState(formats); err != nil {
@@ -109,7 +148,7 @@ func (o *SetContainerStateParams) bindState(rawData []string, hasKey bool, forma
 // validateState carries on validations for parameter State
 func (o *SetContainerStateParams) validateState(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("state", "path", o.State, []interface{}{"running", "exited"}, true); err != nil {
+	if err := validate.EnumCase("state", "query", o.State, []interface{}{"running", "exited", "paused"}, true); err != nil {
 		return err
 	}
 

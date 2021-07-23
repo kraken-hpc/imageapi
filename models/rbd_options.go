@@ -125,7 +125,7 @@ func (m *RbdOptions) validateIP(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.Pattern("ip", "body", string(m.IP), `^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`); err != nil {
+	if err := validate.Pattern("ip", "body", m.IP.String(), `^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`); err != nil {
 		return err
 	}
 

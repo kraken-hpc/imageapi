@@ -46,7 +46,7 @@ func NewDeleteMountOK() *DeleteMountOK {
 	return &DeleteMountOK{}
 }
 
-/*DeleteMountOK handles this case with default header values.
+/* DeleteMountOK describes a response with status code 200, with default header values.
 
 Unmount succeeded
 */
@@ -57,7 +57,6 @@ type DeleteMountOK struct {
 func (o *DeleteMountOK) Error() string {
 	return fmt.Sprintf("[DELETE /mount][%d] deleteMountOK  %+v", 200, o.Payload)
 }
-
 func (o *DeleteMountOK) GetPayload() *models.Mount {
 	return o.Payload
 }
@@ -81,7 +80,7 @@ func NewDeleteMountDefault(code int) *DeleteMountDefault {
 	}
 }
 
-/*DeleteMountDefault handles this case with default header values.
+/* DeleteMountDefault describes a response with status code -1, with default header values.
 
 Unmount failed
 */
@@ -99,7 +98,6 @@ func (o *DeleteMountDefault) Code() int {
 func (o *DeleteMountDefault) Error() string {
 	return fmt.Sprintf("[DELETE /mount][%d] DeleteMount default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *DeleteMountDefault) GetPayload() *models.Error {
 	return o.Payload
 }

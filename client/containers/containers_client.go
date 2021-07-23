@@ -23,23 +23,18 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientOption is the option for Client methods
+type ClientOption func(*runtime.ClientOperation)
+
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CreateContainer(params *CreateContainerParams) (*CreateContainerCreated, error)
+	CreateContainer(params *CreateContainerParams, opts ...ClientOption) (*CreateContainerCreated, error)
 
-	DeleteContainer(params *DeleteContainerParams) (*DeleteContainerOK, error)
+	DeleteContainer(params *DeleteContainerParams, opts ...ClientOption) (*DeleteContainerOK, error)
 
-	DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameOK, error)
+	ListContainers(params *ListContainersParams, opts ...ClientOption) (*ListContainersOK, error)
 
-	GetContainer(params *GetContainerParams) (*GetContainerOK, error)
-
-	GetContainerByname(params *GetContainerBynameParams) (*GetContainerBynameOK, error)
-
-	ListContainers(params *ListContainersParams) (*ListContainersOK, error)
-
-	SetContainerState(params *SetContainerStateParams) (*SetContainerStateOK, error)
-
-	SetContainerStateByname(params *SetContainerStateBynameParams) (*SetContainerStateBynameOK, error)
+	SetContainerState(params *SetContainerStateParams, opts ...ClientOption) (*SetContainerStateOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -47,13 +42,12 @@ type ClientService interface {
 /*
   CreateContainer Create a container
 */
-func (a *Client) CreateContainer(params *CreateContainerParams) (*CreateContainerCreated, error) {
+func (a *Client) CreateContainer(params *CreateContainerParams, opts ...ClientOption) (*CreateContainerCreated, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCreateContainerParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "create_container",
 		Method:             "POST",
 		PathPattern:        "/container",
@@ -64,7 +58,12 @@ func (a *Client) CreateContainer(params *CreateContainerParams) (*CreateContaine
 		Reader:             &CreateContainerReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -79,19 +78,18 @@ func (a *Client) CreateContainer(params *CreateContainerParams) (*CreateContaine
 
 /*
   DeleteContainer Delete a container defition.
-This will stop running containers.
+Either `id` or `name` query parameter must be specified.
 
 */
-func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContainerOK, error) {
+func (a *Client) DeleteContainer(params *DeleteContainerParams, opts ...ClientOption) (*DeleteContainerOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDeleteContainerParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "delete_container",
 		Method:             "DELETE",
-		PathPattern:        "/container/{id}",
+		PathPattern:        "/container",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -99,7 +97,12 @@ func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContaine
 		Reader:             &DeleteContainerReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -113,116 +116,14 @@ func (a *Client) DeleteContainer(params *DeleteContainerParams) (*DeleteContaine
 }
 
 /*
-  DeleteContainerByname Delete a container defition.
-This will stop running containers.
-
-*/
-func (a *Client) DeleteContainerByname(params *DeleteContainerBynameParams) (*DeleteContainerBynameOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewDeleteContainerBynameParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "delete_container_byname",
-		Method:             "DELETE",
-		PathPattern:        "/container/byname/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &DeleteContainerBynameReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*DeleteContainerBynameOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*DeleteContainerBynameDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  GetContainer Get a container definition
-*/
-func (a *Client) GetContainer(params *GetContainerParams) (*GetContainerOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetContainerParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "get_container",
-		Method:             "GET",
-		PathPattern:        "/container/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetContainerReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetContainerOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*GetContainerDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  GetContainerByname Get a container definition
-*/
-func (a *Client) GetContainerByname(params *GetContainerBynameParams) (*GetContainerBynameOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetContainerBynameParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "get_container_byname",
-		Method:             "GET",
-		PathPattern:        "/container/byname/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetContainerBynameReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetContainerBynameOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*GetContainerBynameDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
   ListContainers Get a list of containers
 */
-func (a *Client) ListContainers(params *ListContainersParams) (*ListContainersOK, error) {
+func (a *Client) ListContainers(params *ListContainersParams, opts ...ClientOption) (*ListContainersOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewListContainersParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "list_containers",
 		Method:             "GET",
 		PathPattern:        "/container",
@@ -233,7 +134,12 @@ func (a *Client) ListContainers(params *ListContainersParams) (*ListContainersOK
 		Reader:             &ListContainersReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -250,17 +156,18 @@ func (a *Client) ListContainers(params *ListContainersParams) (*ListContainersOK
   SetContainerState Request a (valid) state for a container.
 Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
 
+Either a valid Name or ID must be passed as a query parameter, along with a valid state parameter.
+
 */
-func (a *Client) SetContainerState(params *SetContainerStateParams) (*SetContainerStateOK, error) {
+func (a *Client) SetContainerState(params *SetContainerStateParams, opts ...ClientOption) (*SetContainerStateOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewSetContainerStateParams()
 	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	op := &runtime.ClientOperation{
 		ID:                 "set_container_state",
-		Method:             "GET",
-		PathPattern:        "/container/{id}/{state}",
+		Method:             "PATCH",
+		PathPattern:        "/container",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -268,7 +175,12 @@ func (a *Client) SetContainerState(params *SetContainerStateParams) (*SetContain
 		Reader:             &SetContainerStateReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
-	})
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
 	if err != nil {
 		return nil, err
 	}
@@ -278,41 +190,6 @@ func (a *Client) SetContainerState(params *SetContainerStateParams) (*SetContain
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*SetContainerStateDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  SetContainerStateByname Request a (valid) state for a container.
-Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
-
-*/
-func (a *Client) SetContainerStateByname(params *SetContainerStateBynameParams) (*SetContainerStateBynameOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewSetContainerStateBynameParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "set_container_state_byname",
-		Method:             "GET",
-		PathPattern:        "/container/byname/{name}/{state}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &SetContainerStateBynameReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*SetContainerStateBynameOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*SetContainerStateBynameDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

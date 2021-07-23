@@ -29,7 +29,7 @@ func NewDeleteMount(ctx *middleware.Context, handler DeleteMountHandler) *Delete
 	return &DeleteMount{Context: ctx, Handler: handler}
 }
 
-/*DeleteMount swagger:route DELETE /mount mounts deleteMount
+/* DeleteMount swagger:route DELETE /mount mounts deleteMount
 
 Unmount a specified mount.  Note that mount reference IDs must be specified.
 
@@ -42,7 +42,7 @@ type DeleteMount struct {
 func (o *DeleteMount) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewDeleteMountParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
