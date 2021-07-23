@@ -2,6 +2,7 @@ package api
 
 import (
 	"sync"
+	"time"
 
 	"github.com/kraken-hpc/imageapi/models"
 	"github.com/sirupsen/logrus"
@@ -18,9 +19,17 @@ func (s *ObjectStore) Init() {
 	s.next = 1
 	s.objs = make(map[models.ID]EndpointObject)
 	s.mutex = &sync.Mutex{}
+	// start the garbage collector
 	go func() {
 		for {
-
+			time.Sleep(API.CollectInterval)
+			s.mutex.Lock()
+			for _, o := range s.objs {
+				if o.GetID() == 0 {
+					go s.collect(o)
+				}
+			}
+			s.mutex.Unlock()
 		}
 	}()
 }
@@ -40,11 +49,16 @@ func (s *ObjectStore) Register(o EndpointObject) EndpointObject {
 }
 
 func (s *ObjectStore) Unregister(o EndpointObject) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.unregister(o)
+}
+
+// internal, non-locking version
+func (s *ObjectStore) unregister(o EndpointObject) {
 	if o.GetID() == 0 {
 		return
 	}
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
 	delete(s.objs, o.GetID())
 }
 
@@ -107,7 +121,7 @@ func (s *ObjectStore) refAdd(id models.ID, i int64) {
 	if obj, ok := s.objs[id]; ok {
 		obj.RefAdd(i)
 		if obj.GetRefs() == 0 {
-			s.collect(obj)
+			go s.collect(obj)
 		}
 	}
 }
