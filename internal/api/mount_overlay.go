@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	MountDrivers[models.MountKindOverlay] = &MountDriverAttach{}
+	MountDrivers[models.MountKindOverlay] = &MountDriverOverlay{}
 }
 
 type MountDriverOverlay struct {
