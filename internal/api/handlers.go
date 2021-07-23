@@ -34,7 +34,7 @@ var AttachmentsAttachHandler = attachments.AttachHandlerFunc(func(params attachm
 var AttachmentsDeleteAttachHandler = attachments.DeleteAttachHandlerFunc(func(params attachments.DeleteAttachParams) middleware.Responder {
 	var err error
 	var a *Attach
-	if a, err = API.Attachments.Detach((*Attach)(params.Attach)); err != nil {
+	if a, err = API.Attachments.Detach(&Attach{ID: (models.ID)(params.ID)}); err != nil {
 		err = errorSanitize(err)
 		return attachments.NewDeleteAttachDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}
@@ -77,7 +77,7 @@ var MountsMountHandler = mounts.MountHandlerFunc(func(params mounts.MountParams)
 var MountsDeleteMountHandler = mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
 	var err error
 	var m *Mount
-	if m, err = API.Mounts.Unmount((*Mount)(params.Mount)); err != nil {
+	if m, err = API.Mounts.Unmount(&Mount{ID: (models.ID)(params.ID)}); err != nil {
 		err = errorSanitize(err)
 		return mounts.NewDeleteMountDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}

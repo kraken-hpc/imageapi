@@ -121,12 +121,11 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "attach",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/attach"
-            }
+            "type": "integer",
+            "format": "int64",
+            "name": "id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -399,12 +398,12 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount"
-            }
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of mount to delete",
+            "name": "id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -873,12 +872,11 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "attach",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/attach"
-            }
+            "type": "integer",
+            "format": "int64",
+            "name": "id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -1151,12 +1149,12 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount"
-            }
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of mount to delete",
+            "name": "id",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {

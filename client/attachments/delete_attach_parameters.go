@@ -14,8 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/kraken-hpc/imageapi/models"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteAttachParams creates a new DeleteAttachParams object,
@@ -61,8 +60,10 @@ func NewDeleteAttachParamsWithHTTPClient(client *http.Client) *DeleteAttachParam
 */
 type DeleteAttachParams struct {
 
-	// Attach.
-	Attach *models.Attach
+	// ID.
+	//
+	// Format: int64
+	ID int64
 
 	timeout    time.Duration
 	Context    context.Context
@@ -117,15 +118,15 @@ func (o *DeleteAttachParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAttach adds the attach to the delete attach params
-func (o *DeleteAttachParams) WithAttach(attach *models.Attach) *DeleteAttachParams {
-	o.SetAttach(attach)
+// WithID adds the id to the delete attach params
+func (o *DeleteAttachParams) WithID(id int64) *DeleteAttachParams {
+	o.SetID(id)
 	return o
 }
 
-// SetAttach adds the attach to the delete attach params
-func (o *DeleteAttachParams) SetAttach(attach *models.Attach) {
-	o.Attach = attach
+// SetID adds the id to the delete attach params
+func (o *DeleteAttachParams) SetID(id int64) {
+	o.ID = id
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -135,8 +136,13 @@ func (o *DeleteAttachParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		return err
 	}
 	var res []error
-	if o.Attach != nil {
-		if err := r.SetBodyParam(o.Attach); err != nil {
+
+	// query param id
+	qrID := o.ID
+	qID := swag.FormatInt64(qrID)
+	if qID != "" {
+
+		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}
 	}

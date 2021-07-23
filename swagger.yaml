@@ -393,11 +393,11 @@ paths:
       tags:
         - attachments
       parameters:
-        - name: attach
-          in: body
+        - name: id
+          in: query
           required: true
-          schema:
-            $ref: "#/definitions/attach"
+          type: integer
+          format: int64
       responses:
         200:
           description: Detach succeed
@@ -463,11 +463,12 @@ paths:
       tags:
         - mounts
       parameters:
-        - name: mount
-          in: body
+        - name: id
+          in: query
           required: true
-          schema:
-            $ref: "#/definitions/mount"
+          type: integer
+          format: int64
+          description: ID of mount to delete
       responses:
         200:
           description: Unmount succeeded

@@ -9,11 +9,17 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // DeleteAttachURL generates an URL for the delete attach operation
 type DeleteAttachURL struct {
+	ID int64
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -42,6 +48,15 @@ func (o *DeleteAttachURL) Build() (*url.URL, error) {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	idQ := swag.FormatInt64(o.ID)
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

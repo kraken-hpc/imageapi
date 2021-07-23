@@ -14,8 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/kraken-hpc/imageapi/models"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteMountParams creates a new DeleteMountParams object,
@@ -61,8 +60,13 @@ func NewDeleteMountParamsWithHTTPClient(client *http.Client) *DeleteMountParams 
 */
 type DeleteMountParams struct {
 
-	// Mount.
-	Mount *models.Mount
+	/* ID.
+
+	   ID of mount to delete
+
+	   Format: int64
+	*/
+	ID int64
 
 	timeout    time.Duration
 	Context    context.Context
@@ -117,15 +121,15 @@ func (o *DeleteMountParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithMount adds the mount to the delete mount params
-func (o *DeleteMountParams) WithMount(mount *models.Mount) *DeleteMountParams {
-	o.SetMount(mount)
+// WithID adds the id to the delete mount params
+func (o *DeleteMountParams) WithID(id int64) *DeleteMountParams {
+	o.SetID(id)
 	return o
 }
 
-// SetMount adds the mount to the delete mount params
-func (o *DeleteMountParams) SetMount(mount *models.Mount) {
-	o.Mount = mount
+// SetID adds the id to the delete mount params
+func (o *DeleteMountParams) SetID(id int64) {
+	o.ID = id
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -135,8 +139,13 @@ func (o *DeleteMountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 		return err
 	}
 	var res []error
-	if o.Mount != nil {
-		if err := r.SetBodyParam(o.Mount); err != nil {
+
+	// query param id
+	qrID := o.ID
+	qID := swag.FormatInt64(qrID)
+	if qID != "" {
+
+		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}
 	}

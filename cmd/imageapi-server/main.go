@@ -9,7 +9,6 @@ import (
 	"github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
 
-	internal "github.com/kraken-hpc/imageapi/internal/api"
 	"github.com/kraken-hpc/imageapi/restapi"
 	"github.com/kraken-hpc/imageapi/restapi/operations"
 )
@@ -18,15 +17,6 @@ import (
 // Make sure not to overwrite this file after you generated it because all your edits would be lost!
 
 func main() {
-	////////////////////////
-	// BEGIN CUSTOM CODE //
-	//////////////////////
-
-	internal.ForkInit()
-
-	//////////////////////
-	// END CUSTOM CODE //
-	////////////////////
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
