@@ -77,7 +77,6 @@ func (m *MountDriverNFS) Unmount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("unmount failed")
 		return nil, ERRFAIL
 	}
-	API.Store.RefAdd(mnt.Attach.Attach.ID, -1)
 	l.Info("successfully unmounted")
 	// garbage collection should do our cleanup
 	return mnt, nil
