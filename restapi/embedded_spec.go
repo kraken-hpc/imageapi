@@ -53,11 +53,10 @@ func init() {
           },
           {
             "enum": [
-              "attach",
-              "bind",
-              "nfs",
-              "overlay",
-              "uri"
+              "iscsi",
+              "local",
+              "loopback",
+              "rbd"
             ],
             "type": "string",
             "description": "Kind of attachments to query.",
@@ -615,6 +614,9 @@ func init() {
         "attach": {
           "$ref": "#/definitions/mount_attach"
         },
+        "bind": {
+          "$ref": "#/definitions/mount_bind"
+        },
         "id": {
           "$ref": "#/definitions/id"
         },
@@ -662,6 +664,41 @@ func init() {
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "mount_bind": {
+      "description": "` + "`" + `mount_bind` + "`" + ` describes a local bind mount. \nBind mounts can be relative to another mount, or to /, allowing a way to access local data.\n",
+      "type": "object",
+      "required": [
+        "path",
+        "base"
+      ],
+      "properties": {
+        "base": {
+          "description": "base determines the relative root for the path.  There are two options:\n` + "`" + `root` + "`" + ` means to use the current root (` + "`" + `/` + "`" + `) as the base path.\n` + "`" + `mount` + "`" + ` means to use a mount as the base path. If this is specified, ` + "`" + `mount` + "`" + ` must be specified as well.\n",
+          "type": "string",
+          "enum": [
+            "root",
+            "mount"
+          ]
+        },
+        "mount": {
+          "$ref": "#/definitions/mount"
+        },
+        "path": {
+          "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
+          "type": "string"
+        },
+        "recursive": {
+          "description": "perform a recursive bind mount",
+          "type": "boolean",
+          "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -825,11 +862,10 @@ func init() {
           },
           {
             "enum": [
-              "attach",
-              "bind",
-              "nfs",
-              "overlay",
-              "uri"
+              "iscsi",
+              "local",
+              "loopback",
+              "rbd"
             ],
             "type": "string",
             "description": "Kind of attachments to query.",
@@ -1387,6 +1423,9 @@ func init() {
         "attach": {
           "$ref": "#/definitions/mount_attach"
         },
+        "bind": {
+          "$ref": "#/definitions/mount_bind"
+        },
         "id": {
           "$ref": "#/definitions/id"
         },
@@ -1434,6 +1473,41 @@ func init() {
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "mount_bind": {
+      "description": "` + "`" + `mount_bind` + "`" + ` describes a local bind mount. \nBind mounts can be relative to another mount, or to /, allowing a way to access local data.\n",
+      "type": "object",
+      "required": [
+        "path",
+        "base"
+      ],
+      "properties": {
+        "base": {
+          "description": "base determines the relative root for the path.  There are two options:\n` + "`" + `root` + "`" + ` means to use the current root (` + "`" + `/` + "`" + `) as the base path.\n` + "`" + `mount` + "`" + ` means to use a mount as the base path. If this is specified, ` + "`" + `mount` + "`" + ` must be specified as well.\n",
+          "type": "string",
+          "enum": [
+            "root",
+            "mount"
+          ]
+        },
+        "mount": {
+          "$ref": "#/definitions/mount"
+        },
+        "path": {
+          "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
+          "type": "string"
+        },
+        "recursive": {
+          "description": "perform a recursive bind mount",
+          "type": "boolean",
+          "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },

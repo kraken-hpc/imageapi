@@ -117,7 +117,7 @@ func (o *ListAttachmentsParams) bindKind(rawData []string, hasKey bool, formats 
 // validateKind carries on validations for parameter Kind
 func (o *ListAttachmentsParams) validateKind(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("kind", "query", *o.Kind, []interface{}{"attach", "bind", "nfs", "overlay", "uri"}, true); err != nil {
+	if err := validate.EnumCase("kind", "query", *o.Kind, []interface{}{"iscsi", "local", "loopback", "rbd"}, true); err != nil {
 		return err
 	}
 
