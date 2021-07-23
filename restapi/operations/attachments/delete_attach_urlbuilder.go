@@ -15,7 +15,8 @@ import (
 
 // DeleteAttachURL generates an URL for the delete attach operation
 type DeleteAttachURL struct {
-	ID int64
+	Force *bool
+	ID    int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -50,6 +51,14 @@ func (o *DeleteAttachURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var forceQ string
+	if o.Force != nil {
+		forceQ = swag.FormatBool(*o.Force)
+	}
+	if forceQ != "" {
+		qs.Set("force", forceQ)
+	}
 
 	idQ := swag.FormatInt64(o.ID)
 	if idQ != "" {

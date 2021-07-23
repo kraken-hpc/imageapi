@@ -398,6 +398,12 @@ paths:
           required: true
           type: integer
           format: int64
+        - in: query
+          name: force
+          type: boolean
+          required: false
+          default: false
+          description: Force deletion
       responses:
         200:
           description: Detach succeed
@@ -469,6 +475,12 @@ paths:
           type: integer
           format: int64
           description: ID of mount to delete
+        - in: query
+          name: force
+          type: boolean
+          required: false
+          default: false
+          description: Force deletion
       responses:
         200:
           description: Unmount succeeded
@@ -548,6 +560,12 @@ paths:
           type: string
           required: false
           description: Delete by Name
+        - in: query
+          name: force
+          type: boolean
+          required: false
+          default: false
+          description: Force deletion
       tags:
         - containers
       description: |

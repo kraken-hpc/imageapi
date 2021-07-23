@@ -16,11 +16,18 @@ import (
 )
 
 // NewDeleteContainerParams creates a new DeleteContainerParams object
-//
-// There are no default values defined in the spec.
+// with the default values initialized.
 func NewDeleteContainerParams() DeleteContainerParams {
 
-	return DeleteContainerParams{}
+	var (
+		// initialize parameters with default values
+
+		forceDefault = bool(false)
+	)
+
+	return DeleteContainerParams{
+		Force: &forceDefault,
+	}
 }
 
 // DeleteContainerParams contains all the bound params for the delete container operation
@@ -32,6 +39,11 @@ type DeleteContainerParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*Force deletion
+	  In: query
+	  Default: false
+	*/
+	Force *bool
 	/*Delete by ID
 	  In: query
 	*/
@@ -53,6 +65,11 @@ func (o *DeleteContainerParams) BindRequest(r *http.Request, route *middleware.M
 
 	qs := runtime.Values(r.URL.Query())
 
+	qForce, qhkForce, _ := qs.GetOK("force")
+	if err := o.bindForce(qForce, qhkForce, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	qID, qhkID, _ := qs.GetOK("id")
 	if err := o.bindID(qID, qhkID, route.Formats); err != nil {
 		res = append(res, err)
@@ -65,6 +82,30 @@ func (o *DeleteContainerParams) BindRequest(r *http.Request, route *middleware.M
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindForce binds and validates parameter Force from query.
+func (o *DeleteContainerParams) bindForce(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewDeleteContainerParams()
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("force", "query", "bool", raw)
+	}
+	o.Force = &value
+
 	return nil
 }
 

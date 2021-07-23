@@ -60,6 +60,12 @@ func NewDeleteContainerParamsWithHTTPClient(client *http.Client) *DeleteContaine
 */
 type DeleteContainerParams struct {
 
+	/* Force.
+
+	   Force deletion
+	*/
+	Force *bool
+
 	/* ID.
 
 	   Delete by ID
@@ -91,7 +97,18 @@ func (o *DeleteContainerParams) WithDefaults() *DeleteContainerParams {
 //
 // All values with no default are reset to their zero value.
 func (o *DeleteContainerParams) SetDefaults() {
-	// no default values defined for this parameter
+	var (
+		forceDefault = bool(false)
+	)
+
+	val := DeleteContainerParams{
+		Force: &forceDefault,
+	}
+
+	val.timeout = o.timeout
+	val.Context = o.Context
+	val.HTTPClient = o.HTTPClient
+	*o = val
 }
 
 // WithTimeout adds the timeout to the delete container params
@@ -127,6 +144,17 @@ func (o *DeleteContainerParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithForce adds the force to the delete container params
+func (o *DeleteContainerParams) WithForce(force *bool) *DeleteContainerParams {
+	o.SetForce(force)
+	return o
+}
+
+// SetForce adds the force to the delete container params
+func (o *DeleteContainerParams) SetForce(force *bool) {
+	o.Force = force
+}
+
 // WithID adds the id to the delete container params
 func (o *DeleteContainerParams) WithID(id *int64) *DeleteContainerParams {
 	o.SetID(id)
@@ -156,6 +184,23 @@ func (o *DeleteContainerParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		return err
 	}
 	var res []error
+
+	if o.Force != nil {
+
+		// query param force
+		var qrForce bool
+
+		if o.Force != nil {
+			qrForce = *o.Force
+		}
+		qForce := swag.FormatBool(qrForce)
+		if qForce != "" {
+
+			if err := r.SetQueryParam("force", qForce); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.ID != nil {
 

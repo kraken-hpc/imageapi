@@ -60,6 +60,12 @@ func NewDeleteMountParamsWithHTTPClient(client *http.Client) *DeleteMountParams 
 */
 type DeleteMountParams struct {
 
+	/* Force.
+
+	   Force deletion
+	*/
+	Force *bool
+
 	/* ID.
 
 	   ID of mount to delete
@@ -85,7 +91,18 @@ func (o *DeleteMountParams) WithDefaults() *DeleteMountParams {
 //
 // All values with no default are reset to their zero value.
 func (o *DeleteMountParams) SetDefaults() {
-	// no default values defined for this parameter
+	var (
+		forceDefault = bool(false)
+	)
+
+	val := DeleteMountParams{
+		Force: &forceDefault,
+	}
+
+	val.timeout = o.timeout
+	val.Context = o.Context
+	val.HTTPClient = o.HTTPClient
+	*o = val
 }
 
 // WithTimeout adds the timeout to the delete mount params
@@ -121,6 +138,17 @@ func (o *DeleteMountParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithForce adds the force to the delete mount params
+func (o *DeleteMountParams) WithForce(force *bool) *DeleteMountParams {
+	o.SetForce(force)
+	return o
+}
+
+// SetForce adds the force to the delete mount params
+func (o *DeleteMountParams) SetForce(force *bool) {
+	o.Force = force
+}
+
 // WithID adds the id to the delete mount params
 func (o *DeleteMountParams) WithID(id int64) *DeleteMountParams {
 	o.SetID(id)
@@ -139,6 +167,23 @@ func (o *DeleteMountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 		return err
 	}
 	var res []error
+
+	if o.Force != nil {
+
+		// query param force
+		var qrForce bool
+
+		if o.Force != nil {
+			qrForce = *o.Force
+		}
+		qForce := swag.FormatBool(qrForce)
+		if qForce != "" {
+
+			if err := r.SetQueryParam("force", qForce); err != nil {
+				return err
+			}
+		}
+	}
 
 	// query param id
 	qrID := o.ID

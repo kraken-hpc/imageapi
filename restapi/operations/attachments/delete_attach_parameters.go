@@ -17,11 +17,18 @@ import (
 )
 
 // NewDeleteAttachParams creates a new DeleteAttachParams object
-//
-// There are no default values defined in the spec.
+// with the default values initialized.
 func NewDeleteAttachParams() DeleteAttachParams {
 
-	return DeleteAttachParams{}
+	var (
+		// initialize parameters with default values
+
+		forceDefault = bool(false)
+	)
+
+	return DeleteAttachParams{
+		Force: &forceDefault,
+	}
 }
 
 // DeleteAttachParams contains all the bound params for the delete attach operation
@@ -33,6 +40,11 @@ type DeleteAttachParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*Force deletion
+	  In: query
+	  Default: false
+	*/
+	Force *bool
 	/*
 	  Required: true
 	  In: query
@@ -51,6 +63,11 @@ func (o *DeleteAttachParams) BindRequest(r *http.Request, route *middleware.Matc
 
 	qs := runtime.Values(r.URL.Query())
 
+	qForce, qhkForce, _ := qs.GetOK("force")
+	if err := o.bindForce(qForce, qhkForce, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	qID, qhkID, _ := qs.GetOK("id")
 	if err := o.bindID(qID, qhkID, route.Formats); err != nil {
 		res = append(res, err)
@@ -58,6 +75,30 @@ func (o *DeleteAttachParams) BindRequest(r *http.Request, route *middleware.Matc
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindForce binds and validates parameter Force from query.
+func (o *DeleteAttachParams) bindForce(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewDeleteAttachParams()
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("force", "query", "bool", raw)
+	}
+	o.Force = &value
+
 	return nil
 }
 

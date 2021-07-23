@@ -60,6 +60,12 @@ func NewDeleteAttachParamsWithHTTPClient(client *http.Client) *DeleteAttachParam
 */
 type DeleteAttachParams struct {
 
+	/* Force.
+
+	   Force deletion
+	*/
+	Force *bool
+
 	// ID.
 	//
 	// Format: int64
@@ -82,7 +88,18 @@ func (o *DeleteAttachParams) WithDefaults() *DeleteAttachParams {
 //
 // All values with no default are reset to their zero value.
 func (o *DeleteAttachParams) SetDefaults() {
-	// no default values defined for this parameter
+	var (
+		forceDefault = bool(false)
+	)
+
+	val := DeleteAttachParams{
+		Force: &forceDefault,
+	}
+
+	val.timeout = o.timeout
+	val.Context = o.Context
+	val.HTTPClient = o.HTTPClient
+	*o = val
 }
 
 // WithTimeout adds the timeout to the delete attach params
@@ -118,6 +135,17 @@ func (o *DeleteAttachParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithForce adds the force to the delete attach params
+func (o *DeleteAttachParams) WithForce(force *bool) *DeleteAttachParams {
+	o.SetForce(force)
+	return o
+}
+
+// SetForce adds the force to the delete attach params
+func (o *DeleteAttachParams) SetForce(force *bool) {
+	o.Force = force
+}
+
 // WithID adds the id to the delete attach params
 func (o *DeleteAttachParams) WithID(id int64) *DeleteAttachParams {
 	o.SetID(id)
@@ -136,6 +164,23 @@ func (o *DeleteAttachParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		return err
 	}
 	var res []error
+
+	if o.Force != nil {
+
+		// query param force
+		var qrForce bool
+
+		if o.Force != nil {
+			qrForce = *o.Force
+		}
+		qForce := swag.FormatBool(qrForce)
+		if qForce != "" {
+
+			if err := r.SetQueryParam("force", qForce); err != nil {
+				return err
+			}
+		}
+	}
 
 	// query param id
 	qrID := o.ID

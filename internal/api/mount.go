@@ -106,7 +106,7 @@ func (m *Mounts) GetOrMount(mnt *Mount) (ret *Mount, err error) {
 }
 
 // Unmount based on a generic specification
-func (m *Mounts) Unmount(mnt *Mount) (ret *Mount, err error) {
+func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 	l := m.log.WithField("operation", "unmount")
 	if mnt.ID < 1 {
 		l.Trace("unmount called with 0 ID")
@@ -126,7 +126,7 @@ func (m *Mounts) Unmount(mnt *Mount) (ret *Mount, err error) {
 		return nil, ERRNOTFOUND
 	}
 	l = l.WithField("id", mnt.ID)
-	if mnt.Refs > 1 { // we hold 1 from our Get above
+	if mnt.Refs > 1 && !force { // we hold 1 from our Get above
 		l.Debug("unmount called on mount that is in use")
 		return nil, ERRBUSY
 	}

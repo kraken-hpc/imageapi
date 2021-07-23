@@ -34,7 +34,7 @@ var AttachmentsAttachHandler = attachments.AttachHandlerFunc(func(params attachm
 var AttachmentsDeleteAttachHandler = attachments.DeleteAttachHandlerFunc(func(params attachments.DeleteAttachParams) middleware.Responder {
 	var err error
 	var a *Attach
-	if a, err = API.Attachments.Detach(&Attach{ID: (models.ID)(params.ID)}); err != nil {
+	if a, err = API.Attachments.Detach(&Attach{ID: (models.ID)(params.ID)}, *params.Force); err != nil {
 		err = errorSanitize(err)
 		return attachments.NewDeleteAttachDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}
@@ -77,7 +77,7 @@ var MountsMountHandler = mounts.MountHandlerFunc(func(params mounts.MountParams)
 var MountsDeleteMountHandler = mounts.DeleteMountHandlerFunc(func(params mounts.DeleteMountParams) middleware.Responder {
 	var err error
 	var m *Mount
-	if m, err = API.Mounts.Unmount(&Mount{ID: (models.ID)(params.ID)}); err != nil {
+	if m, err = API.Mounts.Unmount(&Mount{ID: (models.ID)(params.ID)}, *params.Force); err != nil {
 		err = errorSanitize(err)
 		return mounts.NewDeleteMountDefault(errorToHTTP[err]).WithPayload(errorPayload(err))
 	}
@@ -121,6 +121,9 @@ var ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(fun
 	var err error
 	var c *Container
 	var id models.ID
+	if *params.Force {
+		return containers.NewDeleteContainerDefault(501).WithPayload(&models.Error{Code: 501, Message: swag.String("forced container deletion is not yet implemented")})
+	}
 	if params.ID == nil {
 		if params.Name == nil {
 			return containers.NewDeleteContainerDefault(errorToHTTP[ERRINVALDAT]).WithPayload(&models.Error{Code: int64(errorToHTTP[ERRINVALDAT]), Message: swag.String("either ID or Name must be provided")})

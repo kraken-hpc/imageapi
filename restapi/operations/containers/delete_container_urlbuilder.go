@@ -15,8 +15,9 @@ import (
 
 // DeleteContainerURL generates an URL for the delete container operation
 type DeleteContainerURL struct {
-	ID   *int64
-	Name *string
+	Force *bool
+	ID    *int64
+	Name  *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -51,6 +52,14 @@ func (o *DeleteContainerURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var forceQ string
+	if o.Force != nil {
+		forceQ = swag.FormatBool(*o.Force)
+	}
+	if forceQ != "" {
+		qs.Set("force", forceQ)
+	}
 
 	var idQ string
 	if o.ID != nil {

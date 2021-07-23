@@ -126,6 +126,13 @@ func init() {
             "name": "id",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {
@@ -246,6 +253,13 @@ func init() {
             "type": "string",
             "description": "Delete by Name",
             "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
             "in": "query"
           }
         ],
@@ -404,6 +418,13 @@ func init() {
             "name": "id",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {
@@ -877,6 +898,13 @@ func init() {
             "name": "id",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {
@@ -997,6 +1025,13 @@ func init() {
             "type": "string",
             "description": "Delete by Name",
             "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
             "in": "query"
           }
         ],
@@ -1155,6 +1190,13 @@ func init() {
             "name": "id",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {

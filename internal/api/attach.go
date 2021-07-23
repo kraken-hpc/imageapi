@@ -83,7 +83,7 @@ func (a *Attachments) GetOrAttach(at *Attach) (ret *Attach, err error) {
 }
 
 // Detach detaches an attachment
-func (a *Attachments) Detach(at *Attach) (ret *Attach, err error) {
+func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	l := a.log.WithField("operation", "detach")
 	if at.ID < 1 {
 		l.Trace("detach called with ID 0")
@@ -103,7 +103,7 @@ func (a *Attachments) Detach(at *Attach) (ret *Attach, err error) {
 		return nil, ERRNOTFOUND
 	}
 	l = l.WithField("id", at.ID)
-	if at.Refs > 1 { // we hold 1 from the Get above
+	if at.Refs > 1 && !force { // we hold 1 from the Get above
 		l.Debug("detach called on an attachment that is in use")
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
