@@ -105,12 +105,14 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	l = l.WithField("id", at.ID)
 	if at.Refs > 1 && !force { // we hold 1 from the Get above
 		l.Debug("detach called on an attachment that is in use")
+		return nil, ERRBUSY
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
 		ret, err = drv.Detach(at)
 		if err == nil {
 			API.Store.Unregister(ret)
 		}
+		return ret, err
 	}
-	return nil, fmt.Errorf("no driver found for attachment kind %s", at.Kind)
+	return nil, ERRNODRV
 }

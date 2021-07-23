@@ -138,6 +138,7 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 			}
 			API.Store.Unregister(ret)
 		}
+		return ret, err
 	}
 	return nil, ERRNODRV
 }
