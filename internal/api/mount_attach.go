@@ -44,7 +44,7 @@ func (m *MountDriverAttach) Mount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("failed to mount")
 		return nil, ERRFAIL
 	}
-	l.Trace("successfully mounted")
+	l.Info("successfully mounted")
 	return mnt, nil
 }
 

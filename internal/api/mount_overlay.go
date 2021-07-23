@@ -95,6 +95,7 @@ func (m *MountDriverOverlay) Mount(mnt *Mount) (r *Mount, err error) {
 		l.WithError(err).Error("overlay mount failed")
 		return nil, ERRFAIL
 	}
+	l.Info("successfully mounted")
 	return mnt, nil
 }
 
