@@ -24,12 +24,21 @@ type MountNfs struct {
 	// Required: true
 	Host *string `json:"host"`
 
-	// these mount options will be passed to the mount syscall. Supported options depend on filesystem type.
-	MountOptions []string `json:"mount_options"`
+	// Options as specified in nfs(5).  General mount options won't work here.
+	// addr= and clientaddr= will be filled out automatically based on host.
+	// vers= will be filled by version
+	//
+	Options []string `json:"options"`
 
 	// The remote path for the NFS mount
 	// Required: true
 	Path *string `json:"path"`
+
+	// mount read-only
+	Ro *bool `json:"ro,omitempty"`
+
+	// NFS version
+	Version *string `json:"version,omitempty"`
 }
 
 // Validate validates this mount nfs

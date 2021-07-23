@@ -265,8 +265,19 @@ definitions:
       path:
         type: string
         description: The remote path for the NFS mount
-      mount_options:
-        description: these mount options will be passed to the mount syscall. Supported options depend on filesystem type.
+      ro:
+        description: mount read-only
+        type: boolean
+        default: false
+      version:
+        description: NFS version
+        type: string
+        default: "4.2"
+      options:
+        description: |
+          Options as specified in nfs(5).  General mount options won't work here.
+          addr= and clientaddr= will be filled out automatically based on host.
+          vers= will be filled by version
         type: array
         items:
           type: string

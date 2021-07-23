@@ -717,8 +717,8 @@ func init() {
           "description": "IP or hostname for remote NFS mount",
           "type": "string"
         },
-        "mount_options": {
-          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+        "options": {
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
           "type": "array",
           "items": {
             "type": "string"
@@ -727,6 +727,11 @@ func init() {
         "path": {
           "description": "The remote path for the NFS mount",
           "type": "string"
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1554,8 +1559,8 @@ func init() {
           "description": "IP or hostname for remote NFS mount",
           "type": "string"
         },
-        "mount_options": {
-          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+        "options": {
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
           "type": "array",
           "items": {
             "type": "string"
@@ -1564,6 +1569,11 @@ func init() {
         "path": {
           "description": "The remote path for the NFS mount",
           "type": "string"
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },
