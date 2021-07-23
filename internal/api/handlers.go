@@ -97,7 +97,7 @@ var MountsListMountsHandler = mounts.ListMountsHandlerFunc(func(params mounts.Li
 		// List
 		im := API.Mounts.List()
 		for _, m := range im {
-			if *params.Kind != "" && m.Kind != *params.Kind {
+			if params.Kind != nil && m.Kind != *params.Kind {
 				continue
 			}
 			ms = append(ms, (*models.Mount)(m))
@@ -161,7 +161,7 @@ var ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(
 		// List
 		is := API.Containers.List()
 		for _, c := range is {
-			if *params.State != "" && c.Container.State != models.ContainerState(*params.State) {
+			if params.State != nil && c.Container.State != models.ContainerState(*params.State) {
 				continue
 			}
 			cs = append(cs, c.Container)
