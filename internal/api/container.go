@@ -223,6 +223,7 @@ func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
 		c.mutex.Unlock()
 	}
 	API.Store.Unregister(ctn)
+	API.Store.RefAdd(ctn.Container.Mount.ID, -1)
 	l.Info("container deleted")
 	// garbage collection should take care of our mount if it's now unused
 	return ctn, nil
