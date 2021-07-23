@@ -635,6 +635,9 @@ func init() {
           "type": "string",
           "readOnly": true
         },
+        "nfs": {
+          "$ref": "#/definitions/mount_nfs"
+        },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
@@ -699,6 +702,31 @@ func init() {
           "description": "mount read-only",
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "mount_nfs": {
+      "description": "` + "`" + `mount_nfs` + "`" + ` describes an NFS mount.\n",
+      "type": "object",
+      "required": [
+        "host",
+        "path"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname for remote NFS mount",
+          "type": "string"
+        },
+        "mount_options": {
+          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "description": "The remote path for the NFS mount",
+          "type": "string"
         }
       }
     },
@@ -1444,6 +1472,9 @@ func init() {
           "type": "string",
           "readOnly": true
         },
+        "nfs": {
+          "$ref": "#/definitions/mount_nfs"
+        },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
@@ -1508,6 +1539,31 @@ func init() {
           "description": "mount read-only",
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "mount_nfs": {
+      "description": "` + "`" + `mount_nfs` + "`" + ` describes an NFS mount.\n",
+      "type": "object",
+      "required": [
+        "host",
+        "path"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname for remote NFS mount",
+          "type": "string"
+        },
+        "mount_options": {
+          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "description": "The remote path for the NFS mount",
+          "type": "string"
         }
       }
     },

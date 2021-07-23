@@ -251,6 +251,26 @@ definitions:
       mount:
         $ref: "#/definitions/mount"
           
+  mount_nfs:
+    description: |
+      `mount_nfs` describes an NFS mount.
+    type: object
+    required:
+      - host
+      - path
+    properties:
+      host:
+        type: string
+        description: IP or hostname for remote NFS mount
+      path:
+        type: string
+        description: The remote path for the NFS mount
+      mount_options:
+        description: these mount options will be passed to the mount syscall. Supported options depend on filesystem type.
+        type: array
+        items:
+          type: string
+
   mount:
     description: |
       Generically address mounts by kind and ID or definition
@@ -288,6 +308,8 @@ definitions:
         $ref: "#/definitions/mount_attach"
       bind:
         $ref: "#/definitions/mount_bind"
+      nfs:
+        $ref: "#/definitions/mount_nfs"
       overlay:
         $ref: "#/definitions/mount_overlay"
 
