@@ -58,7 +58,7 @@ func (m *MountDriverBind) Mount(mnt *Mount) (ret *Mount, err error) {
 	if *mnt.Bind.Ro {
 		options = append(options, "ro")
 	}
-	if err = mount.Mount(fullPath, mnt.Mountpoint, "", options); err != nil {
+	if err = mount.Mount(fullPath, mnt.Mountpoint, "bind", options); err != nil {
 		l.WithError(err).Error("failed to mount")
 		return nil, ERRFAIL
 	}
