@@ -139,17 +139,13 @@ func (s *ObjectStore) collect(eo EndpointObject) {
 	case EndpointObjectAttach:
 		if _, err := API.Attachments.Detach(eo.(*Attach), false); err == nil {
 			s.Unregister(eo)
-			l.Trace("sucessfully collected attachment object")
 			return
 		}
-		l.Debug("failed to collect attachment object")
 	case EndpointObjectMount:
 		if _, err := API.Mounts.Unmount(eo.(*Mount), false); err == nil {
 			s.Unregister(eo)
-			l.Trace("sucessfully collected mount object")
 			return
 		}
-		l.Debug("failed to collect mount object")
 	case EndpointObjectContainer:
 		// we don't currently garbage collect these
 	}
