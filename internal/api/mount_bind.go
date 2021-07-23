@@ -52,10 +52,10 @@ func (m *MountDriverBind) Mount(mnt *Mount) (ret *Mount, err error) {
 	// ok, we're good to attempt the mount
 	// make a mountpoint
 	options := []string{"bind"}
-	if *mnt.Bind.Recursive {
+	if mnt.Bind.Recursive != nil && *mnt.Bind.Recursive {
 		options = append(options, "rec")
 	}
-	if *mnt.Bind.Ro {
+	if mnt.Bind.Ro != nil && *mnt.Bind.Ro {
 		options = append(options, "ro")
 	}
 	if err = mount.Mount(fullPath, mnt.Mountpoint, "bind", options); err != nil {
