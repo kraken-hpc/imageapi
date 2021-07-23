@@ -33,8 +33,8 @@ func (s *ObjectStore) Register(o EndpointObject) EndpointObject {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	o.SetID(s.next)
-	s.refAdd(o.GetID(), 1)
 	s.objs[s.next] = o
+	s.refAdd(o.GetID(), 1)
 	s.next++
 	return o
 }
