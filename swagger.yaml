@@ -251,6 +251,37 @@ definitions:
       mount:
         $ref: "#/definitions/mount"
           
+  mount_nfs:
+    description: |
+      `mount_nfs` describes an NFS mount.
+    type: object
+    required:
+      - host
+      - path
+    properties:
+      host:
+        type: string
+        description: IP or hostname for remote NFS mount
+      path:
+        type: string
+        description: The remote path for the NFS mount
+      ro:
+        description: mount read-only
+        type: boolean
+        default: false
+      version:
+        description: NFS version
+        type: string
+        default: "4.2"
+      options:
+        description: |
+          Options as specified in nfs(5).  General mount options won't work here.
+          addr= and clientaddr= will be filled out automatically based on host.
+          vers= will be filled by version
+        type: array
+        items:
+          type: string
+
   mount:
     description: |
       Generically address mounts by kind and ID or definition
@@ -288,6 +319,8 @@ definitions:
         $ref: "#/definitions/mount_attach"
       bind:
         $ref: "#/definitions/mount_bind"
+      nfs:
+        $ref: "#/definitions/mount_nfs"
       overlay:
         $ref: "#/definitions/mount_overlay"
 

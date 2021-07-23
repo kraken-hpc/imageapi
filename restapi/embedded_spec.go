@@ -635,6 +635,9 @@ func init() {
           "type": "string",
           "readOnly": true
         },
+        "nfs": {
+          "$ref": "#/definitions/mount_nfs"
+        },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
@@ -694,6 +697,36 @@ func init() {
           "description": "perform a recursive bind mount",
           "type": "boolean",
           "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "mount_nfs": {
+      "description": "` + "`" + `mount_nfs` + "`" + ` describes an NFS mount.\n",
+      "type": "object",
+      "required": [
+        "host",
+        "path"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname for remote NFS mount",
+          "type": "string"
+        },
+        "options": {
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "description": "The remote path for the NFS mount",
+          "type": "string"
         },
         "ro": {
           "description": "mount read-only",
@@ -1444,6 +1477,9 @@ func init() {
           "type": "string",
           "readOnly": true
         },
+        "nfs": {
+          "$ref": "#/definitions/mount_nfs"
+        },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
@@ -1503,6 +1539,36 @@ func init() {
           "description": "perform a recursive bind mount",
           "type": "boolean",
           "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "mount_nfs": {
+      "description": "` + "`" + `mount_nfs` + "`" + ` describes an NFS mount.\n",
+      "type": "object",
+      "required": [
+        "host",
+        "path"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname for remote NFS mount",
+          "type": "string"
+        },
+        "options": {
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "description": "The remote path for the NFS mount",
+          "type": "string"
         },
         "ro": {
           "description": "mount read-only",

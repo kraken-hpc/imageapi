@@ -53,6 +53,9 @@ type Mount struct {
 	// Read Only: true
 	Mountpoint string `json:"mountpoint,omitempty"`
 
+	// nfs
+	Nfs *MountNfs `json:"nfs,omitempty"`
+
 	// overlay
 	Overlay *MountOverlay `json:"overlay,omitempty"`
 
@@ -78,6 +81,10 @@ func (m *Mount) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateKind(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNfs(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -191,6 +198,23 @@ func (m *Mount) validateKind(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Mount) validateNfs(formats strfmt.Registry) error {
+	if swag.IsZero(m.Nfs) { // not required
+		return nil
+	}
+
+	if m.Nfs != nil {
+		if err := m.Nfs.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("nfs")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *Mount) validateOverlay(formats strfmt.Registry) error {
 	if swag.IsZero(m.Overlay) { // not required
 		return nil
@@ -225,6 +249,10 @@ func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) er
 	}
 
 	if err := m.contextValidateMountpoint(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateNfs(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -286,6 +314,20 @@ func (m *Mount) contextValidateMountpoint(ctx context.Context, formats strfmt.Re
 
 	if err := validate.ReadOnly(ctx, "mountpoint", "body", string(m.Mountpoint)); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateNfs(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Nfs != nil {
+		if err := m.Nfs.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("nfs")
+			}
+			return err
+		}
 	}
 
 	return nil
