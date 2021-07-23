@@ -28,6 +28,9 @@ type Mount struct {
 	// attach
 	Attach *MountAttach `json:"attach,omitempty"`
 
+	// bind
+	Bind *MountBind `json:"bind,omitempty"`
+
 	// id
 	ID ID `json:"id,omitempty"`
 
@@ -66,6 +69,10 @@ func (m *Mount) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateBind(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -93,6 +100,23 @@ func (m *Mount) validateAttach(formats strfmt.Registry) error {
 		if err := m.Attach.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("attach")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mount) validateBind(formats strfmt.Registry) error {
+	if swag.IsZero(m.Bind) { // not required
+		return nil
+	}
+
+	if m.Bind != nil {
+		if err := m.Bind.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("bind")
 			}
 			return err
 		}
@@ -192,6 +216,10 @@ func (m *Mount) ContextValidate(ctx context.Context, formats strfmt.Registry) er
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateBind(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateID(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -220,6 +248,20 @@ func (m *Mount) contextValidateAttach(ctx context.Context, formats strfmt.Regist
 		if err := m.Attach.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("attach")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mount) contextValidateBind(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Bind != nil {
+		if err := m.Bind.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("bind")
 			}
 			return err
 		}

@@ -211,7 +211,7 @@ definitions:
         type: string
         readOnly: true
       upperdir:
-        description:  currently, upperdir is always a directory in mountDir
+        description: currently, upperdir is always a directory in mountDir
         type: string
         readOnly: true
       # external
@@ -221,6 +221,36 @@ definitions:
         items:
           $ref: "#/definitions/mount"
 
+  mount_bind:
+    description: |
+      `mount_bind` describes a local bind mount. 
+      Bind mounts can be relative to another mount, or to /, allowing a way to access local data.
+    type: object
+    required:
+      - path
+      - base
+    properties:
+      path:
+        type: string
+        description: A unix-formatted filesystem path with `/` relative to the respective base.
+      base:
+        description:  |
+          base determines the relative root for the path.  There are two options:
+          `root` means to use the current root (`/`) as the base path.
+          `mount` means to use a mount as the base path. If this is specified, `mount` must be specified as well.
+        type: string
+        enum: [ "root", "mount" ]
+      recursive:
+        description: perform a recursive bind mount
+        type: boolean
+        default: false
+      ro:
+        description: mount read-only
+        type: boolean
+        default: false
+      mount:
+        $ref: "#/definitions/mount"
+          
   mount:
     description: |
       Generically address mounts by kind and ID or definition
@@ -256,6 +286,8 @@ definitions:
         readOnly: true
       attach:
         $ref: "#/definitions/mount_attach"
+      bind:
+        $ref: "#/definitions/mount_bind"
       overlay:
         $ref: "#/definitions/mount_overlay"
 
@@ -351,7 +383,7 @@ paths:
         - in: query
           name: kind
           type: string
-          enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+          enum: [ "iscsi", "local", "loopback", "rbd" ]
           required: false
           description: Kind of attachments to query.
       tags:
