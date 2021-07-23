@@ -191,7 +191,7 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (ret *C
 		l.WithError(err).Error("failed")
 		return nil, ERRINVALDAT
 	}
-	return
+	return ctn, nil
 }
 
 func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
@@ -222,10 +222,10 @@ func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
 		delete(c.names, ctn.Container.Name)
 		c.mutex.Unlock()
 	}
-	API.Store.RefAdd(ctn.Container.ID, -1)
+	API.Store.Unregister(ctn)
 	l.Info("container deleted")
 	// garbage collection should take care of our mount if it's now unused
-	return
+	return ctn, nil
 }
 
 // NameGetID will return the ID for a given name
