@@ -14,60 +14,95 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/kraken-hpc/imageapi/models"
+	"github.com/go-openapi/swag"
 )
 
-// NewDeleteMountParams creates a new DeleteMountParams object
-// with the default values initialized.
+// NewDeleteMountParams creates a new DeleteMountParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteMountParams() *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewDeleteMountParamsWithTimeout creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewDeleteMountParamsWithTimeout(timeout time.Duration) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewDeleteMountParamsWithContext creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewDeleteMountParamsWithContext(ctx context.Context) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
-
 		Context: ctx,
 	}
 }
 
 // NewDeleteMountParamsWithHTTPClient creates a new DeleteMountParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewDeleteMountParamsWithHTTPClient(client *http.Client) *DeleteMountParams {
-	var ()
 	return &DeleteMountParams{
 		HTTPClient: client,
 	}
 }
 
-/*DeleteMountParams contains all the parameters to send to the API endpoint
-for the delete mount operation typically these are written to a http.Request
+/* DeleteMountParams contains all the parameters to send to the API endpoint
+   for the delete mount operation.
+
+   Typically these are written to a http.Request.
 */
 type DeleteMountParams struct {
 
-	/*Mount*/
-	Mount *models.Mount
+	/* Force.
+
+	   Force deletion
+	*/
+	Force *bool
+
+	/* ID.
+
+	   ID of mount to delete
+
+	   Format: int64
+	*/
+	ID int64
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the delete mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteMountParams) WithDefaults() *DeleteMountParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the delete mount params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteMountParams) SetDefaults() {
+	var (
+		forceDefault = bool(false)
+	)
+
+	val := DeleteMountParams{
+		Force: &forceDefault,
+	}
+
+	val.timeout = o.timeout
+	val.Context = o.Context
+	val.HTTPClient = o.HTTPClient
+	*o = val
 }
 
 // WithTimeout adds the timeout to the delete mount params
@@ -103,15 +138,26 @@ func (o *DeleteMountParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithMount adds the mount to the delete mount params
-func (o *DeleteMountParams) WithMount(mount *models.Mount) *DeleteMountParams {
-	o.SetMount(mount)
+// WithForce adds the force to the delete mount params
+func (o *DeleteMountParams) WithForce(force *bool) *DeleteMountParams {
+	o.SetForce(force)
 	return o
 }
 
-// SetMount adds the mount to the delete mount params
-func (o *DeleteMountParams) SetMount(mount *models.Mount) {
-	o.Mount = mount
+// SetForce adds the force to the delete mount params
+func (o *DeleteMountParams) SetForce(force *bool) {
+	o.Force = force
+}
+
+// WithID adds the id to the delete mount params
+func (o *DeleteMountParams) WithID(id int64) *DeleteMountParams {
+	o.SetID(id)
+	return o
+}
+
+// SetID adds the id to the delete mount params
+func (o *DeleteMountParams) SetID(id int64) {
+	o.ID = id
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -122,8 +168,29 @@ func (o *DeleteMountParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 	}
 	var res []error
 
-	if o.Mount != nil {
-		if err := r.SetBodyParam(o.Mount); err != nil {
+	if o.Force != nil {
+
+		// query param force
+		var qrForce bool
+
+		if o.Force != nil {
+			qrForce = *o.Force
+		}
+		qForce := swag.FormatBool(qrForce)
+		if qForce != "" {
+
+			if err := r.SetQueryParam("force", qForce); err != nil {
+				return err
+			}
+		}
+	}
+
+	// query param id
+	qrID := o.ID
+	qID := swag.FormatInt64(qrID)
+	if qID != "" {
+
+		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}
 	}

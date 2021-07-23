@@ -9,11 +9,18 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // DeleteMountURL generates an URL for the delete mount operation
 type DeleteMountURL struct {
+	Force *bool
+	ID    int64
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -42,6 +49,23 @@ func (o *DeleteMountURL) Build() (*url.URL, error) {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var forceQ string
+	if o.Force != nil {
+		forceQ = swag.FormatBool(*o.Force)
+	}
+	if forceQ != "" {
+		qs.Set("force", forceQ)
+	}
+
+	idQ := swag.FormatInt64(o.ID)
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

@@ -51,6 +51,10 @@ type Container struct {
 	//
 	Namespaces []ContainerNamespace `json:"namespaces"`
 
+	// refs
+	// Read Only: true
+	Refs int64 `json:"refs,omitempty"`
+
 	// When read, this contains the current container state. On creation, this requests the initial state (valid options: `created` or `running`). The default is `created`.
 	//
 	State ContainerState `json:"state,omitempty"`
@@ -209,6 +213,10 @@ func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateRefs(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateState(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -277,6 +285,15 @@ func (m *Container) contextValidateNamespaces(ctx context.Context, formats strfm
 			return err
 		}
 
+	}
+
+	return nil
+}
+
+func (m *Container) contextValidateRefs(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "refs", "body", int64(m.Refs)); err != nil {
+		return err
 	}
 
 	return nil

@@ -17,56 +17,98 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewDeleteContainerParams creates a new DeleteContainerParams object
-// with the default values initialized.
+// NewDeleteContainerParams creates a new DeleteContainerParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteContainerParams() *DeleteContainerParams {
-	var ()
 	return &DeleteContainerParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewDeleteContainerParamsWithTimeout creates a new DeleteContainerParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewDeleteContainerParamsWithTimeout(timeout time.Duration) *DeleteContainerParams {
-	var ()
 	return &DeleteContainerParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewDeleteContainerParamsWithContext creates a new DeleteContainerParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewDeleteContainerParamsWithContext(ctx context.Context) *DeleteContainerParams {
-	var ()
 	return &DeleteContainerParams{
-
 		Context: ctx,
 	}
 }
 
 // NewDeleteContainerParamsWithHTTPClient creates a new DeleteContainerParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewDeleteContainerParamsWithHTTPClient(client *http.Client) *DeleteContainerParams {
-	var ()
 	return &DeleteContainerParams{
 		HTTPClient: client,
 	}
 }
 
-/*DeleteContainerParams contains all the parameters to send to the API endpoint
-for the delete container operation typically these are written to a http.Request
+/* DeleteContainerParams contains all the parameters to send to the API endpoint
+   for the delete container operation.
+
+   Typically these are written to a http.Request.
 */
 type DeleteContainerParams struct {
 
-	/*ID*/
-	ID int64
+	/* Force.
+
+	   Force deletion
+	*/
+	Force *bool
+
+	/* ID.
+
+	   Delete by ID
+
+	   Format: int64
+	*/
+	ID *int64
+
+	/* Name.
+
+	   Delete by Name
+	*/
+	Name *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the delete container params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteContainerParams) WithDefaults() *DeleteContainerParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the delete container params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *DeleteContainerParams) SetDefaults() {
+	var (
+		forceDefault = bool(false)
+	)
+
+	val := DeleteContainerParams{
+		Force: &forceDefault,
+	}
+
+	val.timeout = o.timeout
+	val.Context = o.Context
+	val.HTTPClient = o.HTTPClient
+	*o = val
 }
 
 // WithTimeout adds the timeout to the delete container params
@@ -102,15 +144,37 @@ func (o *DeleteContainerParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithForce adds the force to the delete container params
+func (o *DeleteContainerParams) WithForce(force *bool) *DeleteContainerParams {
+	o.SetForce(force)
+	return o
+}
+
+// SetForce adds the force to the delete container params
+func (o *DeleteContainerParams) SetForce(force *bool) {
+	o.Force = force
+}
+
 // WithID adds the id to the delete container params
-func (o *DeleteContainerParams) WithID(id int64) *DeleteContainerParams {
+func (o *DeleteContainerParams) WithID(id *int64) *DeleteContainerParams {
 	o.SetID(id)
 	return o
 }
 
 // SetID adds the id to the delete container params
-func (o *DeleteContainerParams) SetID(id int64) {
+func (o *DeleteContainerParams) SetID(id *int64) {
 	o.ID = id
+}
+
+// WithName adds the name to the delete container params
+func (o *DeleteContainerParams) WithName(name *string) *DeleteContainerParams {
+	o.SetName(name)
+	return o
+}
+
+// SetName adds the name to the delete container params
+func (o *DeleteContainerParams) SetName(name *string) {
+	o.Name = name
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -121,9 +185,55 @@ func (o *DeleteContainerParams) WriteToRequest(r runtime.ClientRequest, reg strf
 	}
 	var res []error
 
-	// path param id
-	if err := r.SetPathParam("id", swag.FormatInt64(o.ID)); err != nil {
-		return err
+	if o.Force != nil {
+
+		// query param force
+		var qrForce bool
+
+		if o.Force != nil {
+			qrForce = *o.Force
+		}
+		qForce := swag.FormatBool(qrForce)
+		if qForce != "" {
+
+			if err := r.SetQueryParam("force", qForce); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.ID != nil {
+
+		// query param id
+		var qrID int64
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := swag.FormatInt64(qrID)
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Name != nil {
+
+		// query param name
+		var qrName string
+
+		if o.Name != nil {
+			qrName = *o.Name
+		}
+		qName := qrName
+		if qName != "" {
+
+			if err := r.SetQueryParam("name", qName); err != nil {
+				return err
+			}
+		}
 	}
 
 	if len(res) > 0 {

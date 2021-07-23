@@ -9,11 +9,18 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // ListMountsURL generates an URL for the list mounts operation
 type ListMountsURL struct {
+	ID   *int64
+	Kind *string
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -42,6 +49,26 @@ func (o *ListMountsURL) Build() (*url.URL, error) {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var idQ string
+	if o.ID != nil {
+		idQ = swag.FormatInt64(*o.ID)
+	}
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	var kindQ string
+	if o.Kind != nil {
+		kindQ = *o.Kind
+	}
+	if kindQ != "" {
+		qs.Set("kind", kindQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

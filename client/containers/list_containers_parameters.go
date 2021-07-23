@@ -14,54 +14,90 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
-// NewListContainersParams creates a new ListContainersParams object
-// with the default values initialized.
+// NewListContainersParams creates a new ListContainersParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewListContainersParams() *ListContainersParams {
-
 	return &ListContainersParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewListContainersParamsWithTimeout creates a new ListContainersParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewListContainersParamsWithTimeout(timeout time.Duration) *ListContainersParams {
-
 	return &ListContainersParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewListContainersParamsWithContext creates a new ListContainersParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewListContainersParamsWithContext(ctx context.Context) *ListContainersParams {
-
 	return &ListContainersParams{
-
 		Context: ctx,
 	}
 }
 
 // NewListContainersParamsWithHTTPClient creates a new ListContainersParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewListContainersParamsWithHTTPClient(client *http.Client) *ListContainersParams {
-
 	return &ListContainersParams{
 		HTTPClient: client,
 	}
 }
 
-/*ListContainersParams contains all the parameters to send to the API endpoint
-for the list containers operation typically these are written to a http.Request
+/* ListContainersParams contains all the parameters to send to the API endpoint
+   for the list containers operation.
+
+   Typically these are written to a http.Request.
 */
 type ListContainersParams struct {
+
+	/* ID.
+
+	   Query containers by ID
+
+	   Format: int64
+	*/
+	ID *int64
+
+	/* Name.
+
+	   Query containers by name
+	*/
+	Name *string
+
+	/* State.
+
+	   Query containers by state
+	*/
+	State *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the list containers params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ListContainersParams) WithDefaults() *ListContainersParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the list containers params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *ListContainersParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the list containers params
@@ -97,6 +133,39 @@ func (o *ListContainersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithID adds the id to the list containers params
+func (o *ListContainersParams) WithID(id *int64) *ListContainersParams {
+	o.SetID(id)
+	return o
+}
+
+// SetID adds the id to the list containers params
+func (o *ListContainersParams) SetID(id *int64) {
+	o.ID = id
+}
+
+// WithName adds the name to the list containers params
+func (o *ListContainersParams) WithName(name *string) *ListContainersParams {
+	o.SetName(name)
+	return o
+}
+
+// SetName adds the name to the list containers params
+func (o *ListContainersParams) SetName(name *string) {
+	o.Name = name
+}
+
+// WithState adds the state to the list containers params
+func (o *ListContainersParams) WithState(state *string) *ListContainersParams {
+	o.SetState(state)
+	return o
+}
+
+// SetState adds the state to the list containers params
+func (o *ListContainersParams) SetState(state *string) {
+	o.State = state
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListContainersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +173,57 @@ func (o *ListContainersParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
+
+	if o.ID != nil {
+
+		// query param id
+		var qrID int64
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := swag.FormatInt64(qrID)
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Name != nil {
+
+		// query param name
+		var qrName string
+
+		if o.Name != nil {
+			qrName = *o.Name
+		}
+		qName := qrName
+		if qName != "" {
+
+			if err := r.SetQueryParam("name", qName); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.State != nil {
+
+		// query param state
+		var qrState string
+
+		if o.State != nil {
+			qrState = *o.State
+		}
+		qState := qrState
+		if qState != "" {
+
+			if err := r.SetQueryParam("state", qState); err != nil {
+				return err
+			}
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

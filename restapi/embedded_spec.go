@@ -32,54 +32,47 @@ func init() {
   "info": {
     "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
-    "version": "1.0.0"
+    "version": "0.2.0"
   },
   "basePath": "/imageapi/v1",
   "paths": {
-    "/attach/rbd": {
+    "/attach": {
       "get": {
+        "description": "List attachments",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "list_rbds",
+        "operationId": "list_attachments",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of a single attachment to query.",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "attach",
+              "bind",
+              "nfs",
+              "overlay",
+              "uri"
+            ],
+            "type": "string",
+            "description": "Kind of attachments to query.",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "list of rbd maps",
+            "description": "list all attachments",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/rbd"
+                "$ref": "#/definitions/attach"
               }
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "attach"
-        ],
-        "operationId": "map_rbd",
-        "parameters": [
-          {
-            "name": "rbd",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/rbd"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "RBD attach succeed",
-            "schema": {
-              "$ref": "#/definitions/rbd"
             }
           },
           "default": {
@@ -89,19 +82,28 @@ func init() {
             }
           }
         }
-      }
-    },
-    "/attach/rbd/{id}": {
-      "get": {
+      },
+      "post": {
+        "description": "Create a new attachment based on attach specification",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "get_rbd",
-        "responses": {
-          "200": {
-            "description": "RBD entry",
+        "operationId": "attach",
+        "parameters": [
+          {
+            "name": "attach",
+            "in": "body",
+            "required": true,
             "schema": {
-              "$ref": "#/definitions/rbd"
+              "$ref": "#/definitions/attach"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "attach succeed",
+            "schema": {
+              "$ref": "#/definitions/attach"
             }
           },
           "default": {
@@ -113,34 +115,41 @@ func init() {
         }
       },
       "delete": {
+        "description": "Detach a specified attachment.",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "unmap_rbd",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Unmapped",
+            "description": "Detach succeed",
             "schema": {
-              "$ref": "#/definitions/rbd"
+              "$ref": "#/definitions/attach"
             }
           },
           "default": {
-            "description": "error",
+            "description": "Detach failed",
             "schema": {
               "$ref": "#/definitions/error"
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
+      }
     },
     "/container": {
       "get": {
@@ -149,6 +158,34 @@ func init() {
           "containers"
         ],
         "operationId": "list_containers",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Query containers by ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Query containers by name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "created",
+              "running",
+              "stopping",
+              "exited",
+              "dead"
+            ],
+            "type": "string",
+            "description": "Query containers by state",
+            "name": "state",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of containers",
@@ -197,131 +234,35 @@ func init() {
             }
           }
         }
-      }
-    },
-    "/container/byname/{name}": {
-      "get": {
-        "description": "Get a container definition",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "get_container_byname",
-        "responses": {
-          "200": {
-            "description": "Container entry",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
       },
       "delete": {
-        "description": "Delete a container defition.  \nThis will stop running containers.\n",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "delete_container_byname",
-        "responses": {
-          "200": {
-            "description": "Container deleted",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "pattern": "^[a-zA-Z0-9._-]*$",
-          "type": "string",
-          "name": "name",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/byname/{name}/{state}": {
-      "get": {
-        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "set_container_state_byname",
-        "responses": {
-          "200": {
-            "description": "Container state changed",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "pattern": "^[a-zA-Z0-9.\\-_]*$",
-          "type": "string",
-          "name": "name",
-          "in": "path",
-          "required": true
-        },
-        {
-          "enum": [
-            "running",
-            "exited"
-          ],
-          "type": "string",
-          "name": "state",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/{id}": {
-      "get": {
-        "description": "Get a container definition",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "get_container",
-        "responses": {
-          "200": {
-            "description": "Container entry",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "description": "Delete a container defition.  \nThis will stop running containers.\n",
+        "description": "Delete a container defition.  \nEither ` + "`" + `id` + "`" + ` or ` + "`" + `name` + "`" + ` query parameter must be specified.\n",
         "tags": [
           "containers"
         ],
         "operationId": "delete_container",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Delete by ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Delete by Name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Container deleted",
@@ -337,23 +278,39 @@ func init() {
           }
         }
       },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/{id}/{state}": {
-      "get": {
-        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
+      "patch": {
+        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n\nEither a valid Name or ID must be passed as a query parameter, along with a valid state parameter.\n",
         "tags": [
           "containers"
         ],
         "operationId": "set_container_state",
+        "parameters": [
+          {
+            "enum": [
+              "running",
+              "exited",
+              "paused"
+            ],
+            "type": "string",
+            "description": "Desired container state",
+            "name": "state",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of container",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Name of container",
+            "name": "name",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Container state changed",
@@ -368,26 +325,7 @@ func init() {
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        },
-        {
-          "enum": [
-            "running",
-            "exited"
-          ],
-          "type": "string",
-          "name": "state",
-          "in": "path",
-          "required": true
-        }
-      ]
+      }
     },
     "/mount": {
       "get": {
@@ -396,6 +334,28 @@ func init() {
           "mounts"
         ],
         "operationId": "list_mounts",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of a single mount to query.",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "attach",
+              "bind",
+              "nfs",
+              "overlay",
+              "uri"
+            ],
+            "type": "string",
+            "description": "Kind of mounts to query.",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "list all mounts",
@@ -452,12 +412,19 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount"
-            }
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of mount to delete",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {
@@ -475,221 +442,80 @@ func init() {
           }
         }
       }
-    },
-    "/mount/overlay": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "list_mounts_overlay",
-        "responses": {
-          "200": {
-            "description": "list of overlay mounts",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/mount_overlay"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "mount_overlay",
-        "parameters": [
-          {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Overlay mount succeed",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
-    "/mount/overlay/{id}": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "get_mount_overlay",
-        "responses": {
-          "200": {
-            "description": "Overlay mount entry",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "unmount_overlay",
-        "responses": {
-          "200": {
-            "description": "Unmounted",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/mount/rbd": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "list_mounts_rbd",
-        "responses": {
-          "200": {
-            "description": "list of rbd mounts",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/mount_rbd"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "mount_rbd",
-        "parameters": [
-          {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "RBD mount succeed",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
-    "/mount/rbd/{id}": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "get_mount_rbd",
-        "responses": {
-          "200": {
-            "description": "RBD mount entry",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "unmount_rbd",
-        "responses": {
-          "200": {
-            "description": "Unmounted",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
     }
   },
   "definitions": {
+    "attach": {
+      "description": "Generically address attachments.  Attachments are objects that ultimately provide a block device file.    \n",
+      "properties": {
+        "device_file": {
+          "description": "The device_file is the path to the system device file.",
+          "type": "string",
+          "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id",
+          "readOnly": true
+        },
+        "kind": {
+          "description": "Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\niscsi - attach an iscsi lun\nlocal - create an attachment reference to an existing block device (specifying a non-block device will fail)\nloopback - create a loopback device referencing a file in a mount\nrbd - attach a Ceph/RBD object\n\nAll kinds may or may not be fully supported by the implementation.\n",
+          "type": "string",
+          "enum": [
+            "iscsi",
+            "local",
+            "loopback",
+            "rbd"
+          ]
+        },
+        "rbd": {
+          "$ref": "#/definitions/attach_rbd"
+        },
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        }
+      }
+    },
+    "attach_rbd": {
+      "description": "attach_rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
+      "type": "object",
+      "required": [
+        "monitors",
+        "pool",
+        "image"
+      ],
+      "properties": {
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "monitors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "ipv4",
+            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"
+          }
+        },
+        "options": {
+          "$ref": "#/definitions/rbd_options"
+        },
+        "pool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": "string"
+        }
+      }
+    },
     "container": {
       "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.\n\nA container is identified by a service-provided unique numeric ` + "`" + `pid` + "`" + `.\n\nOptionally, a container can be provided with a ` + "`" + `name` + "`" + `.  The name must\nbe unique.  Containers can be referenced by ` + "`" + `name` + "`" + ` if provided.\n",
       "type": "object",
@@ -721,6 +547,11 @@ func init() {
           "items": {
             "$ref": "#/definitions/container_namespace"
           }
+        },
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
         },
         "state": {
           "description": "When read, this contains the current container state. On creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `). The default is ` + "`" + `created` + "`" + `.\n",
@@ -780,25 +611,57 @@ func init() {
     "mount": {
       "description": "Generically address mounts by kind and ID or definition\nEither an ` + "`" + `mount_id` + "`" + ` or a mount definition must be supplied.\nIf both are supplied, the mount definition will be ignored.\nIf ` + "`" + `mount_id` + "`" + ` is specified, then the kind/id will be used to reference that mount.\nIf no ` + "`" + `mount_id` + "`" + ` is supplied a defition of type ` + "`" + `kind` + "`" + ` must be present.\n",
       "type": "object",
-      "required": [
-        "kind"
-      ],
       "properties": {
+        "attach": {
+          "$ref": "#/definitions/mount_attach"
+        },
+        "id": {
+          "$ref": "#/definitions/id"
+        },
         "kind": {
+          "description": "Kind specifies the kind of mount.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\nattach - mount a device specified by an attachment.\nbind - bind mount a local directory\nnfs - mount an NFS filesystem\noverlay - overlay mount over an existing mount\nuri - download a file from a URI and extract it into a ramdisk mount\n\nAll kinds may or may not be fully supported by the implementation.\n",
           "type": "string",
           "enum": [
+            "attach",
+            "bind",
+            "nfs",
             "overlay",
-            "rbd"
+            "uri"
           ]
         },
-        "mount_id": {
-          "$ref": "#/definitions/id"
+        "mountpoint": {
+          "type": "string",
+          "readOnly": true
         },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
-        "rbd": {
-          "$ref": "#/definitions/mount_rbd"
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        }
+      }
+    },
+    "mount_attach": {
+      "description": "` + "`" + `mount_attach` + "`" + ` describes an attach mount.  This must have at least attach ID associated with it, \nand a provided filesystem type.\n\nEither ` + "`" + `attach_id` + "`" + ` or ` + "`" + `attach` + "`" + ` must be specified.  If both are specified, ` + "`" + `attach` + "`" + ` will be ignored.\n\nIf ` + "`" + `attach` + "`" + ` is specified and ` + "`" + `attach_id` + "`" + ` is omitted, the specified attach will first be attached, and will be\ndetached on deletion.\n",
+      "required": [
+        "fs_type",
+        "attach"
+      ],
+      "properties": {
+        "attach": {
+          "$ref": "#/definitions/attach"
+        },
+        "fs_type": {
+          "type": "string"
+        },
+        "mount_options": {
+          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -809,25 +672,12 @@ func init() {
         "lower"
       ],
       "properties": {
-        "id": {
-          "$ref": "#/definitions/id",
-          "readOnly": true
-        },
         "lower": {
           "description": "This is an array of mount specifications to be used (in order) as lower mounts for the overlay.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/mount"
           }
-        },
-        "mountpoint": {
-          "type": "string",
-          "readOnly": true
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
         },
         "upperdir": {
           "description": "currently, upperdir is always a directory in mountDir",
@@ -840,98 +690,10 @@ func init() {
         }
       }
     },
-    "mount_rbd": {
-      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it\n(which becomes the mount's ID), and a provided filesystem type.\n\nEither ` + "`" + `rbd_id` + "`" + ` or ` + "`" + `rbd` + "`" + ` must be specified.  If both are specified, ` + "`" + `rbd` + "`" + ` will be ignored.\n\nIf ` + "`" + `rbd` + "`" + ` is specified and ` + "`" + `rbd_id` + "`" + ` is omitted, the RBD will first be attached, and will be\ndetached on deletion.\n",
-      "required": [
-        "fs_type"
-      ],
-      "properties": {
-        "fs_type": {
-          "type": "string"
-        },
-        "id": {
-          "$ref": "#/definitions/id",
-          "readOnly": true
-        },
-        "mount_options": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "mountpoint": {
-          "type": "string",
-          "readOnly": true
-        },
-        "rbd": {
-          "$ref": "#/definitions/rbd"
-        },
-        "rbd_id": {
-          "$ref": "#/definitions/id"
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        }
-      }
-    },
     "name": {
       "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
       "type": "string",
       "pattern": "^[A-Za-z0-1.\\-_]*$"
-    },
-    "rbd": {
-      "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
-      "type": "object",
-      "required": [
-        "monitors",
-        "pool",
-        "image"
-      ],
-      "properties": {
-        "device_file": {
-          "description": "The device_file is the path to the system device file.",
-          "type": "string",
-          "readOnly": true
-        },
-        "device_id": {
-          "description": "The dev_id is the device ID in the rbd subsystem.",
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        },
-        "id": {
-          "$ref": "#/definitions/id"
-        },
-        "image": {
-          "type": "string",
-          "minLength": 1
-        },
-        "monitors": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "ipv4",
-            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"
-          }
-        },
-        "options": {
-          "$ref": "#/definitions/rbd_options"
-        },
-        "pool": {
-          "type": "string",
-          "minLength": 1
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        },
-        "snapshot": {
-          "type": "string"
-        }
-      }
     },
     "rbd_options": {
       "type": "object",
@@ -1042,54 +804,47 @@ func init() {
   "info": {
     "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
-    "version": "1.0.0"
+    "version": "0.2.0"
   },
   "basePath": "/imageapi/v1",
   "paths": {
-    "/attach/rbd": {
+    "/attach": {
       "get": {
+        "description": "List attachments",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "list_rbds",
+        "operationId": "list_attachments",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of a single attachment to query.",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "attach",
+              "bind",
+              "nfs",
+              "overlay",
+              "uri"
+            ],
+            "type": "string",
+            "description": "Kind of attachments to query.",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "list of rbd maps",
+            "description": "list all attachments",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/rbd"
+                "$ref": "#/definitions/attach"
               }
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "attach"
-        ],
-        "operationId": "map_rbd",
-        "parameters": [
-          {
-            "name": "rbd",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/rbd"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "RBD attach succeed",
-            "schema": {
-              "$ref": "#/definitions/rbd"
             }
           },
           "default": {
@@ -1099,19 +854,28 @@ func init() {
             }
           }
         }
-      }
-    },
-    "/attach/rbd/{id}": {
-      "get": {
+      },
+      "post": {
+        "description": "Create a new attachment based on attach specification",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "get_rbd",
-        "responses": {
-          "200": {
-            "description": "RBD entry",
+        "operationId": "attach",
+        "parameters": [
+          {
+            "name": "attach",
+            "in": "body",
+            "required": true,
             "schema": {
-              "$ref": "#/definitions/rbd"
+              "$ref": "#/definitions/attach"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "attach succeed",
+            "schema": {
+              "$ref": "#/definitions/attach"
             }
           },
           "default": {
@@ -1123,34 +887,41 @@ func init() {
         }
       },
       "delete": {
+        "description": "Detach a specified attachment.",
         "tags": [
-          "attach"
+          "attachments"
         ],
-        "operationId": "unmap_rbd",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Unmapped",
+            "description": "Detach succeed",
             "schema": {
-              "$ref": "#/definitions/rbd"
+              "$ref": "#/definitions/attach"
             }
           },
           "default": {
-            "description": "error",
+            "description": "Detach failed",
             "schema": {
               "$ref": "#/definitions/error"
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
+      }
     },
     "/container": {
       "get": {
@@ -1159,6 +930,34 @@ func init() {
           "containers"
         ],
         "operationId": "list_containers",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Query containers by ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Query containers by name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "created",
+              "running",
+              "stopping",
+              "exited",
+              "dead"
+            ],
+            "type": "string",
+            "description": "Query containers by state",
+            "name": "state",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of containers",
@@ -1207,131 +1006,35 @@ func init() {
             }
           }
         }
-      }
-    },
-    "/container/byname/{name}": {
-      "get": {
-        "description": "Get a container definition",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "get_container_byname",
-        "responses": {
-          "200": {
-            "description": "Container entry",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
       },
       "delete": {
-        "description": "Delete a container defition.  \nThis will stop running containers.\n",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "delete_container_byname",
-        "responses": {
-          "200": {
-            "description": "Container deleted",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "pattern": "^[a-zA-Z0-9._-]*$",
-          "type": "string",
-          "name": "name",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/byname/{name}/{state}": {
-      "get": {
-        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "set_container_state_byname",
-        "responses": {
-          "200": {
-            "description": "Container state changed",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "pattern": "^[a-zA-Z0-9.\\-_]*$",
-          "type": "string",
-          "name": "name",
-          "in": "path",
-          "required": true
-        },
-        {
-          "enum": [
-            "running",
-            "exited"
-          ],
-          "type": "string",
-          "name": "state",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/{id}": {
-      "get": {
-        "description": "Get a container definition",
-        "tags": [
-          "containers"
-        ],
-        "operationId": "get_container",
-        "responses": {
-          "200": {
-            "description": "Container entry",
-            "schema": {
-              "$ref": "#/definitions/container"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "description": "Delete a container defition.  \nThis will stop running containers.\n",
+        "description": "Delete a container defition.  \nEither ` + "`" + `id` + "`" + ` or ` + "`" + `name` + "`" + ` query parameter must be specified.\n",
         "tags": [
           "containers"
         ],
         "operationId": "delete_container",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Delete by ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Delete by Name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Container deleted",
@@ -1347,23 +1050,39 @@ func init() {
           }
         }
       },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/container/{id}/{state}": {
-      "get": {
-        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n",
+      "patch": {
+        "description": "Request a (valid) state for a container. \nValid states to request include: ` + "`" + `running` + "`" + `, ` + "`" + `exited` + "`" + `, ` + "`" + `paused` + "`" + ` (paused is not yet implemented)\n\nEither a valid Name or ID must be passed as a query parameter, along with a valid state parameter.\n",
         "tags": [
           "containers"
         ],
         "operationId": "set_container_state",
+        "parameters": [
+          {
+            "enum": [
+              "running",
+              "exited",
+              "paused"
+            ],
+            "type": "string",
+            "description": "Desired container state",
+            "name": "state",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of container",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Name of container",
+            "name": "name",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Container state changed",
@@ -1378,26 +1097,7 @@ func init() {
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        },
-        {
-          "enum": [
-            "running",
-            "exited"
-          ],
-          "type": "string",
-          "name": "state",
-          "in": "path",
-          "required": true
-        }
-      ]
+      }
     },
     "/mount": {
       "get": {
@@ -1406,6 +1106,28 @@ func init() {
           "mounts"
         ],
         "operationId": "list_mounts",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of a single mount to query.",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "attach",
+              "bind",
+              "nfs",
+              "overlay",
+              "uri"
+            ],
+            "type": "string",
+            "description": "Kind of mounts to query.",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "list all mounts",
@@ -1462,12 +1184,19 @@ func init() {
         ],
         "parameters": [
           {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount"
-            }
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of mount to delete",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Force deletion",
+            "name": "force",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1485,221 +1214,80 @@ func init() {
           }
         }
       }
-    },
-    "/mount/overlay": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "list_mounts_overlay",
-        "responses": {
-          "200": {
-            "description": "list of overlay mounts",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/mount_overlay"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "mount_overlay",
-        "parameters": [
-          {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Overlay mount succeed",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
-    "/mount/overlay/{id}": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "get_mount_overlay",
-        "responses": {
-          "200": {
-            "description": "Overlay mount entry",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "unmount_overlay",
-        "responses": {
-          "200": {
-            "description": "Unmounted",
-            "schema": {
-              "$ref": "#/definitions/mount_overlay"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
-    },
-    "/mount/rbd": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "list_mounts_rbd",
-        "responses": {
-          "200": {
-            "description": "list of rbd mounts",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/mount_rbd"
-              }
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "mount_rbd",
-        "parameters": [
-          {
-            "name": "mount",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "RBD mount succeed",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
-    "/mount/rbd/{id}": {
-      "get": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "get_mount_rbd",
-        "responses": {
-          "200": {
-            "description": "RBD mount entry",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "mounts"
-        ],
-        "operationId": "unmount_rbd",
-        "responses": {
-          "200": {
-            "description": "Unmounted",
-            "schema": {
-              "$ref": "#/definitions/mount_rbd"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
     }
   },
   "definitions": {
+    "attach": {
+      "description": "Generically address attachments.  Attachments are objects that ultimately provide a block device file.    \n",
+      "properties": {
+        "device_file": {
+          "description": "The device_file is the path to the system device file.",
+          "type": "string",
+          "readOnly": true
+        },
+        "id": {
+          "$ref": "#/definitions/id",
+          "readOnly": true
+        },
+        "kind": {
+          "description": "Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\niscsi - attach an iscsi lun\nlocal - create an attachment reference to an existing block device (specifying a non-block device will fail)\nloopback - create a loopback device referencing a file in a mount\nrbd - attach a Ceph/RBD object\n\nAll kinds may or may not be fully supported by the implementation.\n",
+          "type": "string",
+          "enum": [
+            "iscsi",
+            "local",
+            "loopback",
+            "rbd"
+          ]
+        },
+        "rbd": {
+          "$ref": "#/definitions/attach_rbd"
+        },
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        }
+      }
+    },
+    "attach_rbd": {
+      "description": "attach_rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
+      "type": "object",
+      "required": [
+        "monitors",
+        "pool",
+        "image"
+      ],
+      "properties": {
+        "device_id": {
+          "description": "The dev_id is the device ID in the rbd subsystem.",
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "monitors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "ipv4",
+            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"
+          }
+        },
+        "options": {
+          "$ref": "#/definitions/rbd_options"
+        },
+        "pool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": "string"
+        }
+      }
+    },
     "container": {
       "description": "The ` + "`" + `container` + "`" + ` option describes a minimally namespaced container.\n\nA container is identified by a service-provided unique numeric ` + "`" + `pid` + "`" + `.\n\nOptionally, a container can be provided with a ` + "`" + `name` + "`" + `.  The name must\nbe unique.  Containers can be referenced by ` + "`" + `name` + "`" + ` if provided.\n",
       "type": "object",
@@ -1731,6 +1319,11 @@ func init() {
           "items": {
             "$ref": "#/definitions/container_namespace"
           }
+        },
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
         },
         "state": {
           "description": "When read, this contains the current container state. On creation, this requests the initial state (valid options: ` + "`" + `created` + "`" + ` or ` + "`" + `running` + "`" + `). The default is ` + "`" + `created` + "`" + `.\n",
@@ -1790,25 +1383,57 @@ func init() {
     "mount": {
       "description": "Generically address mounts by kind and ID or definition\nEither an ` + "`" + `mount_id` + "`" + ` or a mount definition must be supplied.\nIf both are supplied, the mount definition will be ignored.\nIf ` + "`" + `mount_id` + "`" + ` is specified, then the kind/id will be used to reference that mount.\nIf no ` + "`" + `mount_id` + "`" + ` is supplied a defition of type ` + "`" + `kind` + "`" + ` must be present.\n",
       "type": "object",
-      "required": [
-        "kind"
-      ],
       "properties": {
+        "attach": {
+          "$ref": "#/definitions/mount_attach"
+        },
+        "id": {
+          "$ref": "#/definitions/id"
+        },
         "kind": {
+          "description": "Kind specifies the kind of mount.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\nattach - mount a device specified by an attachment.\nbind - bind mount a local directory\nnfs - mount an NFS filesystem\noverlay - overlay mount over an existing mount\nuri - download a file from a URI and extract it into a ramdisk mount\n\nAll kinds may or may not be fully supported by the implementation.\n",
           "type": "string",
           "enum": [
+            "attach",
+            "bind",
+            "nfs",
             "overlay",
-            "rbd"
+            "uri"
           ]
         },
-        "mount_id": {
-          "$ref": "#/definitions/id"
+        "mountpoint": {
+          "type": "string",
+          "readOnly": true
         },
         "overlay": {
           "$ref": "#/definitions/mount_overlay"
         },
-        "rbd": {
-          "$ref": "#/definitions/mount_rbd"
+        "refs": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        }
+      }
+    },
+    "mount_attach": {
+      "description": "` + "`" + `mount_attach` + "`" + ` describes an attach mount.  This must have at least attach ID associated with it, \nand a provided filesystem type.\n\nEither ` + "`" + `attach_id` + "`" + ` or ` + "`" + `attach` + "`" + ` must be specified.  If both are specified, ` + "`" + `attach` + "`" + ` will be ignored.\n\nIf ` + "`" + `attach` + "`" + ` is specified and ` + "`" + `attach_id` + "`" + ` is omitted, the specified attach will first be attached, and will be\ndetached on deletion.\n",
+      "required": [
+        "fs_type",
+        "attach"
+      ],
+      "properties": {
+        "attach": {
+          "$ref": "#/definitions/attach"
+        },
+        "fs_type": {
+          "type": "string"
+        },
+        "mount_options": {
+          "description": "these mount options will be passed to the mount syscall. Supported options depend on filesystem type.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1819,25 +1444,12 @@ func init() {
         "lower"
       ],
       "properties": {
-        "id": {
-          "$ref": "#/definitions/id",
-          "readOnly": true
-        },
         "lower": {
           "description": "This is an array of mount specifications to be used (in order) as lower mounts for the overlay.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/mount"
           }
-        },
-        "mountpoint": {
-          "type": "string",
-          "readOnly": true
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
         },
         "upperdir": {
           "description": "currently, upperdir is always a directory in mountDir",
@@ -1850,98 +1462,10 @@ func init() {
         }
       }
     },
-    "mount_rbd": {
-      "description": "mount_rbd describes an RBD mount.  This must have at least and RBD ID associated with it\n(which becomes the mount's ID), and a provided filesystem type.\n\nEither ` + "`" + `rbd_id` + "`" + ` or ` + "`" + `rbd` + "`" + ` must be specified.  If both are specified, ` + "`" + `rbd` + "`" + ` will be ignored.\n\nIf ` + "`" + `rbd` + "`" + ` is specified and ` + "`" + `rbd_id` + "`" + ` is omitted, the RBD will first be attached, and will be\ndetached on deletion.\n",
-      "required": [
-        "fs_type"
-      ],
-      "properties": {
-        "fs_type": {
-          "type": "string"
-        },
-        "id": {
-          "$ref": "#/definitions/id",
-          "readOnly": true
-        },
-        "mount_options": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "mountpoint": {
-          "type": "string",
-          "readOnly": true
-        },
-        "rbd": {
-          "$ref": "#/definitions/rbd"
-        },
-        "rbd_id": {
-          "$ref": "#/definitions/id"
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        }
-      }
-    },
     "name": {
       "description": "A name is a unique, user-provided identifier for an object.\n\nA name must consist of numbers, letters, and the symbols in the set { ` + "`" + `.` + "`" + `, ` + "`" + `-` + "`" + `, ` + "`" + `_` + "`" + `}.\n",
       "type": "string",
       "pattern": "^[A-Za-z0-1.\\-_]*$"
-    },
-    "rbd": {
-      "description": "rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.\nAdditionally, you will need options.name and options.secret specified.\n",
-      "type": "object",
-      "required": [
-        "monitors",
-        "pool",
-        "image"
-      ],
-      "properties": {
-        "device_file": {
-          "description": "The device_file is the path to the system device file.",
-          "type": "string",
-          "readOnly": true
-        },
-        "device_id": {
-          "description": "The dev_id is the device ID in the rbd subsystem.",
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        },
-        "id": {
-          "$ref": "#/definitions/id"
-        },
-        "image": {
-          "type": "string",
-          "minLength": 1
-        },
-        "monitors": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "ipv4",
-            "pattern": "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"
-          }
-        },
-        "options": {
-          "$ref": "#/definitions/rbd_options"
-        },
-        "pool": {
-          "type": "string",
-          "minLength": 1
-        },
-        "refs": {
-          "type": "integer",
-          "format": "int64",
-          "readOnly": true
-        },
-        "snapshot": {
-          "type": "string"
-        }
-      }
     },
     "rbd_options": {
       "type": "object",

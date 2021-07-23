@@ -6,23 +6,29 @@ package mounts
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
-	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
-
-	"github.com/kraken-hpc/imageapi/models"
 )
 
 // NewDeleteMountParams creates a new DeleteMountParams object
-// no default values defined in spec.
+// with the default values initialized.
 func NewDeleteMountParams() DeleteMountParams {
 
-	return DeleteMountParams{}
+	var (
+		// initialize parameters with default values
+
+		forceDefault = bool(false)
+	)
+
+	return DeleteMountParams{
+		Force: &forceDefault,
+	}
 }
 
 // DeleteMountParams contains all the bound params for the delete mount operation
@@ -34,11 +40,16 @@ type DeleteMountParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*
-	  Required: true
-	  In: body
+	/*Force deletion
+	  In: query
+	  Default: false
 	*/
-	Mount *models.Mount
+	Force *bool
+	/*ID of mount to delete
+	  Required: true
+	  In: query
+	*/
+	ID int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -50,35 +61,69 @@ func (o *DeleteMountParams) BindRequest(r *http.Request, route *middleware.Match
 
 	o.HTTPRequest = r
 
-	if runtime.HasBody(r) {
-		defer r.Body.Close()
-		var body models.Mount
-		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("mount", "body", ""))
-			} else {
-				res = append(res, errors.NewParseError("mount", "body", "", err))
-			}
-		} else {
-			// validate body object
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
+	qs := runtime.Values(r.URL.Query())
 
-			ctx := validate.WithOperationRequest(context.Background())
-			if err := body.ContextValidate(ctx, route.Formats); err != nil {
-				res = append(res, err)
-			}
+	qForce, qhkForce, _ := qs.GetOK("force")
+	if err := o.bindForce(qForce, qhkForce, route.Formats); err != nil {
+		res = append(res, err)
+	}
 
-			if len(res) == 0 {
-				o.Mount = &body
-			}
-		}
-	} else {
-		res = append(res, errors.Required("mount", "body", ""))
+	qID, qhkID, _ := qs.GetOK("id")
+	if err := o.bindID(qID, qhkID, route.Formats); err != nil {
+		res = append(res, err)
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindForce binds and validates parameter Force from query.
+func (o *DeleteMountParams) bindForce(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewDeleteMountParams()
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("force", "query", "bool", raw)
+	}
+	o.Force = &value
+
+	return nil
+}
+
+// bindID binds and validates parameter ID from query.
+func (o *DeleteMountParams) bindID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("id", "query", rawData)
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: true
+	// AllowEmptyValue: false
+
+	if err := validate.RequiredString("id", "query", raw); err != nil {
+		return err
+	}
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("id", "query", "int64", raw)
+	}
+	o.ID = value
+
 	return nil
 }

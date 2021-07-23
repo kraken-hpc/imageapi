@@ -29,7 +29,7 @@ func NewCreateContainer(ctx *middleware.Context, handler CreateContainerHandler)
 	return &CreateContainer{Context: ctx, Handler: handler}
 }
 
-/*CreateContainer swagger:route POST /container containers createContainer
+/* CreateContainer swagger:route POST /container containers createContainer
 
 Create a container
 
@@ -42,7 +42,7 @@ type CreateContainer struct {
 func (o *CreateContainer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateContainerParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

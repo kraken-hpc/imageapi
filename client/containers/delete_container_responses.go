@@ -46,7 +46,7 @@ func NewDeleteContainerOK() *DeleteContainerOK {
 	return &DeleteContainerOK{}
 }
 
-/*DeleteContainerOK handles this case with default header values.
+/* DeleteContainerOK describes a response with status code 200, with default header values.
 
 Container deleted
 */
@@ -55,9 +55,8 @@ type DeleteContainerOK struct {
 }
 
 func (o *DeleteContainerOK) Error() string {
-	return fmt.Sprintf("[DELETE /container/{id}][%d] deleteContainerOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[DELETE /container][%d] deleteContainerOK  %+v", 200, o.Payload)
 }
-
 func (o *DeleteContainerOK) GetPayload() *models.Container {
 	return o.Payload
 }
@@ -81,7 +80,7 @@ func NewDeleteContainerDefault(code int) *DeleteContainerDefault {
 	}
 }
 
-/*DeleteContainerDefault handles this case with default header values.
+/* DeleteContainerDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -97,9 +96,8 @@ func (o *DeleteContainerDefault) Code() int {
 }
 
 func (o *DeleteContainerDefault) Error() string {
-	return fmt.Sprintf("[DELETE /container/{id}][%d] delete_container default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[DELETE /container][%d] delete_container default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *DeleteContainerDefault) GetPayload() *models.Error {
 	return o.Payload
 }

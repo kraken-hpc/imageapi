@@ -29,10 +29,10 @@ func NewDeleteContainer(ctx *middleware.Context, handler DeleteContainerHandler)
 	return &DeleteContainer{Context: ctx, Handler: handler}
 }
 
-/*DeleteContainer swagger:route DELETE /container/{id} containers deleteContainer
+/* DeleteContainer swagger:route DELETE /container containers deleteContainer
 
 Delete a container defition.
-This will stop running containers.
+Either `id` or `name` query parameter must be specified.
 
 
 */
@@ -44,7 +44,7 @@ type DeleteContainer struct {
 func (o *DeleteContainer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewDeleteContainerParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

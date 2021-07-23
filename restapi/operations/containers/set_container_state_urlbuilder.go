@@ -9,14 +9,14 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
-	"strings"
 
 	"github.com/go-openapi/swag"
 )
 
 // SetContainerStateURL generates an URL for the set container state operation
 type SetContainerStateURL struct {
-	ID    int64
+	ID    *int64
+	Name  *string
 	State string
 
 	_basePath string
@@ -43,27 +43,38 @@ func (o *SetContainerStateURL) SetBasePath(bp string) {
 func (o *SetContainerStateURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/container/{id}/{state}"
-
-	id := swag.FormatInt64(o.ID)
-	if id != "" {
-		_path = strings.Replace(_path, "{id}", id, -1)
-	} else {
-		return nil, errors.New("id is required on SetContainerStateURL")
-	}
-
-	state := o.State
-	if state != "" {
-		_path = strings.Replace(_path, "{state}", state, -1)
-	} else {
-		return nil, errors.New("state is required on SetContainerStateURL")
-	}
+	var _path = "/container"
 
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var idQ string
+	if o.ID != nil {
+		idQ = swag.FormatInt64(*o.ID)
+	}
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	var nameQ string
+	if o.Name != nil {
+		nameQ = *o.Name
+	}
+	if nameQ != "" {
+		qs.Set("name", nameQ)
+	}
+
+	stateQ := o.State
+	if stateQ != "" {
+		qs.Set("state", stateQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

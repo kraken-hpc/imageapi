@@ -9,11 +9,19 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // ListContainersURL generates an URL for the list containers operation
 type ListContainersURL struct {
+	ID    *int64
+	Name  *string
+	State *string
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -42,6 +50,34 @@ func (o *ListContainersURL) Build() (*url.URL, error) {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var idQ string
+	if o.ID != nil {
+		idQ = swag.FormatInt64(*o.ID)
+	}
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	var nameQ string
+	if o.Name != nil {
+		nameQ = *o.Name
+	}
+	if nameQ != "" {
+		qs.Set("name", nameQ)
+	}
+
+	var stateQ string
+	if o.State != nil {
+		stateQ = *o.State
+	}
+	if stateQ != "" {
+		qs.Set("state", stateQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

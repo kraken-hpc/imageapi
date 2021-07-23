@@ -9,14 +9,15 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
-	"strings"
 
 	"github.com/go-openapi/swag"
 )
 
 // DeleteContainerURL generates an URL for the delete container operation
 type DeleteContainerURL struct {
-	ID int64
+	Force *bool
+	ID    *int64
+	Name  *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -42,20 +43,41 @@ func (o *DeleteContainerURL) SetBasePath(bp string) {
 func (o *DeleteContainerURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/container/{id}"
-
-	id := swag.FormatInt64(o.ID)
-	if id != "" {
-		_path = strings.Replace(_path, "{id}", id, -1)
-	} else {
-		return nil, errors.New("id is required on DeleteContainerURL")
-	}
+	var _path = "/container"
 
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/imageapi/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var forceQ string
+	if o.Force != nil {
+		forceQ = swag.FormatBool(*o.Force)
+	}
+	if forceQ != "" {
+		qs.Set("force", forceQ)
+	}
+
+	var idQ string
+	if o.ID != nil {
+		idQ = swag.FormatInt64(*o.ID)
+	}
+	if idQ != "" {
+		qs.Set("id", idQ)
+	}
+
+	var nameQ string
+	if o.Name != nil {
+		nameQ = *o.Name
+	}
+	if nameQ != "" {
+		qs.Set("name", nameQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

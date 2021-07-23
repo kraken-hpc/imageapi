@@ -46,7 +46,7 @@ func NewCreateContainerCreated() *CreateContainerCreated {
 	return &CreateContainerCreated{}
 }
 
-/*CreateContainerCreated handles this case with default header values.
+/* CreateContainerCreated describes a response with status code 201, with default header values.
 
 Container creation succeed
 */
@@ -57,7 +57,6 @@ type CreateContainerCreated struct {
 func (o *CreateContainerCreated) Error() string {
 	return fmt.Sprintf("[POST /container][%d] createContainerCreated  %+v", 201, o.Payload)
 }
-
 func (o *CreateContainerCreated) GetPayload() *models.Container {
 	return o.Payload
 }
@@ -81,7 +80,7 @@ func NewCreateContainerDefault(code int) *CreateContainerDefault {
 	}
 }
 
-/*CreateContainerDefault handles this case with default header values.
+/* CreateContainerDefault describes a response with status code -1, with default header values.
 
 error
 */
@@ -99,7 +98,6 @@ func (o *CreateContainerDefault) Code() int {
 func (o *CreateContainerDefault) Error() string {
 	return fmt.Sprintf("[POST /container][%d] create_container default  %+v", o._statusCode, o.Payload)
 }
-
 func (o *CreateContainerDefault) GetPayload() *models.Error {
 	return o.Payload
 }
