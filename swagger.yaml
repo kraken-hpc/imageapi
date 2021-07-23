@@ -215,14 +215,6 @@ definitions:
         type: string
         readOnly: true
       # external
-      recursive:
-        description: perform a recursive bind mount
-        type: boolean
-        default: false
-      ro:
-        description: mount read-only
-        type: boolean
-        default: false
       lower:
         description: This is an array of mount specifications to be used (in order) as lower mounts for the overlay.
         type: array
@@ -233,13 +225,11 @@ definitions:
     description: |
       `mount_bind` describes a local bind mount. 
       Bind mounts can be relative to another mount, or to /, allowing a way to access local data.
-
     type: object
     required:
       - path
       - base
     properties:
-      # internal
       path:
         type: string
         description: A unix-formatted filesystem path with `/` relative to the respective base.
@@ -250,7 +240,14 @@ definitions:
           `mount` means to use a mount as the base path. If this is specified, `mount` must be specified as well.
         type: string
         enum: [ "root", "mount" ]
-      # external
+      recursive:
+        description: perform a recursive bind mount
+        type: boolean
+        default: false
+      ro:
+        description: mount read-only
+        type: boolean
+        default: false
       mount:
         $ref: "#/definitions/mount"
           

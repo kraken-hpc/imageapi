@@ -36,6 +36,12 @@ type MountBind struct {
 	// A unix-formatted filesystem path with `/` relative to the respective base.
 	// Required: true
 	Path *string `json:"path"`
+
+	// perform a recursive bind mount
+	Recursive *bool `json:"recursive,omitempty"`
+
+	// mount read-only
+	Ro *bool `json:"ro,omitempty"`
 }
 
 // Validate validates this mount bind

@@ -32,12 +32,6 @@ type MountOverlay struct {
 	// Required: true
 	Lower []*Mount `json:"lower"`
 
-	// perform a recursive bind mount
-	Recursive *bool `json:"recursive,omitempty"`
-
-	// mount read-only
-	Ro *bool `json:"ro,omitempty"`
-
 	// currently, upperdir is always a directory in mountDir
 	// Read Only: true
 	Upperdir string `json:"upperdir,omitempty"`

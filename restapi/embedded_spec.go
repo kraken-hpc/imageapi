@@ -689,6 +689,16 @@ func init() {
         "path": {
           "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
           "type": "string"
+        },
+        "recursive": {
+          "description": "perform a recursive bind mount",
+          "type": "boolean",
+          "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -705,16 +715,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/mount"
           }
-        },
-        "recursive": {
-          "description": "perform a recursive bind mount",
-          "type": "boolean",
-          "default": false
-        },
-        "ro": {
-          "description": "mount read-only",
-          "type": "boolean",
-          "default": false
         },
         "upperdir": {
           "description": "currently, upperdir is always a directory in mountDir",
@@ -1498,6 +1498,16 @@ func init() {
         "path": {
           "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
           "type": "string"
+        },
+        "recursive": {
+          "description": "perform a recursive bind mount",
+          "type": "boolean",
+          "default": false
+        },
+        "ro": {
+          "description": "mount read-only",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1514,16 +1524,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/mount"
           }
-        },
-        "recursive": {
-          "description": "perform a recursive bind mount",
-          "type": "boolean",
-          "default": false
-        },
-        "ro": {
-          "description": "mount read-only",
-          "type": "boolean",
-          "default": false
         },
         "upperdir": {
           "description": "currently, upperdir is always a directory in mountDir",
