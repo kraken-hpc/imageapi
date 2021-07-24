@@ -466,6 +466,9 @@ func init() {
             "rbd"
           ]
         },
+        "loopback": {
+          "$ref": "#/definitions/attach_loopback"
+        },
         "rbd": {
           "$ref": "#/definitions/attach_rbd"
         },
@@ -473,6 +476,36 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_loopback": {
+      "description": "` + "`" + `attach_loopback` + "`" + ` describes a loopback device based on an available file.\nThe file can live either on ` + "`" + `/` + "`" + ` (\"root\") or a mount, as specified by base.\nPath specifies the path relative to the base.\n",
+      "type": "object",
+      "required": [
+        "path",
+        "base"
+      ],
+      "properties": {
+        "base": {
+          "description": "base determines the relative root for the path.  There are two options:\n` + "`" + `root` + "`" + ` means to use the current root (` + "`" + `/` + "`" + `) as the base path.\n` + "`" + `mount` + "`" + ` means to use a mount as the base path. If this is specified, ` + "`" + `mount` + "`" + ` must be specified as well.\n",
+          "type": "string",
+          "enum": [
+            "root",
+            "mount"
+          ]
+        },
+        "mount": {
+          "$ref": "#/definitions/mount"
+        },
+        "path": {
+          "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
+          "type": "string"
+        },
+        "readPartitions": {
+          "description": "Should the partition table on the looback device be read?\nAddressing sub-partitions is not yet supported.\n",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -718,7 +751,7 @@ func init() {
           "type": "string"
         },
         "options": {
-          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\nvers= will be filled by version\n",
           "type": "array",
           "items": {
             "type": "string"
@@ -732,6 +765,11 @@ func init() {
           "description": "mount read-only",
           "type": "boolean",
           "default": false
+        },
+        "version": {
+          "description": "NFS version",
+          "type": "string",
+          "default": "4.2"
         }
       }
     },
@@ -1308,6 +1346,9 @@ func init() {
             "rbd"
           ]
         },
+        "loopback": {
+          "$ref": "#/definitions/attach_loopback"
+        },
         "rbd": {
           "$ref": "#/definitions/attach_rbd"
         },
@@ -1315,6 +1356,36 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_loopback": {
+      "description": "` + "`" + `attach_loopback` + "`" + ` describes a loopback device based on an available file.\nThe file can live either on ` + "`" + `/` + "`" + ` (\"root\") or a mount, as specified by base.\nPath specifies the path relative to the base.\n",
+      "type": "object",
+      "required": [
+        "path",
+        "base"
+      ],
+      "properties": {
+        "base": {
+          "description": "base determines the relative root for the path.  There are two options:\n` + "`" + `root` + "`" + ` means to use the current root (` + "`" + `/` + "`" + `) as the base path.\n` + "`" + `mount` + "`" + ` means to use a mount as the base path. If this is specified, ` + "`" + `mount` + "`" + ` must be specified as well.\n",
+          "type": "string",
+          "enum": [
+            "root",
+            "mount"
+          ]
+        },
+        "mount": {
+          "$ref": "#/definitions/mount"
+        },
+        "path": {
+          "description": "A unix-formatted filesystem path with ` + "`" + `/` + "`" + ` relative to the respective base.",
+          "type": "string"
+        },
+        "readPartitions": {
+          "description": "Should the partition table on the looback device be read?\nAddressing sub-partitions is not yet supported.\n",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -1560,7 +1631,7 @@ func init() {
           "type": "string"
         },
         "options": {
-          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\n",
+          "description": "Options as specified in nfs(5).  General mount options won't work here.\naddr= and clientaddr= will be filled out automatically based on host.\nvers= will be filled by version\n",
           "type": "array",
           "items": {
             "type": "string"
@@ -1574,6 +1645,11 @@ func init() {
           "description": "mount read-only",
           "type": "boolean",
           "default": false
+        },
+        "version": {
+          "description": "NFS version",
+          "type": "string",
+          "default": "4.2"
         }
       }
     },

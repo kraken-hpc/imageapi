@@ -3,6 +3,7 @@ module github.com/kraken-hpc/imageapi
 go 1.15
 
 require (
+	github.com/u-root/u-root v7.0.0+incompatible
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/bensallen/rbd v0.0.0-20210224155049-baf486eceefa
 	github.com/go-openapi/errors v0.20.0
@@ -24,3 +25,5 @@ require (
 	golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 )
+
+replace github.com/u-root/u-root v7.0.0+incompatible => github.com/u-root/u-root v1.0.1-0.20201119150355-04f343dd1922
