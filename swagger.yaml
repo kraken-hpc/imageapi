@@ -136,6 +136,35 @@ definitions:
         type: string
       options:
         $ref: "#/definitions/rbd_options"
+  
+  attach_loopback:
+    description: |
+      `attach_loopback` describes a loopback device based on an available file.
+      The file can live either on `/` ("root") or a mount, as specified by base.
+      Path specifies the path relative to the base.
+    type: object
+    required:
+      - path
+      - base
+    properties:
+      path:
+        type: string
+        description: A unix-formatted filesystem path with `/` relative to the respective base.
+      base:
+        description:  |
+          base determines the relative root for the path.  There are two options:
+          `root` means to use the current root (`/`) as the base path.
+          `mount` means to use a mount as the base path. If this is specified, `mount` must be specified as well.
+        type: string
+        enum: [ "root", "mount" ]
+      readPartitions:
+        description: |
+          Should the partition table on the looback device be read?
+          Addressing sub-partitions is not yet supported.
+        type: boolean
+        default: false
+      mount:
+        $ref: "#/definitions/mount"
 
   attach:
     description: |
@@ -168,6 +197,8 @@ definitions:
         readOnly: true
       rbd:
         $ref: "#/definitions/attach_rbd"
+      loopback:
+        $ref: "#/definitions/attach_loopback"
 
   mount_attach:
     description: |
