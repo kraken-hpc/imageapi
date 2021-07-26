@@ -1,7 +1,6 @@
 package api
 
 import (
-	"io/fs"
 	"os"
 
 	"github.com/kraken-hpc/imageapi/models"
@@ -36,12 +35,12 @@ func (a *AttachDriverLocal) Attach(att *Attach) (ret *Attach, err error) {
 		return nil, ERRFAIL
 	}
 
-	if finfo.Mode()&fs.ModeDevice == 0 {
+	if finfo.Mode()&os.ModeDevice == 0 {
 		l.Trace("path is not a device file")
 		return nil, ERRINVALDAT
 	}
 
-	if finfo.Mode()&fs.ModeCharDevice != 0 {
+	if finfo.Mode()&os.ModeCharDevice != 0 {
 		l.Trace("path points to character device")
 		return nil, ERRINVALDAT
 	}

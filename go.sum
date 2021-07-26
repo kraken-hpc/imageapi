@@ -352,8 +352,6 @@ github.com/u-root/iscsinl v0.1.0/go.mod h1:UGTrNqGTX3vAz6y/VmHC7pY8FLqoigybttGad
 github.com/u-root/u-root v1.0.1-0.20201119150355-04f343dd1922 h1:t9B62nb5RYgZNwrK+gaF//CDcJnYSt1HqE+MAROggM0=
 github.com/u-root/u-root v1.0.1-0.20201119150355-04f343dd1922/go.mod h1:c7G35Qvc1z58PWx/p1R9ROyiSuBc0ckqMU74klQ5g/s=
 github.com/u-root/u-root v6.0.1-0.20200118052101-6bcd1cda5996+incompatible/go.mod h1:RYkpo8pTHrNjW08opNd/U6p/RJE7K0D8fXO0d47+3YY=
-github.com/u-root/u-root v7.0.0+incompatible h1:u+KSS04pSxJGI5E7WE4Bs9+Zd75QjFv+REkjy/aoAc8=
-github.com/u-root/u-root v7.0.0+incompatible/go.mod h1:RYkpo8pTHrNjW08opNd/U6p/RJE7K0D8fXO0d47+3YY=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
