@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AttachDrivers[models.AttachKindLoopback] = &AttachDriverLocal{}
+	AttachDrivers[models.AttachKindLocal] = &AttachDriverLocal{}
 }
 
 type AttachDriverLocal struct {
