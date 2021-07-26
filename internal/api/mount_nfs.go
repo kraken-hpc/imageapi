@@ -68,8 +68,8 @@ func (m *MountDriverNFS) Unmount(mnt *Mount) (ret *Mount, err error) {
 	l := m.log.WithFields(logrus.Fields{
 		"operation": "unmount",
 		"id":        mnt.ID,
-		"host":      mnt.Nfs.Host,
-		"path":      mnt.Nfs.Path,
+		"host":      *mnt.Nfs.Host,
+		"path":      *mnt.Nfs.Path,
 	})
 
 	// always lazy unmount.  Good idea?
