@@ -1,7 +1,5 @@
 package api
 
-// API operations on rbd maps
-
 import (
 	"os"
 	"path"
@@ -32,8 +30,8 @@ func (a *AttachDriverLoopback) Attach(att *Attach) (ret *Attach, err error) {
 		return nil, ERRINVALDAT
 	}
 	l = l.WithFields(logrus.Fields{
-		"path": att.Loopback.Path,
-		"base": att.Loopback.Base,
+		"path": *att.Loopback.Path,
+		"base": *att.Loopback.Base,
 	})
 
 	base := "/"
@@ -85,8 +83,8 @@ func (a *AttachDriverLoopback) Detach(att *Attach) (ret *Attach, err error) {
 	l := a.log.WithFields(logrus.Fields{
 		"operation": "unmap",
 		"id":        att.ID,
-		"path":      att.Loopback.Path,
-		"base":      att.Loopback.Base,
+		"path":      *att.Loopback.Path,
+		"base":      *att.Loopback.Base,
 	})
 	if err = loop.ClearFile(att.DeviceFile); err != nil {
 		l.Debug("failed to clear loopback association")

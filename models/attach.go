@@ -43,6 +43,9 @@ type Attach struct {
 	// Enum: [iscsi local loopback rbd]
 	Kind string `json:"kind,omitempty"`
 
+	// local
+	Local *AttachLocal `json:"local,omitempty"`
+
 	// loopback
 	Loopback *AttachLoopback `json:"loopback,omitempty"`
 
@@ -63,6 +66,10 @@ func (m *Attach) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateKind(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateLocal(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -143,6 +150,23 @@ func (m *Attach) validateKind(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Attach) validateLocal(formats strfmt.Registry) error {
+	if swag.IsZero(m.Local) { // not required
+		return nil
+	}
+
+	if m.Local != nil {
+		if err := m.Local.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("local")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *Attach) validateLoopback(formats strfmt.Registry) error {
 	if swag.IsZero(m.Loopback) { // not required
 		return nil
@@ -189,6 +213,10 @@ func (m *Attach) ContextValidate(ctx context.Context, formats strfmt.Registry) e
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateLocal(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateLoopback(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -223,6 +251,20 @@ func (m *Attach) contextValidateID(ctx context.Context, formats strfmt.Registry)
 			return ve.ValidateName("id")
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *Attach) contextValidateLocal(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Local != nil {
+		if err := m.Local.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("local")
+			}
+			return err
+		}
 	}
 
 	return nil
