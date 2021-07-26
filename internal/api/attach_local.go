@@ -46,11 +46,17 @@ func (a *AttachDriverLocal) Attach(att *Attach) (ret *Attach, err error) {
 	}
 	att.DeviceFile = *att.Local.Path
 
-	l.Info("successfully mapped")
+	l.Info("successfully attached")
 	return att, nil
 }
 
 func (a *AttachDriverLocal) Detach(att *Attach) (ret *Attach, err error) {
 	// this is a dummy operation
+	l := a.log.WithFields(logrus.Fields{
+		"operation": "detach",
+		"id":        att.ID,
+		"path":      *att.Local.Path,
+	})
+	l.Info("successfully detached")
 	return att, nil
 }
