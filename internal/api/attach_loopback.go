@@ -1,7 +1,5 @@
 package api
 
-// API operations on rbd maps
-
 import (
 	"os"
 	"path"

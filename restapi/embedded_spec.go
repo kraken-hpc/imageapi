@@ -466,6 +466,9 @@ func init() {
             "rbd"
           ]
         },
+        "local": {
+          "$ref": "#/definitions/attach_local"
+        },
         "loopback": {
           "$ref": "#/definitions/attach_loopback"
         },
@@ -476,6 +479,19 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_local": {
+      "description": "` + "`" + `attach_local` + "`" + ` describes a block device that is locally present.\nThis can be used to get a reference to a local disk, for instance.\n\nLocal only supports finding device files on the local (root) system.\nIt only takes one parameter: the path to the device file.\n",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "A unix-formatted filesystem path pointing to a block device file.",
+          "type": "string"
         }
       }
     },
@@ -1346,6 +1362,9 @@ func init() {
             "rbd"
           ]
         },
+        "local": {
+          "$ref": "#/definitions/attach_local"
+        },
         "loopback": {
           "$ref": "#/definitions/attach_loopback"
         },
@@ -1356,6 +1375,19 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_local": {
+      "description": "` + "`" + `attach_local` + "`" + ` describes a block device that is locally present.\nThis can be used to get a reference to a local disk, for instance.\n\nLocal only supports finding device files on the local (root) system.\nIt only takes one parameter: the path to the device file.\n",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "A unix-formatted filesystem path pointing to a block device file.",
+          "type": "string"
         }
       }
     },

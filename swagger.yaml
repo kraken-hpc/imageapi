@@ -166,6 +166,21 @@ definitions:
       mount:
         $ref: "#/definitions/mount"
 
+  attach_local:
+    description: |
+      `attach_local` describes a block device that is locally present.
+      This can be used to get a reference to a local disk, for instance.
+
+      Local only supports finding device files on the local (root) system.
+      It only takes one parameter: the path to the device file.
+    type: object
+    required:
+      - path
+    properties:
+      path:
+        type: string
+        description: A unix-formatted filesystem path pointing to a block device file.
+        
   attach:
     description: |
       Generically address attachments.  Attachments are objects that ultimately provide a block device file.    
@@ -197,6 +212,8 @@ definitions:
         readOnly: true
       rbd:
         $ref: "#/definitions/attach_rbd"
+      local:
+        $ref: "#/definitions/attach_local"
       loopback:
         $ref: "#/definitions/attach_loopback"
 
