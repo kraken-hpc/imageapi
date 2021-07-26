@@ -27,7 +27,7 @@ func (a *AttachDriverLocal) Attach(att *Attach) (ret *Attach, err error) {
 		l.Trace("attempted to attach local with no local definition")
 		return nil, ERRINVALDAT
 	}
-	l = l.WithField("path", att.Local.Path)
+	l = l.WithField("path", *att.Local.Path)
 
 	finfo, err := os.Stat(*att.Local.Path)
 	if err != nil {
