@@ -74,19 +74,22 @@ func (m *Mounts) Mount(mnt *Mount) (ret *Mount, err error) {
 			l.WithError(err).Error("failed to create mountpoint")
 			return nil, ErrSrv
 		}
+		defer func() {
+			if err != nil {
+				if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {
+					// not fatal, but we should report it
+					l.WithError(rmerr).Warn("failed to remove mountpoint after failed mount")
+				}
+			}
+		}()
+		l = l.WithField("mountpoint", mnt.Mountpoint)
 		if chmoderr := os.Chmod(mnt.Mountpoint, os.FileMode(0755)); chmoderr != nil {
 			l.WithError(chmoderr).Error("chmod of mountpoint failed")
 		}
 		ret, err = drv.Mount(mnt)
 		if err == nil {
 			ret = API.Store.Register(ret).(*Mount)
-			l.Infof("successfully mounted: %s", ret.Mountpoint)
-		} else {
-			// cleanup mountpoint
-			if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {
-				// not fatal, but we should report it
-				l.WithError(rmerr).Warn("failed to remove mountpoint after failed mount")
-			}
+			l.WithField("id", ret.ID).Info("successfully mounted")
 		}
 		return
 	}
@@ -127,10 +130,30 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 		l.Trace("unmount called on non-mount object")
 		return nil, ErrNotFound
 	}
-	l = l.WithField("id", mnt.ID)
+	l = l.WithFields(logrus.Fields{
+		"id":         mnt.ID,
+		"mountpoint": mnt.Mountpoint,
+	})
 	if mnt.Refs > 1 && !force { // we hold 1 from our Get above
 		l.Debug("unmount called on mount that is in use")
 		return nil, ErrBusy
+	}
+	// two edge cases:
+	// 1) mountpoint no longer exists.  Technically, any stat error (could be perms).
+	if _, err := os.Stat(mnt.Mountpoint); err != nil {
+		API.Store.Unregister(mnt)
+		l.Warn("unmount called on a mountpoint that no longer exists, assuming it's already unmounted")
+		// to the end user, we treat this as a successful unmount
+		return ret, nil
+	}
+	// 2) mountpoint isn't a mount (maybe we got unmounted already?)
+	if !isMountpoint(mnt.Mountpoint) {
+		API.Store.Unregister(mnt)
+		l.Warn("mountpoint is not mounted, unregistering")
+		if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {
+			l.WithError(rmerr).Warn("failed to remove mountpoint on unmount")
+		}
+		return ret, nil
 	}
 	if drv, ok := MountDrivers[mnt.Kind]; ok {
 		l = l.WithField("driver", drv)
@@ -140,7 +163,7 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 				l.WithError(rmerr).Warn("failed to remove mountpoint on unmount")
 			}
 			API.Store.Unregister(ret)
-			l.Infof("successfully unmounted: %s", ret.Mountpoint)
+			l.Info("successfully unmounted")
 		}
 		return ret, err
 	}
