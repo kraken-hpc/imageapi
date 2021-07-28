@@ -89,5 +89,13 @@ func (a *AttachDriverLoopback) Detach(att *Attach) (ret *Attach, err error) {
 		l.Debug("failed to clear loopback association")
 		return nil, ErrFail
 	}
+	// drop mount refs
+	if *att.Loopback.Base == models.MountBindBaseMount {
+		if att.Loopback.Mount == nil {
+			l.Debug("bind mount called with mount base but no mount definition")
+			return nil, ErrInvalDat
+		}
+		API.Store.RefAdd(att.Loopback.Mount.ID, -1)
+	}
 	return att, nil
 }
