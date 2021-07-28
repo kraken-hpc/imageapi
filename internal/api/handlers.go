@@ -11,7 +11,7 @@ import (
 
 func errorSanitize(err error) error {
 	if _, ok := errorToHTTP[err]; !ok {
-		return ERRSRV
+		return ErrSrv
 	}
 	return err
 }
@@ -47,7 +47,7 @@ var AttachmentsListAttachmentsHandler = attachments.ListAttachmentsHandlerFunc(f
 		// Get
 		a := API.Attachments.Get((models.ID)(*params.ID))
 		if a == nil {
-			return attachments.NewDeleteAttachDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+			return attachments.NewDeleteAttachDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 		}
 		as = append(as, (*models.Attach)(a))
 	} else {
@@ -90,7 +90,7 @@ var MountsListMountsHandler = mounts.ListMountsHandlerFunc(func(params mounts.Li
 		// Get
 		m := API.Mounts.Get((models.ID)(*params.ID))
 		if m == nil {
-			return mounts.NewListMountsDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+			return mounts.NewListMountsDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 		}
 		ms = append(ms, (*models.Mount)(m))
 	} else {
@@ -126,14 +126,14 @@ var ContainersDeleteContainerHandler = containers.DeleteContainerHandlerFunc(fun
 	}
 	if params.ID == nil {
 		if params.Name == nil {
-			return containers.NewDeleteContainerDefault(errorToHTTP[ERRINVALDAT]).WithPayload(&models.Error{Code: int64(errorToHTTP[ERRINVALDAT]), Message: swag.String("either ID or Name must be provided")})
+			return containers.NewDeleteContainerDefault(errorToHTTP[ErrInvalDat]).WithPayload(&models.Error{Code: int64(errorToHTTP[ErrInvalDat]), Message: swag.String("either ID or Name must be provided")})
 		}
 		id = API.Containers.NameGetID((models.Name)(*params.Name))
 	} else {
 		id = models.ID(*params.ID)
 	}
 	if id < 1 {
-		return containers.NewDeleteContainerDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+		return containers.NewDeleteContainerDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 	}
 	if c, err = API.Containers.Delete(id); err != nil {
 		err = errorSanitize(err)
@@ -153,11 +153,11 @@ var ContainersListContainersHandler = containers.ListContainersHandlerFunc(func(
 			id = models.ID(*params.ID)
 		}
 		if id < 1 {
-			return containers.NewListContainersDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+			return containers.NewListContainersDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 		}
 		c := API.Containers.Get(id)
 		if c == nil {
-			return containers.NewListContainersDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+			return containers.NewListContainersDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 		}
 		cs = append(cs, c.Container)
 	} else {
@@ -177,14 +177,14 @@ var ContainersSetContainerStateHandler = containers.SetContainerStateHandlerFunc
 	var id models.ID
 	if params.ID == nil {
 		if params.Name == nil {
-			return containers.NewSetContainerStateDefault(errorToHTTP[ERRINVALDAT]).WithPayload(&models.Error{Code: int64(errorToHTTP[ERRINVALDAT]), Message: swag.String("either ID or Name must be provided")})
+			return containers.NewSetContainerStateDefault(errorToHTTP[ErrInvalDat]).WithPayload(&models.Error{Code: int64(errorToHTTP[ErrInvalDat]), Message: swag.String("either ID or Name must be provided")})
 		}
 		id = API.Containers.NameGetID((models.Name)(*params.Name))
 	} else {
 		id = models.ID(*params.ID)
 	}
 	if id < 1 {
-		return containers.NewSetContainerStateDefault(errorToHTTP[ERRNOTFOUND]).WithPayload(errorPayload(ERRNOTFOUND))
+		return containers.NewSetContainerStateDefault(errorToHTTP[ErrNotFound]).WithPayload(errorPayload(ErrNotFound))
 	}
 	var c *Container
 	var err error

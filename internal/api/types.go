@@ -47,20 +47,20 @@ type APIType struct {
 	CollectInterval  time.Duration
 }
 
-var ERRNOTFOUND = errors.New("not found")
-var ERRINVALDAT = errors.New("invalid data type")
-var ERRBUSY = errors.New("object is busy")
-var ERRNODRV = errors.New("no driver found for this object type")
-var ERRSRV = errors.New("internal server error")
-var ERRFAIL = errors.New("operation failed")
+var ErrNotFound = errors.New("not found")
+var ErrInvalDat = errors.New("invalid data type")
+var ErrBusy = errors.New("object is busy")
+var ErrNoDrv = errors.New("no driver found for this object type")
+var ErrSrv = errors.New("internal server error")
+var ErrFail = errors.New("operation failed")
 
 var errorToHTTP = map[error]int{
-	ERRNOTFOUND: 404,
-	ERRINVALDAT: 400,
-	ERRBUSY:     409,
-	ERRNODRV:    501,
-	ERRSRV:      500,
-	ERRFAIL:     500,
+	ErrNotFound: 404,
+	ErrInvalDat: 400,
+	ErrBusy:     409,
+	ErrNoDrv:    501,
+	ErrSrv:      500,
+	ErrFail:     500,
 }
 
 var LogStringToLL = map[string]logrus.Level{
