@@ -180,7 +180,54 @@ definitions:
       path:
         type: string
         description: A unix-formatted filesystem path pointing to a block device file.
-        
+  
+  attach_iscsi:
+    description: |
+      `attach_iscsi` describes an block device available as an iSCSI attachment.
+      Currently, only AuthType=None is supported.
+      A target are required, and should both be in IQN format.
+      Host is required and can be an IP or hostname.
+      If lun is not specified, it will default to lun0.
+    type: object
+    required:
+      - initiator
+      - target
+      - host
+    properties:
+      initiator:
+        type: string
+        description: iSCSI initiator IQN
+      target:
+        type: string
+        description: IQN of the iSCSI target
+      lun:
+        type: integer
+        format: int64
+        description: iSCSI lun on the target to select
+        default: 0
+      host:
+        type: string
+        description: IP or hostname of target host
+      port:
+        type: integer
+        format: int64
+        default: 3260
+        description: Port where the target is listening (default 3260)
+      max_comands:
+        type: integer
+        format: int64
+        default: 128
+        description: Max oustanding iSCSI commands
+      queue_depth:
+        type: integer
+        format: int64
+        default: 16
+        description: Max oustanding IOs
+      scheduler:
+        type: string
+        default: "noop"
+        description: Block device scheduler
+
   attach:
     description: |
       Generically address attachments.  Attachments are objects that ultimately provide a block device file.    
@@ -210,12 +257,14 @@ definitions:
         type: integer
         format: int64
         readOnly: true
-      rbd:
-        $ref: "#/definitions/attach_rbd"
+      iscsi:
+        $ref: "#/definitions/attach_iscsi"
       local:
         $ref: "#/definitions/attach_local"
       loopback:
         $ref: "#/definitions/attach_loopback"
+      rbd:
+        $ref: "#/definitions/attach_rbd"
 
   mount_attach:
     description: |

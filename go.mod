@@ -27,3 +27,5 @@ require (
 )
 
 replace github.com/u-root/u-root v7.0.0+incompatible => github.com/u-root/u-root v1.0.1-0.20201119150355-04f343dd1922
+
+replace github.com/u-root/iscsinl v0.1.0 => github.com/jlowellwofford/iscsinl v0.1.1-0.20210728180304-acf0e693a062
