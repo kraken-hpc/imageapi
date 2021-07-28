@@ -28,7 +28,7 @@ func (m *MountDriverNFS) Mount(mnt *Mount) (ret *Mount, err error) {
 	l := m.log.WithField("operation", "mount")
 	if mnt.Nfs == nil {
 		l.Trace("attempted nfs mount with no mount definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	l = l.WithFields(logrus.Fields{
 		"host": *mnt.Nfs.Host,
@@ -38,7 +38,7 @@ func (m *MountDriverNFS) Mount(mnt *Mount) (ret *Mount, err error) {
 	ips, err := net.LookupIP(*mnt.Nfs.Host)
 	if err != nil {
 		l.WithError(err).Debug("host resolution failed")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	ip := ips[0] // should we be smarter about this?
 	// ok, we're good to attempt the mount
@@ -58,7 +58,7 @@ func (m *MountDriverNFS) Mount(mnt *Mount) (ret *Mount, err error) {
 	//if err = mount.Mount(fmt.Sprintf("%s:%s", *mnt.Nfs.Host, *mnt.Nfs.Path), mnt.Mountpoint, "nfs", mnt.Nfs.MountOptions); err != nil {
 	if err = unix.Mount(fmt.Sprintf("%s:%s", *mnt.Nfs.Host, *mnt.Nfs.Path), mnt.Mountpoint, "nfs", flags, strings.Join(mnt.Nfs.Options, ",")); err != nil {
 		l.WithError(err).Error("failed to mount")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	return mnt, nil
 }
@@ -74,7 +74,7 @@ func (m *MountDriverNFS) Unmount(mnt *Mount) (ret *Mount, err error) {
 	// always lazy unmount.  Good idea?
 	if err = mount.Unmount(mnt.Mountpoint, false, true); err != nil {
 		l.WithError(err).Error("unmount failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	// garbage collection should do our cleanup
 	return mnt, nil

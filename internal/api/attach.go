@@ -82,7 +82,7 @@ func (a *Attachments) GetOrAttach(at *Attach) (ret *Attach, err error) {
 		if ga != nil {
 			return ga, nil
 		}
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	return a.Attach(at)
 }
@@ -92,12 +92,12 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	l := a.log.WithField("operation", "detach")
 	if at.ID < 1 {
 		l.Trace("detach called with ID 0")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	eo := API.Store.Get(at.ID)
 	if eo == nil {
 		l.Tracef("detach called on non-existent attach ID: %d", at.ID)
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	defer func() {
 		API.Store.RefAdd(eo.GetID(), -1)
@@ -105,12 +105,12 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	var ok bool
 	if at, ok = eo.(*Attach); !ok {
 		l.Trace("detach called on non-attach object")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	l = l.WithField("id", at.ID)
 	if at.Refs > 1 && !force { // we hold 1 from the Get above
 		l.Debug("detach called on an attachment that is in use")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
 		ret, err = drv.Detach(at)
@@ -123,5 +123,5 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 		}
 		return ret, err
 	}
-	return nil, ERRNODRV
+	return nil, ErrNoDrv
 }

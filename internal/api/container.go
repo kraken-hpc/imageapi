@@ -73,7 +73,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	// find the mount
 	if n.Container == nil {
 		l.Debug("container create called with no container definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	l = l.WithField("name", n.Container.Name)
 	ctn := n.Container
@@ -95,7 +95,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	// fail early on non-unique name
 	if _, ok := c.names[ctn.Name]; ctn.Name != "" && ok {
 		l.Debugf("container with name %s already exists", ctn.Name)
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 
 	// we enter the container into the store so we get an ID
@@ -116,7 +116,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	f, err := os.Create(ctn.Logfile)
 	if err != nil {
 		l.WithError(err).Error("failed to creat elog file")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 	n.log = log.New(f, fmt.Sprintf("container(%d): ", ctn.ID), log.Ldate|log.Ltime|log.Lmsgprefix)
 	n.log.Printf("container created")
@@ -135,7 +135,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 		models.ContainerStateExited,
 		models.ContainerStateDead:
 		l.Debug("invalid initial state")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	case models.ContainerStateCreated:
 		fallthrough
 	default: // wasn't specified
@@ -158,7 +158,7 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (ret *C
 	ctn := c.Get(id)
 	if ctn == nil {
 		l.Debug("requested setstate on non-existant container")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	defer func() {
 		API.Store.Update(ctn)
@@ -176,7 +176,7 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (ret *C
 		if err = c.run(ctn); err != nil {
 			l.WithError(err).Error("failed to start")
 			ctn.Container.State = models.ContainerStateDead
-			return nil, ERRFAIL
+			return nil, ErrFail
 		}
 	case models.ContainerStateExited:
 		if ctn.Container.State == state {
@@ -189,7 +189,7 @@ func (c *Containers) SetState(id models.ID, state models.ContainerState) (ret *C
 			models.ContainerStateRunning,
 			models.ContainerStateExited)
 		l.WithError(err).Error("failed")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	return ctn, nil
 }
@@ -202,7 +202,7 @@ func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
 	ctn := c.Get(id)
 	if ctn == nil {
 		l.Debug("delete called on non-existent container")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 
 	switch ctn.Container.State {
@@ -210,10 +210,10 @@ func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
 	//case models.ContainerStateRestarting:
 	case models.ContainerStateRunning:
 		l.Trace("attempt to delete running container")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	case models.ContainerStateStopping:
 		l.Trace("attempt to delete stopping container")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 	ctn.log.Printf("container deleted")
 	ctn.log.Writer().(io.WriteCloser).Close()

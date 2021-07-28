@@ -61,18 +61,18 @@ func (m *Mounts) Mount(mnt *Mount) (ret *Mount, err error) {
 	l := m.log.WithField("operation", "mount")
 	if mnt.ID != 0 {
 		l.Errorf("requested a mount with non-zero mount ID")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	if drv, ok := MountDrivers[mnt.Kind]; ok {
 		// we take responsibility for creating the mountpoint
 		l = l.WithField("driver", drv)
 		if err = os.MkdirAll(API.MountDir, 0700); err != nil {
 			l.WithError(err).Error("could not create base mount directory")
-			return nil, ERRSRV
+			return nil, ErrSrv
 		}
 		if mnt.Mountpoint, err = ioutil.TempDir(API.MountDir, "mount_"); err != nil {
 			l.WithError(err).Error("failed to create mountpoint")
-			return nil, ERRSRV
+			return nil, ErrSrv
 		}
 		if chmoderr := os.Chmod(mnt.Mountpoint, os.FileMode(0755)); chmoderr != nil {
 			l.WithError(chmoderr).Error("chmod of mountpoint failed")
@@ -90,7 +90,7 @@ func (m *Mounts) Mount(mnt *Mount) (ret *Mount, err error) {
 		}
 		return
 	}
-	return nil, ERRNODRV
+	return nil, ErrNoDrv
 }
 
 // GetOrMount gets a mount if it already exists, if it does not, it attempts to mount
@@ -101,7 +101,7 @@ func (m *Mounts) GetOrMount(mnt *Mount) (ret *Mount, err error) {
 		if gm != nil {
 			return gm, nil
 		}
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	// new mount?
 	return m.Mount(mnt)
@@ -112,12 +112,12 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 	l := m.log.WithField("operation", "unmount")
 	if mnt.ID < 1 {
 		l.Trace("unmount called with 0 ID")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	eo := API.Store.Get(mnt.ID)
 	if eo == nil {
 		l.Tracef("unmount called on non-existent mount ID: %d", mnt.ID)
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	defer func() {
 		API.Store.RefAdd(eo.GetID(), -1)
@@ -125,12 +125,12 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 	var ok bool
 	if mnt, ok = eo.(*Mount); !ok {
 		l.Trace("unmount called on non-mount object")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	l = l.WithField("id", mnt.ID)
 	if mnt.Refs > 1 && !force { // we hold 1 from our Get above
 		l.Debug("unmount called on mount that is in use")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 	if drv, ok := MountDrivers[mnt.Kind]; ok {
 		l = l.WithField("driver", drv)
@@ -144,5 +144,5 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 		}
 		return ret, err
 	}
-	return nil, ERRNODRV
+	return nil, ErrNoDrv
 }

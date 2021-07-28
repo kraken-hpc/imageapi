@@ -27,13 +27,13 @@ func (m *MountDriverOverlay) Mount(mnt *Mount) (r *Mount, err error) {
 	l := m.log.WithField("operation", "mount")
 	if mnt.Overlay == nil {
 		l.Trace("attempted to overlay mount without overlay definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 
 	// there most be at least one lower
 	if len(mnt.Overlay.Lower) == 0 {
 		l.Debug("no lower mount(s) specified")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 
 	// make sure lower mounts exits, or mount them if we need to
@@ -71,14 +71,14 @@ func (m *MountDriverOverlay) Mount(mnt *Mount) (r *Mount, err error) {
 	// make a upperdir/workdir
 	if mnt.Overlay.Upperdir, err = ioutil.TempDir(API.MountDir, "upper_"); err != nil {
 		l.WithError(err).Error("could not create upperdir")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 	if chmoderr := os.Chmod(mnt.Overlay.Upperdir, os.FileMode(0755)); chmoderr != nil {
 		l.WithError(chmoderr).Error("failed to chmod upperdir")
 	}
 	if mnt.Overlay.Workdir, err = ioutil.TempDir(API.MountDir, "work_"); err != nil {
 		l.WithError(err).Error("could not create workdir")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 	if chmoderr := os.Chmod(mnt.Overlay.Workdir, os.FileMode(0755)); chmoderr != nil {
 		l.WithError(chmoderr).Error("failed to chmod workdir")
@@ -93,7 +93,7 @@ func (m *MountDriverOverlay) Mount(mnt *Mount) (r *Mount, err error) {
 	l.WithField("opts", opts)
 	if err = mount.Mount("overlay", mnt.Mountpoint, "overlay", opts); err != nil {
 		l.WithError(err).Error("overlay mount failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	return mnt, nil
 }
@@ -107,7 +107,7 @@ func (m *MountDriverOverlay) Unmount(mnt *Mount) (ret *Mount, err error) {
 	// always lazy unmount.  Good idea?
 	if err = mount.Unmount(mnt.Mountpoint, false, true); err != nil {
 		l.WithError(err).Error("unmount failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 
 	os.RemoveAll(mnt.Overlay.Workdir)  // option to leave behind?
