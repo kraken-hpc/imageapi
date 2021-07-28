@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kraken-hpc/imageapi/models"
 	"github.com/sirupsen/logrus"
@@ -62,13 +63,17 @@ func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
 		return nil, fmt.Errorf("requested an attachment with non-zero attachment ID")
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
+		l = l.WithField("driver", drv)
 		ret, err = drv.Attach(at)
 		if err == nil {
+			if _, err = os.Stat(ret.DeviceFile); err != nil {
+				l.Error("driver attach did not create a valid device file")
+				// should we call detach here?
+				return nil, ErrFail
+			}
+			l = l.WithField("devicefile", ret.DeviceFile)
 			ret = API.Store.Register(ret).(*Attach)
-			l.WithFields(logrus.Fields{
-				"driver": drv,
-				"id": ret.ID,
-			}).Infof("successfully attached: %s", ret.DeviceFile)
+			l.WithField("id", ret.ID).Info("successfully attached")
 		}
 		return
 	}
@@ -107,19 +112,27 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 		l.Trace("detach called on non-attach object")
 		return nil, ErrNotFound
 	}
-	l = l.WithField("id", at.ID)
+	l = l.WithFields(logrus.Fields{
+		"id":         at.ID,
+		"devicefile": at.DeviceFile,
+	})
 	if at.Refs > 1 && !force { // we hold 1 from the Get above
 		l.Debug("detach called on an attachment that is in use")
 		return nil, ErrBusy
 	}
+	// Edge case: device doesn't exist (or bad perms)
+	if _, err := os.Stat(at.DeviceFile); err != nil {
+		l.Warn("device file does not exist, assuming already detached")
+		API.Store.Unregister(at)
+		// we treat this as success to the user
+		return at, nil
+	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
+		l = l.WithField("driver", drv)
 		ret, err = drv.Detach(at)
 		if err == nil {
 			API.Store.Unregister(ret)
-			l.WithFields(logrus.Fields{
-				"driver": drv,
-				"id": ret.ID,
-			}).Infof("successfully detached: %s", ret.DeviceFile)
+			l.Info("successfully detached")
 		}
 		return ret, err
 	}
