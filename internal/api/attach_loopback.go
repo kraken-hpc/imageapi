@@ -27,7 +27,7 @@ func (a *AttachDriverLoopback) Attach(att *Attach) (ret *Attach, err error) {
 	l := a.log.WithField("operation", "attach")
 	if att.Loopback == nil {
 		l.Trace("attempted to attach loopback with no loopback definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	l = l.WithFields(logrus.Fields{
 		"path": *att.Loopback.Path,
@@ -38,12 +38,12 @@ func (a *AttachDriverLoopback) Attach(att *Attach) (ret *Attach, err error) {
 	if *att.Loopback.Base == models.MountBindBaseMount {
 		if att.Loopback.Mount == nil {
 			l.Debug("bind mount called with mount base but no mount definition")
-			return nil, ERRINVALDAT
+			return nil, ErrInvalDat
 		}
 		m, err := API.Mounts.GetOrMount((*Mount)(att.Loopback.Mount))
 		if err != nil {
 			l.Error("base mount failed to GetOrMount")
-			return nil, ERRFAIL
+			return nil, ErrFail
 		}
 		att.Loopback.Mount = (*models.Mount)(m)
 		defer func() {
@@ -58,24 +58,23 @@ func (a *AttachDriverLoopback) Attach(att *Attach) (ret *Attach, err error) {
 	info, err := os.Stat(fullPath)
 	if err != nil {
 		l.Debug("loopback attach called on file that doesn't exist")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	if !info.Mode().IsRegular() {
 		l.Debug("loopback attach call on a non-regular file")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 
 	att.DeviceFile, err = loop.FindDevice()
 	if err != nil {
 		l.WithError(err).Error("failed to acquire loopback device")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	if err = loop.SetFile(att.DeviceFile, fullPath); err != nil {
 		l.WithError(err).Debug("failed to assign file to loopback device")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 
-	l.Info("successfully mapped")
 	return att, err
 }
 
@@ -88,7 +87,7 @@ func (a *AttachDriverLoopback) Detach(att *Attach) (ret *Attach, err error) {
 	})
 	if err = loop.ClearFile(att.DeviceFile); err != nil {
 		l.Debug("failed to clear loopback association")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	return att, nil
 }

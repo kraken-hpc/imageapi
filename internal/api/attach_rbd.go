@@ -26,12 +26,12 @@ func (a *AttachDriverRbd) Attach(att *Attach) (ret *Attach, err error) {
 	l := a.log.WithField("operation", "attach")
 	if att.Rbd == nil {
 		l.Trace("attempted to attach rbd with no rbd definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 
 	if len(att.Rbd.Monitors) == 0 || *att.Rbd.Pool == "" || *att.Rbd.Image == "" || att.Rbd.Options.Name == "" || att.Rbd.Options.Secret == "" {
 		a.log.Debug("incorrect options")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	l = l.WithFields(logrus.Fields{
 		"image":    *att.Rbd.Image,
@@ -42,7 +42,7 @@ func (a *AttachDriverRbd) Attach(att *Attach) (ret *Attach, err error) {
 	w, err := krbd.RBDBusAddWriter()
 	if err != nil {
 		l.WithError(err).Error("failed to get krbd bus writer")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 	defer w.Close()
 
@@ -69,23 +69,22 @@ func (a *AttachDriverRbd) Attach(att *Attach) (ret *Attach, err error) {
 
 	if err := dev.Find(); err == nil {
 		l.Debug("tried to map device that already exists")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 	// map the rbd
 	if err := i.Map(w); err != nil {
 		l.WithError(err).Error("map failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 
 	// now go find our ID
 	if err := dev.Find(); err != nil {
 		l.WithError(err).Error("mapped device was not found")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 
 	att.Rbd.DeviceID = dev.ID
 	att.DeviceFile = dev.DevPath()
-	l.Info("successfully mapped")
 	return att, err
 }
 
@@ -103,7 +102,7 @@ func (a *AttachDriverRbd) Detach(att *Attach) (ret *Attach, err error) {
 	wc, err := krbd.RBDBusRemoveWriter()
 	if err != nil {
 		l.WithError(err).Error("couldn't get remove writer")
-		return nil, ERRSRV
+		return nil, ErrSrv
 	}
 	defer wc.Close()
 
@@ -116,10 +115,9 @@ func (a *AttachDriverRbd) Detach(att *Attach) (ret *Attach, err error) {
 
 	if err := i.Unmap(wc); err != nil {
 		l.WithError(err).Error("unmap failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	// remove from our map
-	l.Info("successfully unmapped")
 
 	return att, nil
 }

@@ -25,19 +25,19 @@ func (m *MountDriverBind) Mount(mnt *Mount) (ret *Mount, err error) {
 	l := m.log.WithField("operation", "mount")
 	if mnt.Bind == nil {
 		l.Trace("attempted bind mount with no mount definition")
-		return nil, ERRINVALDAT
+		return nil, ErrInvalDat
 	}
 	// go-swagger should handle other validation that we need
 	base := "/"
 	if *mnt.Bind.Base == models.MountBindBaseMount {
 		if mnt.Bind.Mount == nil {
 			l.Debug("bind mount called with mount base but no mount definition")
-			return nil, ERRINVALDAT
+			return nil, ErrInvalDat
 		}
 		m, err := API.Mounts.GetOrMount((*Mount)(mnt.Bind.Mount))
 		if err != nil {
 			l.Error("base mount failed to GetOrMount")
-			return nil, ERRFAIL
+			return nil, ErrFail
 		}
 		mnt.Bind.Mount = (*models.Mount)(m)
 		defer func() {
@@ -60,9 +60,8 @@ func (m *MountDriverBind) Mount(mnt *Mount) (ret *Mount, err error) {
 	}
 	if err = mount.Mount(fullPath, mnt.Mountpoint, "bind", options); err != nil {
 		l.WithError(err).Error("failed to mount")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
-	l.Info("successfully mounted")
 	return mnt, nil
 }
 
@@ -75,12 +74,11 @@ func (m *MountDriverBind) Unmount(mnt *Mount) (ret *Mount, err error) {
 	// always lazy unmount.  Good idea?
 	if err = mount.Unmount(mnt.Mountpoint, false, true); err != nil {
 		l.WithError(err).Error("unmount failed")
-		return nil, ERRFAIL
+		return nil, ErrFail
 	}
 	if *mnt.Bind.Base == models.MountBindBaseMount {
 		API.Store.RefAdd(mnt.Bind.Mount.ID, -1)
 	}
-	l.Info("successfully unmounted")
 	// garbage collection should do our cleanup
 	return mnt, nil
 }

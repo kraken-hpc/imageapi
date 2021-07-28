@@ -56,6 +56,7 @@ func (a *Attachments) Get(id models.ID) *Attach {
 
 // Attach attaches an attachment
 func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
+	l := a.log.WithField("operation", "attach")
 	if at.ID != 0 {
 		a.log.Errorf("requested an attachment with non-zero attachment ID")
 		return nil, fmt.Errorf("requested an attachment with non-zero attachment ID")
@@ -64,6 +65,10 @@ func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
 		ret, err = drv.Attach(at)
 		if err == nil {
 			ret = API.Store.Register(ret).(*Attach)
+			l.WithFields(logrus.Fields{
+				"driver": drv,
+				"id": ret.ID,
+			}).Infof("successfully attached: %s", ret.DeviceFile)
 		}
 		return
 	}
@@ -77,7 +82,7 @@ func (a *Attachments) GetOrAttach(at *Attach) (ret *Attach, err error) {
 		if ga != nil {
 			return ga, nil
 		}
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	return a.Attach(at)
 }
@@ -87,12 +92,12 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	l := a.log.WithField("operation", "detach")
 	if at.ID < 1 {
 		l.Trace("detach called with ID 0")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	eo := API.Store.Get(at.ID)
 	if eo == nil {
 		l.Tracef("detach called on non-existent attach ID: %d", at.ID)
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	defer func() {
 		API.Store.RefAdd(eo.GetID(), -1)
@@ -100,19 +105,23 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 	var ok bool
 	if at, ok = eo.(*Attach); !ok {
 		l.Trace("detach called on non-attach object")
-		return nil, ERRNOTFOUND
+		return nil, ErrNotFound
 	}
 	l = l.WithField("id", at.ID)
 	if at.Refs > 1 && !force { // we hold 1 from the Get above
 		l.Debug("detach called on an attachment that is in use")
-		return nil, ERRBUSY
+		return nil, ErrBusy
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
 		ret, err = drv.Detach(at)
 		if err == nil {
 			API.Store.Unregister(ret)
+			l.WithFields(logrus.Fields{
+				"driver": drv,
+				"id": ret.ID,
+			}).Infof("successfully detached: %s", ret.DeviceFile)
 		}
 		return ret, err
 	}
-	return nil, ERRNODRV
+	return nil, ErrNoDrv
 }
