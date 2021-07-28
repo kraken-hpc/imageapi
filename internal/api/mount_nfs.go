@@ -60,7 +60,6 @@ func (m *MountDriverNFS) Mount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("failed to mount")
 		return nil, ERRFAIL
 	}
-	l.Info("successfully mounted")
 	return mnt, nil
 }
 
@@ -77,7 +76,6 @@ func (m *MountDriverNFS) Unmount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("unmount failed")
 		return nil, ERRFAIL
 	}
-	l.Info("successfully unmounted")
 	// garbage collection should do our cleanup
 	return mnt, nil
 }

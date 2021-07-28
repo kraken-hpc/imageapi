@@ -44,7 +44,6 @@ func (m *MountDriverAttach) Mount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("failed to mount")
 		return nil, ERRFAIL
 	}
-	l.Info("successfully mounted")
 	return mnt, nil
 }
 
@@ -61,7 +60,6 @@ func (m *MountDriverAttach) Unmount(mnt *Mount) (ret *Mount, err error) {
 		return nil, ERRFAIL
 	}
 	API.Store.RefAdd(mnt.Attach.Attach.ID, -1)
-	l.Info("successfully unmounted")
 	// garbage collection should do our cleanup
 	return mnt, nil
 }

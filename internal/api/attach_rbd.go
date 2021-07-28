@@ -85,7 +85,6 @@ func (a *AttachDriverRbd) Attach(att *Attach) (ret *Attach, err error) {
 
 	att.Rbd.DeviceID = dev.ID
 	att.DeviceFile = dev.DevPath()
-	l.Info("successfully mapped")
 	return att, err
 }
 
@@ -119,7 +118,6 @@ func (a *AttachDriverRbd) Detach(att *Attach) (ret *Attach, err error) {
 		return nil, ERRFAIL
 	}
 	// remove from our map
-	l.Info("successfully unmapped")
 
 	return att, nil
 }

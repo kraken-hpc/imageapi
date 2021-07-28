@@ -62,7 +62,6 @@ func (m *MountDriverBind) Mount(mnt *Mount) (ret *Mount, err error) {
 		l.WithError(err).Error("failed to mount")
 		return nil, ERRFAIL
 	}
-	l.Info("successfully mounted")
 	return mnt, nil
 }
 
@@ -80,7 +79,6 @@ func (m *MountDriverBind) Unmount(mnt *Mount) (ret *Mount, err error) {
 	if *mnt.Bind.Base == models.MountBindBaseMount {
 		API.Store.RefAdd(mnt.Bind.Mount.ID, -1)
 	}
-	l.Info("successfully unmounted")
 	// garbage collection should do our cleanup
 	return mnt, nil
 }

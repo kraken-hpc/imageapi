@@ -56,6 +56,7 @@ func (a *Attachments) Get(id models.ID) *Attach {
 
 // Attach attaches an attachment
 func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
+	l := a.log.WithField("operation", "attach")
 	if at.ID != 0 {
 		a.log.Errorf("requested an attachment with non-zero attachment ID")
 		return nil, fmt.Errorf("requested an attachment with non-zero attachment ID")
@@ -64,6 +65,10 @@ func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
 		ret, err = drv.Attach(at)
 		if err == nil {
 			ret = API.Store.Register(ret).(*Attach)
+			l.WithFields(logrus.Fields{
+				"driver": drv,
+				"id": ret.ID,
+			}).Infof("successfully attached: %s", ret.DeviceFile)
 		}
 		return
 	}
@@ -111,6 +116,10 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 		ret, err = drv.Detach(at)
 		if err == nil {
 			API.Store.Unregister(ret)
+			l.WithFields(logrus.Fields{
+				"driver": drv,
+				"id": ret.ID,
+			}).Infof("successfully detached: %s", ret.DeviceFile)
 		}
 		return ret, err
 	}

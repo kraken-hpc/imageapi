@@ -75,7 +75,6 @@ func (a *AttachDriverLoopback) Attach(att *Attach) (ret *Attach, err error) {
 		return nil, ERRFAIL
 	}
 
-	l.Info("successfully mapped")
 	return att, err
 }
 

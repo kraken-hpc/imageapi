@@ -95,7 +95,6 @@ func (m *MountDriverOverlay) Mount(mnt *Mount) (r *Mount, err error) {
 		l.WithError(err).Error("overlay mount failed")
 		return nil, ERRFAIL
 	}
-	l.Info("successfully mounted")
 	return mnt, nil
 }
 
@@ -113,9 +112,8 @@ func (m *MountDriverOverlay) Unmount(mnt *Mount) (ret *Mount, err error) {
 
 	os.RemoveAll(mnt.Overlay.Workdir)  // option to leave behind?
 	os.RemoveAll(mnt.Overlay.Upperdir) // option to leave behind? Or store on RBD?
-	for _, l := range mnt.Overlay.Lower {
-		API.Store.RefAdd(l.ID, -1)
+	for _, lower := range mnt.Overlay.Lower {
+		API.Store.RefAdd(lower.ID, -1)
 	}
-	l.Info("successfully unmounted")
 	return mnt, nil
 }
