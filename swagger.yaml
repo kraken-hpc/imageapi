@@ -225,7 +225,7 @@ definitions:
         description: Max oustanding IOs
       scheduler:
         type: string
-        default: "noop"
+        default: "mq-deadline"
         description: Block device scheduler
 
   attach:

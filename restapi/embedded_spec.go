@@ -529,7 +529,7 @@ func init() {
         "scheduler": {
           "description": "Block device scheduler",
           "type": "string",
-          "default": "noop"
+          "default": "mq-deadline"
         },
         "target": {
           "description": "IQN of the iSCSI target",
@@ -1480,7 +1480,7 @@ func init() {
         "scheduler": {
           "description": "Block device scheduler",
           "type": "string",
-          "default": "noop"
+          "default": "mq-deadline"
         },
         "target": {
           "description": "IQN of the iSCSI target",
