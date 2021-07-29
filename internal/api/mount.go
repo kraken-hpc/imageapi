@@ -65,7 +65,7 @@ func (m *Mounts) Mount(mnt *Mount) (ret *Mount, err error) {
 	}
 	if drv, ok := MountDrivers[mnt.Kind]; ok {
 		// we take responsibility for creating the mountpoint
-		l = l.WithField("driver", drv)
+		l = l.WithField("driver", mnt.Kind)
 		if err = os.MkdirAll(API.MountDir, 0700); err != nil {
 			l.WithError(err).Error("could not create base mount directory")
 			return nil, ErrSrv
@@ -156,7 +156,7 @@ func (m *Mounts) Unmount(mnt *Mount, force bool) (ret *Mount, err error) {
 		return ret, nil
 	}
 	if drv, ok := MountDrivers[mnt.Kind]; ok {
-		l = l.WithField("driver", drv)
+		l = l.WithField("driver", mnt.Kind)
 		ret, err = drv.Unmount(mnt)
 		if err == nil {
 			if rmerr := os.Remove(mnt.Mountpoint); rmerr != nil {

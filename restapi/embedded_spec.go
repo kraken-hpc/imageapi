@@ -456,6 +456,9 @@ func init() {
           "$ref": "#/definitions/id",
           "readOnly": true
         },
+        "iscsi": {
+          "$ref": "#/definitions/attach_iscsi"
+        },
         "kind": {
           "description": "Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\niscsi - attach an iscsi lun\nlocal - create an attachment reference to an existing block device (specifying a non-block device will fail)\nloopback - create a loopback device referencing a file in a mount\nrbd - attach a Ceph/RBD object\n\nAll kinds may or may not be fully supported by the implementation.\n",
           "type": "string",
@@ -479,6 +482,58 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_iscsi": {
+      "description": "` + "`" + `attach_iscsi` + "`" + ` describes an block device available as an iSCSI attachment.\nCurrently, only AuthType=None is supported.\nA target are required, and should both be in IQN format.\nHost is required and can be an IP or hostname.\nIf lun is not specified, it will default to lun0.\n",
+      "type": "object",
+      "required": [
+        "initiator",
+        "target",
+        "host"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname of target host",
+          "type": "string"
+        },
+        "initiator": {
+          "description": "iSCSI initiator IQN",
+          "type": "string"
+        },
+        "lun": {
+          "description": "iSCSI lun on the target to select",
+          "type": "integer",
+          "format": "int64",
+          "default": 0
+        },
+        "max_comands": {
+          "description": "Max oustanding iSCSI commands",
+          "type": "integer",
+          "format": "int64",
+          "default": 128
+        },
+        "port": {
+          "description": "Port where the target is listening (default 3260)",
+          "type": "integer",
+          "format": "int64",
+          "default": 3260
+        },
+        "queue_depth": {
+          "description": "Max oustanding IOs",
+          "type": "integer",
+          "format": "int64",
+          "default": 16
+        },
+        "scheduler": {
+          "description": "Block device scheduler",
+          "type": "string",
+          "default": "mq-deadline"
+        },
+        "target": {
+          "description": "IQN of the iSCSI target",
+          "type": "string"
         }
       }
     },
@@ -1352,6 +1407,9 @@ func init() {
           "$ref": "#/definitions/id",
           "readOnly": true
         },
+        "iscsi": {
+          "$ref": "#/definitions/attach_iscsi"
+        },
         "kind": {
           "description": "Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.\n\nCurrently known kinds:\n\niscsi - attach an iscsi lun\nlocal - create an attachment reference to an existing block device (specifying a non-block device will fail)\nloopback - create a loopback device referencing a file in a mount\nrbd - attach a Ceph/RBD object\n\nAll kinds may or may not be fully supported by the implementation.\n",
           "type": "string",
@@ -1375,6 +1433,58 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        }
+      }
+    },
+    "attach_iscsi": {
+      "description": "` + "`" + `attach_iscsi` + "`" + ` describes an block device available as an iSCSI attachment.\nCurrently, only AuthType=None is supported.\nA target are required, and should both be in IQN format.\nHost is required and can be an IP or hostname.\nIf lun is not specified, it will default to lun0.\n",
+      "type": "object",
+      "required": [
+        "initiator",
+        "target",
+        "host"
+      ],
+      "properties": {
+        "host": {
+          "description": "IP or hostname of target host",
+          "type": "string"
+        },
+        "initiator": {
+          "description": "iSCSI initiator IQN",
+          "type": "string"
+        },
+        "lun": {
+          "description": "iSCSI lun on the target to select",
+          "type": "integer",
+          "format": "int64",
+          "default": 0
+        },
+        "max_comands": {
+          "description": "Max oustanding iSCSI commands",
+          "type": "integer",
+          "format": "int64",
+          "default": 128
+        },
+        "port": {
+          "description": "Port where the target is listening (default 3260)",
+          "type": "integer",
+          "format": "int64",
+          "default": 3260
+        },
+        "queue_depth": {
+          "description": "Max oustanding IOs",
+          "type": "integer",
+          "format": "int64",
+          "default": 16
+        },
+        "scheduler": {
+          "description": "Block device scheduler",
+          "type": "string",
+          "default": "mq-deadline"
+        },
+        "target": {
+          "description": "IQN of the iSCSI target",
+          "type": "string"
         }
       }
     },
