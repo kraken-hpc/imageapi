@@ -114,10 +114,12 @@ func (a *AttachDriverIscsi) Attach(att *Attach) (ret *Attach, err error) {
 		l.Debug("iscsi lun was not found")
 	}
 	att.DeviceFile = fmt.Sprintf("/dev/%s", devnames[att.Iscsi.Lun])
+	/* we might support this sometime in the future
 	if err := iscsinl.ReReadPartitionTable(att.DeviceFile); err != nil {
 		l.WithField("devicefile", att.DeviceFile).WithError(err).Debug("failed to reread partition tables")
 		return nil, ErrFail
 	}
+	*/
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 	a.sessions[att.DeviceFile] = session
