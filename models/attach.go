@@ -29,6 +29,9 @@ type Attach struct {
 	// Read Only: true
 	ID ID `json:"id,omitempty"`
 
+	// iscsi
+	Iscsi *AttachIscsi `json:"iscsi,omitempty"`
+
 	// Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.
 	//
 	// Currently known kinds:
@@ -65,6 +68,10 @@ func (m *Attach) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateIscsi(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateKind(formats); err != nil {
 		res = append(res, err)
 	}
@@ -97,6 +104,23 @@ func (m *Attach) validateID(formats strfmt.Registry) error {
 			return ve.ValidateName("id")
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *Attach) validateIscsi(formats strfmt.Registry) error {
+	if swag.IsZero(m.Iscsi) { // not required
+		return nil
+	}
+
+	if m.Iscsi != nil {
+		if err := m.Iscsi.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("iscsi")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -213,6 +237,10 @@ func (m *Attach) ContextValidate(ctx context.Context, formats strfmt.Registry) e
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateIscsi(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateLocal(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -251,6 +279,20 @@ func (m *Attach) contextValidateID(ctx context.Context, formats strfmt.Registry)
 			return ve.ValidateName("id")
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *Attach) contextValidateIscsi(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Iscsi != nil {
+		if err := m.Iscsi.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("iscsi")
+			}
+			return err
+		}
 	}
 
 	return nil

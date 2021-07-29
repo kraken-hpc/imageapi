@@ -63,7 +63,7 @@ func (a *Attachments) Attach(at *Attach) (ret *Attach, err error) {
 		return nil, fmt.Errorf("requested an attachment with non-zero attachment ID")
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
-		l = l.WithField("driver", drv)
+		l = l.WithField("driver", at.Kind)
 		ret, err = drv.Attach(at)
 		if err == nil {
 			if _, err = os.Stat(ret.DeviceFile); err != nil {
@@ -128,7 +128,7 @@ func (a *Attachments) Detach(at *Attach, force bool) (ret *Attach, err error) {
 		return at, nil
 	}
 	if drv, ok := AttachDrivers[at.Kind]; ok {
-		l = l.WithField("driver", drv)
+		l = l.WithField("driver", at.Kind)
 		ret, err = drv.Detach(at)
 		if err == nil {
 			API.Store.Unregister(ret)
