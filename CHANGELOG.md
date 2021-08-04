@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2021-08-04
+### Added
+- Support for NFS mounts
+- Support for Bind mounts (local directories or sub-directories of mounts)
+- Support for Attach mount type to mount any valid attachment  
+- Support for Local attachment type (for already existing block devices, e.g. local disk)
+- Support for Loopback attachment type to create a /dev/loop* attachment from local or mounted files
+- Support (experimental) for iSCSI attachment type to attach an iSCSI lun
+- Added documentation for many different use cases
+### Changed
+- API moved to revision v0.2.0, refactored for simpler endpoints with query params
+- API added data types to describe new mount/attach types
+- API now follows a consistent scheme for attach and mount objects
+- Internal engine refactored to use standard interfaces for mount/attach "drivers"
+- Refactored central object storage, global ID tracking, and global reference tracking
+- Refactored garbage collection
+- Reorganized documentation
+### Deprecated
+- RBD mount type is replaced with generic "attach" mount type, allowing mount of any attachment type
+
 ## [0.1.5] - 2021-04-22
 ### Added
 - Default settings for VSCode to run vet checks with GOOS=linux
