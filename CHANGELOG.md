@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Local attachment type (for already existing block devices, e.g. local disk)
 - Support for Loopback attachment type to create a /dev/loop* attachment from local or mounted files
 - Support (experimental) for iSCSI attachment type to attach an iSCSI lun
+- Added documentation for many different use cases
 ### Changed
 - API moved to revision v0.2.0, refactored for simpler endpoints with query params
 - API added data types to describe new mount/attach types
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Internal engine refactored to use standard interfaces for mount/attach "drivers"
 - Refactored central object storage, global ID tracking, and global reference tracking
 - Refactored garbage collection
+- Reorganized documentation
 ### Deprecated
 - RBD mount type is replaced with generic "attach" mount type, allowing mount of any attachment type
 

@@ -1,0 +1,24 @@
+# Documentation index
+
+- [README](../README.md) - Project overview and high-level architecture descriptions.
+- [Index](index.md) - This index
+- [Running the ImageAPI service](running.md) - Options and considerations for running the ImageAPI service.
+- [Security Considerations](security.md) - Some security considerations when running the ImageAPI service.
+- [API Documentation](api/index.html) - Auto-generated, human-readable API documentation.
+- Attachments
+  - [iSCSI](attachments/iscsi.md) - Attaching iSCSI LUNs.
+  - [Local](attachments/local.md) - Using a local block device as an attachment.
+  - [Loopback](attachments/loopback.md) - Attaching files as Loopback devices.
+  - [RBD](attachments/rbd.md) - Attaching Ceph/RBD objects.
+- Mounts
+  - [Attach](mounts/attach.md) - Mounting filesystems on Attachments.
+  - [Bind](mounts/bind.md) - Mounting sub-directories as Mounts.
+  - [NFS](mounts/nfs.md) - Mounting and using NFS shares.
+  - [Overlay](mounts/overlay.md) - Overlay mounting read-only mounts to make them read-write.
+- [Containers](containers/containers.md) - Defining and using Containers.
+- Examples
+  - [Full Interaction](examples/full-interaction.md) - A walkthrough of a full set of interactions (via `curl`) with the ImageAPI.
+  - [Scheme: NFS](examples/nfs-scheme.md) - Example defintions for using read-only NFS mounts + Overlay for images.
+  - [Scheme: NFS + Loopback](examples/nfs-loopback-scheme.md) - Example definitions for using read-only NFS mounts with SquashFS files for images.
+  - [Scheme: RBD](examples/rbd-scheme.md) - Example definitions for using read-only RBD attach + Overlay for images.
+  - [Scheme: iSCSI](examples/iscsi-scheme.md) - Example definitions for using read-only iSCSI attach + Overlay for images.
