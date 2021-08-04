@@ -2,307 +2,60 @@
 
 The ImageAPI describes a restful (Swagger/OpenAPI 2.0) interface for attching, mounting, and launching system image containers.
 
-This is desgined to provide a flexible and efficient mechanism to deploy system images to stateless clusters.
+## Overview
+
+The ImageAPI is desgined to provide a flexible and efficient mechanism to deploy system images to stateless clusters.
 
 This service is likely much more useful when combined with a tool like [Kraken](https://github.com/hpc/kraken) that can automate the image attach/load process in conjuction with network booting.
 
-The API specification is contained in [swagger.yaml](swagger.yaml) .
+Unlike traditional network booting solutions, the ImageAPI is intended to be run as a persistent service that can load and unload system images as needed.  Images are run as privileged, namespaced processes, a kind of light-weight linux "container."
 
-It can also be browsed on [SwaggerHub](https://app.swaggerhub.com/apis/jlowellwofford/image-api/1.0.0).
+The API specification is contained in [swagger.yaml](swagger.yaml) .  Human-readable docs can be browsed at [docs/api/index.html](docs/api/index.html) .
 
-# Example interaction
+It can also be browsed on [SwaggerHub](https://app.swaggerhub.com/apis/jlowellwofford/image-api/0.2.0).
 
-1. Make sure that the `rbd` and `overlay` modules are loaded:
-   ```bash
-   modprobe rbd overlay
-   ```
-2. Start the `imageapi-server` service.  We'll just run it by hand:
-   ```bash
-   $ nohup sudo ./imageapi-server --port 8080 --scheme http &
-   ```
-   This starts and backgrounds the service on `127.0.0.1:8080` .  This is insecure, but good for testing.
-3. Attach an RBD object.  We will attach one named `systemd.sqsh` that already contains a `systemd` based image in a `squashfs` filesystem.
+## Architecture
 
-   ```bash
-   $ curl -s -XPOST -H 'Content-Type: application/json' -d '{"monitors":["192.168.1.48"],"pool":"rbd","image":"systemd.sqsh","options":{"ro":true,"name":"admin","secret":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}' http://localhost:8080/imageapi/v1/attach/rbd | jq
-   {
-     "image": "systemd.sqsh",
-     "monitors": [
-       "192.168.1.48"
-     ],
-     "options": {
-       "name": "admin",
-       "ro": true,
-       "secret": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-     },
-     "pool": "rbd"
-   }
-   ```
-   We have successfully attached the RBD object (read-only).  We can see this with:
-   ```bash
-   $ dmesg | tail -n3
-   [ 9584.859653] libceph: mon0 (1)192.168.1.48:6789 session established
-   [ 9584.861001] libceph: client124116 fsid 4bc8e219-dd58-473f-ac79-c947bd1c4d41
-   [ 9584.905617] rbd: rbd0: capacity 10737418240 features 0x1
-   $ ls -l /dev/rbd0
-   brw-rw---- 1 root disk 253, 0 Feb 10 23:53 /dev/rbd0
-   ```
-4. Now that we have attached the object, we need to mount it.
-   ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{"id": 0, "fs_type": "squashfs", "mount_options": [ "ro" ] }' http://localhost:8080/imageapi/v1/mount/rbd | jq
-   {
-     "fs_type": "squashfs",
-     "id": 0,
-     "mount_options": [
-       "ro"
-     ],
-     "mountpoint": "/var/run/imageapi/mounts/mount_746184320"
-   }
-   ```
-   We see that the image got mounted under `/var/run/imageapi/mounts/mount_746184320`.
-   ```bash
-   $ sudo ls /var/run/imageapi/mounts/mount_746184320
-   bin  boot  dev	etc  home  lib	lib64  media  mnt  opt	proc  root  run  sbin  srv  sys  tmp  usr  var
-   ```
-5. To make make a non-destructive, locally read-write image, we mount an `overlay` over this image.
-   ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "lower": [ 0 ]}' http://localhost:8080/imageapi/v1/mount/overlay | jq
-   {
-     "id": 1,
-     "lower": [
-       0
-     ],
-     "mountpoint": "/var/run/imageapi/mounts/mount_725692383",
-     "upperdir": "/var/run/imageapi/mounts/upper_014522290",
-     "workdir": "/var/run/imageapi/mounts/work_400792425"
-   }
-   ```
-   Note that the `"lower"` array referenced the rbd mount `"id"` from above.  We can handle multiple overlay layers by adding more entries to this list.
+### Object types
 
-   The `mountpoint` at `/var/run/imageapi/mounts/mount_725692383` is read-write.
-6. Now we can define our container on this mount:
-   ```bash
-   $ curl -s -XPOST -H 'Content-type: application/json' -d '{ "name": "test-container", "mount": { "id": 1, "kind": "overlay" }, "command": "/usr/lib/systemd/systemd", "state": "created", "systemd": true }' http://localhost:8080/imageapi/v1/container | jq
-   {
-     "command": "/usr/lib/systemd/systemd",
-     "logfile": "/var/run/imageapi/logs/0-1613002114.log",
-     "mount": {
-       "id": 1,
-       "kind": "overlay"
-     },
-     "name": "test-container",
-     "namespaces": null,
-     "state": "created",
-     "systemd": true
-   }
-   ```
-   The `mount` structure specified using an `overlay` mount of `id: 1` that we just created.  `command` specifies the entrypoint command, in this case, `systemd`.  If we're running `systemd` some extra container setup is necessary.  The `"systemd": true` option makes sure that happens.
+The ImageAPI understands three types of objects that work together:
 
-   Note, `namespaces` is currently unused.  All containers get `mount`, `pid`, `uts`, and `ipc` namespaces by default.
+- An **Attachment** is an object that describes a way of acquiring a block device file.  The product of an attachment is always a block device file (e.g., `/dev/rbd0`, `/dev/sda`, `/dev/loop0`, etc.). Current attachment types are:
+  - **iscsi** attach an iSCSI network block device (experimental). See [docs/attachments/iscsi](docs/attachments/iscsi.md)
+  - **local** attach an already-existing local block device (e.g. a local disk). See [docs/attachments/local](docs/attachments/local.md)
+  - **loopback** attach a file in the root filesystem or on an existing mount as a loopback block device. See [docs/attachments/loopback](docs/attachments/loopback.md)
+  - **rbd** attach a ceph/RBD network block device. See [docs/attachments/rbd](docs/attachments/rbd.md)
+- A **Mount** describes any mount-type mechanism that provides a filesystem.  Current Mount types are:
+  - **attach** mount a filesystem on a block device provided by one of the **Attachment** types. See [docs/mounts/attach](docs/mounts/attach.md)
+  - **bind** bind-mount a directory contained in root (`/`) or an existing mount. See [docs/mounts/bind](docs/mounts/bind.md)
+  - **nfs** mount a Network File System (NFS) mountpoint. See [docs/mounts/nfs](docs/mounts/nfs.md)
+  - **overlay** create a read-write overlayfs mount over existing mountpoints (typically read-only). See [docs/mounts/overlay](docs/mounts/overlay.md)
+- A **Container** describes a runnable system image on an existing mountpoint.  Containers need to be provided an init process and some optional occompanying meta-data.  SystemD is supported as an init processes as long as `systemd: true` is provided as an option to the container.  
 
-   We see a reference to a log file for this container.  Currently it's pretty boring:
-   ```bash
-   $ sudo cat /var/run/imageapi/logs/0-1613002114.log
-   2021/02/11 00:08:34 container(0): container created
-   ```
-   That's because we didn't request that the container actually start.  We could have with `"state": "running"`.
-7. Since we didn't auto-start our container, let's start it:
-   ```bash
-   $ curl -s -XGET http://localhost:8080/imageapi/v1/container/0/running | jq
-   {
-     "command": "/usr/lib/systemd/systemd",
-     "logfile": "/var/run/imageapi/logs/0-1613002114.log",
-     "mount": {
-       "id": 1,
-       "kind": "overlay"
-     },
-     "name": "test-container",
-     "namespaces": null,
-     "state": "running",
-     "systemd": true
-   }
-   ```
+### Object structure & nesting
 
-   We can `ps` to see the processes running.
+In general, objects can depend on the existence of other objects.  For instance, Containers always need to reference a Mount object.  Mount objects may need to reference an Attach object or another Mount object.  This can be specified in one of two ways.  Objects another object depends on can either be referenced by ID, in which case that object depended on needs to already exist, or, object definitions can be nested.  In this way, a container definition along with the dependent mount and attach definitions can all be contained in one description.
 
-   ```bash
-   $ ps -elF --forest
-   ...
-   4 S root        1074    1010  0  80   0 - 88261 -       7756   0 21:36 pts/0    00:00:00  |           \_ sudo ./imageapi-server --scheme=http --port=8080
-   4 S root        1075    1074  0  80   0 - 178813 -     23640   0 21:36 pts/0    00:00:00  |               \_ ./imageapi-server --scheme=http --port=8080
-   4 S root        1534    1075  2  80   0 - 24282 -      13004   0 21:44 ?        00:00:00  |                   \_ /usr/lib/systemd/systemd
-   4 S root        1563    1534  0  80   0 -  7761 -      10572   0 21:44 ?        00:00:00  |                       \_ /usr/lib/systemd/systemd-journald
-   4 S root        1610    1534  0  80   0 -  5176 -       9408   1 21:44 ?        00:00:00  |                       \_ /usr/lib/systemd/systemd-logind
-   ...
-   ```
+If objects are provided in a nest fashion, dependencies will automatically be collected if the main object is removed, unless additional references are added.
 
-   We can use `nsenter` to "enter" the container:
-   ```bash
-   $ sudo nsenter -t 1534 -a bash
-   [root@kraken /]# ps waux
-   USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-   root           1  0.5  0.4 170732 12604 ?        Ss   00:14   0:00 /usr/lib/systemd/systemd
-   root          30  0.0  0.5  41236 12832 ?        Ss   00:14   0:00 /usr/lib/systemd/systemd-journald
-   root          73  0.0  0.4 248184 11180 ?        Ss   00:14   0:00 /usr/sbin/sssd -i --logger=files
-   root         103  0.0  0.5 251732 12928 ?        S    00:14   0:00 /usr/libexec/sssd/sssd_be --domain implicit_files --uid 0 --gid 0 --logger=files
-   root         109  0.0  1.5 274916 38160 ?        S    00:14   0:00 /usr/libexec/sssd/sssd_nss --uid 0 --gid 0 --logger=files
-   root         170  0.2  0.3  20704  9576 ?        Ss   00:16   0:00 /usr/lib/systemd/systemd-logind
-   root         194  0.3  0.1 231648  4200 ?        S    00:16   0:00 bash
-   root         206  0.0  0.1 234240  3760 ?        R+   00:16   0:00 ps waux
-   ```
-   We can check our currently running containers:
-   ```bash
-   $ curl -s http://localhost:8080/imageapi/v1/container | jq
-   [
-     {
-       "command": "/usr/lib/systemd/systemd",
-       "logfile": "/var/run/imageapi/logs/0-1613002114.log",
-       "name": "test-container",
-       "mount": {
-         "id": 1,
-         "kind": "overlay"
-       },
-       "namespaces": null,
-       "state": "running",
-       "systemd": true
-     }
-   ]
-   ```
+### Some example object structures
 
-8. Notice that we passed a `"name"` parameter to our container.  This parameter is optional, but can be useful.  If and only if a `name` is provided, containers can be accessed by name.  These calls have the same structure as access by id, but have `byname` in the path. For instance, the following will stop the container:
+Object structures are kept abstract to allow maximum flexiblity.  Objects can be nested in any way they can fit together, and objects can have an arbitrarily deep dependency chain.  Here are a few examples of valid, useful object structures:
 
-   ```bash
-   $ curl -s http://localhost:8080/imageapi/v1/container/byname/test-container/exited | jq
-   [
-     {
-       "command": "/usr/lib/systemd/systemd",
-       "logfile": "/var/run/imageapi/logs/0-1613002114.log",
-       "name": "test-container",
-       "mount": {
-         "id": 1,
-         "kind": "overlay"
-       },
-       "namespaces": null,
-       "state": "stopping",
-       "systemd": true
-     }
-   ]
-   ```
+- **Read-Write NFS attach** [Container -> NFS Mount (read-write)] Only really useful for a single image per node configuration.
+- **Read-Only NFS with overlay** [Container -> Overlay Mount (read-write) -> NFS Mount (read-only)] This allows an extracted NFS shared image to be used by many nodes.  Tests show this is not the most efficient method, but it is easy to manage for small clusters.
+- **Loopback filesytem on NFS mount** [Container -> Overlay Mount (read-write) -> Attach mount (read-only) -> Loopback file (e.g SquashFS, read-only) -> NFS Mount (read-only)].  This may seem like a lot of layers, but it leads to a way to distribute images much more efficiently than the previous to a larger cluster.
+- **Read-write iSCSI/RBD attachment** [Container -> Attach Mount (e.g. ext4, read-write) -> iSCSI or RBD Attach (read-write)]. Only useful for single image per node configuration.  Like **Read-Write NFS attach**, but with block-level transfer instead of filesystem-level (more efficient in tests).
+- **Read-only iSCSI/RBD attachment with overlay** [Container -> Overlay Mount (read-write) -> Attach Mount (e.g. SquashFS, read-only) -> RBD or iSCSI attach (read-only)] Provides a highly-scalable, multiple-node-per-image scheme for larger clusters.  Tests (publication pending) have indicated that RBD + SquashFS + Overlay provides the highest efficiency for scale in most configurations.
 
+While this list provides some sensible combinations of objects, any object combination that can be described will work.  For instance, if there were a reason to do so, the following would be valid: [Container -> Overlay Mount -> Bind Mount -> Attach Mount -> Loopback Attach -> Attach Mount -> iSCSI Attach].  Of course, it's unlikely that this scheme would provide much efficiency.
 
-9.  Finally, let's tear it all down:
-   ```bash
-   $ curl -XDELETE http://localhost:8080/imageapi/v1/container/0
-   $ curl -XDELETE http://localhost:8080/imageapi/v1/mount/overlay/1
-   $ curl -XDELETE http://localhost:8080/imageapi/v1/mount/rbd/0
-   $ curl -XDELETE http://localhost:8080/imageapi/v1/attach/rbd/0
-   $ sudo cat /var/run/imageapi/logs/0-1613002114.log
-   2021/02/11 00:08:34 container(0): container created
-   2021/02/11 00:14:54 container(0): starting container
-   2021/02/11 00:14:54 container(0): validating image
-   2021/02/11 00:14:54 container(0): validating init
-   2021/02/11 00:14:54 init: making all mounts private
-   2021/02/11 00:14:54 init: preparing image
-   2021/02/11 00:14:54 init: mounting /proc
-   2021/02/11 00:14:54 init: mounting /dev
-   2021/02/11 00:14:54 init: mounting /dev/shm
-   2021/02/11 00:14:54 init: mounting /dev/mqueue
-   2021/02/11 00:14:54 init: mounting /dev/pts
-   2021/02/11 00:14:54 init: mounting /sys
-   2021/02/11 00:14:54 init: mounting /run
-   2021/02/11 00:14:54 init: mounting /tmp
-   2021/02/11 00:14:54 init: mounting /sys/fs/cgroup
-   2021/02/11 00:14:54 init: mounting /var/lib/journal
-   2021/02/11 00:14:54 init: making device file /dev/null
-   2021/02/11 00:14:54 init: making device file /dev/zero
-   2021/02/11 00:14:54 init: making device file /dev/full
-   2021/02/11 00:14:54 init: making device file /dev/tty
-   2021/02/11 00:14:54 init: making device file /dev/random
-   2021/02/11 00:14:54 init: making device file /dev/urandom
-   2021/02/11 00:14:54 init: creating symlink /dev/pts/ptmx -> /dev/ptmx
-   2021/02/11 00:14:54 init: creating symlink /proc/self/fd -> /dev/fd
-   2021/02/11 00:14:54 init: creating symlink /proc/self/fd/0 -> /dev/stdin
-   2021/02/11 00:14:54 init: creating symlink /proc/self/fd/1 -> /dev/stdout
-   2021/02/11 00:14:54 init: creating symlink /proc/self/fd/2 -> /dev/stderr
-   2021/02/11 00:14:54 init: executing init
-   2021/02/11 00:20:07 container(0): container deleted
-   $ ls -l /dev/rbd0
-   ls: cannot access '/dev/rbd0': No such file or directory
+### IDs and References
 
-   ```
+Every object is automatically provided a globally unique `ID` which can be used to operate on that object.  Additionally, Containers can be provided an (optional) unique `Name` which can be used in place of the `ID`.
 
-   Note: The ImageAPI will refuse to deleted a running resouce, so you'll want to request the `exited` state, and wait for `stopping` to complete before issuing `-XDELETE` on a container, for instance.
+All objects track internal references to that object.  When the reference count for an object reaches `0`, it will be garbage collected automatically.  Manually created mounts and attachments will automatically have a reference of `1`.  Mounts and attachments with non-zero reference counts can be forced removed (assuming they are not registered in the system as busy) with the `force=true` query option.
 
-10. Ok, so that was fun... but what if we want to define everything at once?
-   
-   The ImageAPI supports (as of `v0.1.0`) the ability to definte nested resources.  For instance, you could define an overaly that includes an underlying RBD with:
+## Documentation
 
-   ```javascript
-  {
-    "lower": [
-      {
-        "kind": "rbd",
-        "rbd": {
-          "fs_type": "squashfs",
-          "mount_options": [
-            "ro"
-          ],
-          "rbd": {
-            "monitors": [
-              "192.168.1.48"
-            ],
-            "pool": "rbd",
-            "image": "systemd.sqsh",
-            "options": {
-              "ro": true,
-              "name": "admin",
-              "secret": "XXX"
-            }
-          }
-        }
-      }
-    ]
-  }
-   ```
-
-More inteteresting is a container comletely specified with mounts and attachments:
-
-The following posted to `/imageapi/v1/container` would attach an RBD, mount it, mount an overalay, define a container on top of it, and run that container in a single definition:
-```javascript
-{
-  "mount": {
-    "kind": "overlay",
-    "overlay": {
-      "lower": [
-        {
-          "kind": "rbd",
-          "rbd": {
-            "fs_type": "squashfs",
-            "mount_options": [
-              "ro"
-            ],
-            "rbd": {
-              "monitors": [
-                "192.168.1.48"
-              ],
-              "pool": "rbd",
-              "image": "systemd.sqsh",
-              "options": {
-                "ro": true,
-                "name": "admin",
-                "secret": "AQC71s9fOrv9KxAAmH7vB3vQGyVmwbBd005B4A=="
-              }
-            }
-          }
-        }
-      ]
-    }
-  },
-  "command": "/usr/lib/systemd/systemd",
-  "systemd" true,
-  "name": "systemd.sqsh",
-  "state": "running"
-}
-```
-
-Because this container is named, it could be exited with a single call to `/imageapi/v1/container/byname/systemd.sqsh/exited`, and then deleted.  The ImageAPI will track refererences to any object (RBD, mount, ...) and will regularly garbage collect any unused resources, so if you delete this container, the ImageAPI will automatically unmount the overlay, unmount the squashfs, and unmap the RBD. If the resources were created through a nested call like this, deleting the top-level resource will delete all references to the next level down, which will lead to its garbage collection.  This will cascade until all resources are collected.
+For an index of additional documentation, see: [docs/index](docs/index.md)
