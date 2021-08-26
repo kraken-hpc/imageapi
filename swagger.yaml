@@ -16,7 +16,7 @@ info:
     For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
     and detach those lower objects.
   title: Image API
-  version: 0.2.0
+  version: 0.2.1
 produces:
 - application/json
 schemes:
@@ -433,6 +433,76 @@ definitions:
     # stolen straight from docker (even if we don't use them all)
     enum: [ "created",  "running", "stopping", "exited", "dead" ]
 
+  container_script:
+    description: |
+      A `uinit` style script to be executed on container load/unload.
+
+      Scripts can be passed in several ways, as specified by `encoding`:
+      - `file` : `script` must be a path to a valid file on the root filesystem.
+      - `container_file` : `script` must be a path to a valid file in the contianer filesystem.
+      - `plain` : multi-line script string.
+      - `base64` : base64 encoded script string.
+      - `gzip` : gzip + base64 encoded script string.
+      - `bzip2` : bzip2 + base64 encoded script string.
+    type: object
+    properties:
+      encoding:
+        description: The type of script specification contained in `script`
+        type: string
+        enum: [ "file", "container_file", "plain", "base64", "gzip", "bzip2" ]
+      script:
+        description: String either containing the script, or a script file location
+        type: string
+      must:
+        description: Any script failure is considered fatal
+        type: boolean
+        default: false
+      success:
+        description: Was the last run of this script successful 
+        type: boolean
+        readOnly: true
+      last_error:
+        description: The last error message reported by this script
+        type: string
+        readOnly: true
+
+  container_script_hook:
+    description: |
+      Describes a container script hook point with execution controls.
+
+      Scripts will be executed in array order after any default scripts.
+    type: object
+    properties:
+      scripts:
+        type: array
+        items:
+          $ref: "#/definitions/container_script"
+      disable_defaults:
+        description: Disable default script hooks.
+        type: boolean
+        default: false
+
+  container_script_hooks:
+    description: |
+      Container script execution hooks.
+
+      We currently provide 4 hook points:
+      1. `create` is executed on container creation (root namespaces).
+      2. `init` is executed in the container namespaces before the provided `init` is called (container namespaces). 
+      3. `exit` is executed on container exit (root namespaces).
+      4. `delete` is executed on container deletion (root namespaces).
+    type: object
+    properties:
+      create:
+        $ref: "#/definitions/container_script_hook"
+      init: 
+        $ref: "#/definitions/container_script_hook"
+      exit:
+        $ref: "#/definitions/container_script_hook"
+      delete:
+        $ref: "#/definitions/container_script_hook"
+    
+
   container:
     description: |
       The `container` option describes a minimally namespaced container.
@@ -481,6 +551,8 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/container_namespace"
+      hooks:
+        $ref: "#/definitions/container_script_hooks"
       refs:
         type: integer
         format: int64

@@ -1,9 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -11,6 +14,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"compress/gzip"
 
 	"github.com/kraken-hpc/go-fork"
 	"github.com/kraken-hpc/imageapi/models"
@@ -654,4 +659,83 @@ func validateImage(newRoot string) (err error) {
 func ForkInit() {
 	fork.RegisterFunc("containerInit", containerInit)
 	fork.Init()
+}
+
+// buildScript constructs one script from a hook and default
+// the returned script needs to have its logger set, and may need key/value pairs added
+func buildScript(hook *models.ContainerScriptHook, defaultScript, mountpoint string) (s *uinit.Script, err error) {
+	if (hook.DisableDefaults == nil || !*hook.DisableDefaults) && defaultScript != "" {
+		_, err = os.Stat(defaultScript)
+		switch err {
+		case nil:
+			if s, err = uinit.NewScriptFromFile(defaultScript, nil); err != nil {
+				// it's ok not to exist, but not ok to fail to parse
+				return nil, fmt.Errorf("failed to parse default script: %v", err)
+			}
+		case os.ErrNotExist:
+			err = nil
+			s, _ = uinit.NewScript([]byte{}, nil)
+		default:
+			return nil, fmt.Errorf("stat error on default script: %v", err)
+		}
+	} else {
+		s, _ = uinit.NewScript([]byte{}, nil)
+	}
+	for _, script := range hook.Scripts {
+		var data []byte
+		var ns *uinit.Script
+		switch script.Encoding {
+		case models.ContainerScriptEncodingFile:
+			data, err = ioutil.ReadFile(script.Script)
+			if err != nil {
+				if script.Must != nil && *script.Must {
+					return nil, fmt.Errorf("failed to read script file %s: %v", script.Script, err)
+				}
+				err = nil
+				continue
+			}
+		case models.ContainerScriptEncodingContainerFile:
+			if data, err = ioutil.ReadFile(filepath.Join(mountpoint, script.Script)); err != nil {
+				err = fmt.Errorf("failed to read script file %s: %v", filepath.Join(mountpoint, script.Script), err)
+				goto error
+			}
+		case models.ContainerScriptEncodingPlain:
+			data = ([]byte)(script.Script)
+		case models.ContainerScriptEncodingBase64:
+			if data, err = base64.StdEncoding.DecodeString(script.Script); err != nil {
+				err = fmt.Errorf("failed to decode base64 script: %v", err)
+				goto error
+			}
+		case models.ContainerScriptEncodingGzip:
+			if data, err = base64.StdEncoding.DecodeString(script.Script); err != nil {
+				err = fmt.Errorf("failed to decode base64/gzip script: %v", err)
+				goto error
+			}
+			var r *gzip.Reader
+			if r, err = gzip.NewReader(bytes.NewReader(data)); err != nil {
+				err = fmt.Errorf("could not decompress gzip script: %v", err)
+				goto error
+			}
+			if data, err = ioutil.ReadAll(r); err != nil {
+				err = fmt.Errorf("could not decompress gzip script: %v", err)
+				goto error
+			}
+		case models.ContainerScriptEncodingBzip2:
+		default:
+			return nil, fmt.Errorf("unrecognized encoding type: %v", script.Encoding)
+		}
+		if ns, err = uinit.NewScript(data, nil); err != nil {
+			err = fmt.Errorf("failed to parse script: %v", err)
+			goto error
+		}
+		s.Tasks = append(s.Tasks, ns.Tasks...)
+		continue
+	error:
+		success := false
+		script.Success = &success
+		if script.Must != nil && *script.Must {
+			return nil, err
+		}
+	}
+	return
 }
