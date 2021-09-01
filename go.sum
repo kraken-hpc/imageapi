@@ -231,8 +231,8 @@ github.com/jessevdk/go-flags v1.5.0 h1:1jKYvbxEjfUl0fmqTCOfonvskHHXMjBySTLW4y9LF
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
 github.com/jinzhu/copier v0.3.2 h1:QdBOCbaouLDYaIPFfi1bKv5F5tPpeTwXe4sD0jqtz5w=
 github.com/jinzhu/copier v0.3.2/go.mod h1:24xnZezI2Yqac9J61UC6/dG/k76ttpq0DdJI3QmUvro=
-github.com/jlowellwofford/iscsinl v0.1.1-0.20210728180304-acf0e693a062 h1:wMpYzQyC685hnx80KC/GJ+PUHZJ25IA5l4AvO+PUhMU=
-github.com/jlowellwofford/iscsinl v0.1.1-0.20210728180304-acf0e693a062/go.mod h1:RWIgJWqm9/0gjBZ0Hl8iR6MVGzZ+yAda2uqqLmetE2I=
+github.com/jlowellwofford/iscsinl v0.1.1-0.20210831201708-527d3dbd2e6d h1:SU2fb/eqGE6dawxfiHVzMKM6Hb4z4iGEn3VqQP+Fuws=
+github.com/jlowellwofford/iscsinl v0.1.1-0.20210831201708-527d3dbd2e6d/go.mod h1:RWIgJWqm9/0gjBZ0Hl8iR6MVGzZ+yAda2uqqLmetE2I=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
