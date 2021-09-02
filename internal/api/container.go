@@ -110,7 +110,7 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	// set up logger
 	if err = os.MkdirAll(API.LogDir, 0700); err != nil {
 		l.WithError(err).Error("could not make log directory")
-		return nil, fmt.Errorf("could not create log directory: %v", err)
+		return nil, ErrSrv
 	}
 	ctn.Logfile = path.Join(API.LogDir, fmt.Sprintf("%d-%d.log", ctn.ID, time.Now().Unix()))
 	f, err := os.Create(ctn.Logfile)
@@ -120,6 +120,29 @@ func (c *Containers) Create(n *Container) (ret *Container, err error) {
 	}
 	n.log = log.New(f, fmt.Sprintf("container(%d): ", ctn.ID), log.Ldate|log.Ltime|log.Lmsgprefix)
 	n.log.Printf("container created")
+
+	n.log.Printf("running script hook: create")
+	var hook *models.ContainerScriptHook
+	if ctn.Hooks != nil {
+		hook = ctn.Hooks.Create
+	}
+	if h, err := NewHook(hook, "", ctn.Mount.Mountpoint, n.log, map[string]string{
+		"logfile":    ctn.Logfile,
+		"command":    *ctn.Command,
+		"mountpoint": ctn.Mount.Mountpoint,
+		"mountkind":  ctn.Mount.Kind,
+		"name":       string(ctn.Name),
+		"id":         fmt.Sprintf("%d", ctn.ID),
+		"systemd":    fmt.Sprintf("%t", ctn.Systemd),
+	}); err != nil {
+		l.WithError(err).Debug("fatal error building create scripts")
+		return nil, ErrFail
+	} else {
+		if err = h.Run(); err != nil {
+			l.WithError(err).Debug("fatal error running create scripts")
+			return nil, ErrFail
+		}
+	}
 
 	// handle initial state
 	switch ctn.State {
@@ -215,6 +238,31 @@ func (c *Containers) Delete(id models.ID) (ret *Container, err error) {
 		l.Trace("attempt to delete stopping container")
 		return nil, ErrBusy
 	}
+	// run delete hook
+	ctn.log.Printf("running script hook: exit")
+	var hook *models.ContainerScriptHook
+	if ctn.Container.Hooks != nil {
+		hook = ctn.Container.Hooks.Exit
+	}
+	if h, err := NewHook(hook, "", ctn.Container.Mount.Mountpoint, ctn.log, map[string]string{
+		"logfile":    ctn.Container.Logfile,
+		"command":    *ctn.Container.Command,
+		"mountpoint": ctn.Container.Mount.Mountpoint,
+		"mountkind":  ctn.Container.Mount.Kind,
+		"name":       string(ctn.Container.Name),
+		"id":         fmt.Sprintf("%d", ctn.Container.ID),
+		"systemd":    fmt.Sprintf("%t", ctn.Container.Systemd),
+		"state":      string(ctn.Container.State),
+	}); err != nil {
+		l.WithError(err).Debug("fatal error building exit scripts")
+		// but we don't actually do anything here
+	} else {
+		if err = h.Run(); err != nil {
+			l.WithError(err).Debug("fatal error running exit scripts")
+			// but we don't actually do anything here
+		}
+	}
+
 	ctn.log.Printf("container deleted")
 	ctn.log.Writer().(io.WriteCloser).Close()
 	if ctn.Container.Name != "" {
@@ -277,7 +325,7 @@ func (c *Containers) run(ctn *Container) (err error) {
 	// 2 parse command into args
 	args := uinit.SplitCommandLine(*ctn.Container.Command)
 	if len(args) < 1 {
-		return fmt.Errorf("command appears to be invalid: %s", *ctn.Container.Command)
+		return fmt.Errorf("clone: command appears to be invalid: %s", *ctn.Container.Command)
 	}
 
 	// 3. Is our init valid?
@@ -286,7 +334,26 @@ func (c *Containers) run(ctn *Container) (err error) {
 		return fmt.Errorf("clone: init validationfailed: %v", err)
 	}
 
-	// 3. Launch new process
+	// 4. Pre-build start hook
+	log.Print("building script hook: Init")
+	var hook *models.ContainerScriptHook
+	if ctn.Container.Hooks != nil {
+		hook = ctn.Container.Hooks.Init
+	}
+	h, err := NewHook(hook, "", ctn.Container.Mount.Mountpoint, ctn.log, map[string]string{
+		"logfile":    ctn.Container.Logfile,
+		"command":    *ctn.Container.Command,
+		"mountpoint": ctn.Container.Mount.Mountpoint,
+		"mountkind":  ctn.Container.Mount.Kind,
+		"name":       string(ctn.Container.Name),
+		"id":         fmt.Sprintf("%d", ctn.Container.ID),
+		"systemd":    fmt.Sprintf("%t", ctn.Container.Systemd),
+	})
+	if err != nil {
+		return fmt.Errorf("clone: fatal error loading init script hook: %v", err.Error())
+	}
+
+	// 5. Launch new process
 	f := fork.NewFork("containerInit", containerInit)
 	f.Stdout = log.Writer().(*os.File)
 	f.Stderr = log.Writer().(*os.File)
@@ -294,7 +361,7 @@ func (c *Containers) run(ctn *Container) (err error) {
 	f.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWIPC | syscall.CLONE_NEWUTS,
 	}
-	if err := f.Fork(ctn.Container.Mount.Mountpoint, ctn.Container.Systemd, args); err != nil {
+	if err := f.Fork(ctn.Container.Mount.Mountpoint, ctn.Container.Systemd, h, args); err != nil {
 		return fmt.Errorf("clone: failed to start pid_init: %v", err)
 	}
 
@@ -359,7 +426,7 @@ var specialLinks = []symlinkType{
 }
 
 // this is run as a separate process
-func containerInit(mountpoint string, systemd bool, args []string) {
+func containerInit(mountpoint string, systemd bool, hook *Hook, args []string) {
 	// 0. setup logging
 	l := log.New(os.Stdout, "init: ", log.Ldate|log.Ltime|log.Lmsgprefix)
 
@@ -404,7 +471,15 @@ func containerInit(mountpoint string, systemd bool, args []string) {
 		}
 	}
 
-	// 6. execute init
+	// 6. Run init script hooks
+	if hook != nil {
+		l.Printf("executing init script hooks")
+		if err := hook.Run(); err != nil {
+			l.Fatalf("fatal init script hook error: %v", err)
+		}
+	}
+
+	// 7. execute init
 	l.Print("executing init")
 	if err := unix.Exec(args[0], args, []string{}); err != nil {
 		l.Fatalf("containerInit: exec failed: %v", err)
@@ -424,8 +499,9 @@ func (c *Containers) watcher(ctx context.Context, ctn *Container, f *fork.Functi
 		end <- e
 	}()
 	state := models.ContainerStateExited
+	var e error
 	select {
-	case e := <-end:
+	case e = <-end:
 		if e != nil {
 			l.WithError(e).Debug("process ended in error state")
 			ctn.log.Printf("process ended in error state: %v", e)
@@ -452,6 +528,37 @@ func (c *Containers) watcher(ctx context.Context, ctn *Container, f *fork.Functi
 		unix.Syncfs(fd)
 		unix.Close(fd)
 	}
+
+	// run the Exit hook
+	ctn.log.Printf("running script hook: exit")
+	var hook *models.ContainerScriptHook
+	if ctn.Container.Hooks != nil {
+		hook = ctn.Container.Hooks.Exit
+	}
+	errstr := ""
+	if e != nil {
+		errstr = e.Error()
+	}
+	if h, err := NewHook(hook, "", ctn.Container.Mount.Mountpoint, ctn.log, map[string]string{
+		"logfile":     ctn.Container.Logfile,
+		"command":     *ctn.Container.Command,
+		"mountpoint":  ctn.Container.Mount.Mountpoint,
+		"mountkind":   ctn.Container.Mount.Kind,
+		"name":        string(ctn.Container.Name),
+		"id":          fmt.Sprintf("%d", ctn.Container.ID),
+		"systemd":     fmt.Sprintf("%t", ctn.Container.Systemd),
+		"error":       fmt.Sprintf("%t", e != nil),
+		"errorstring": errstr,
+	}); err != nil {
+		l.WithError(err).Debug("fatal error building exit scripts")
+		state = models.ContainerStateDead
+	} else {
+		if err = h.Run(); err != nil {
+			l.WithError(err).Debug("fatal error running exit scripts")
+			state = models.ContainerStateDead
+		}
+	}
+
 	// process is over, set the state
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

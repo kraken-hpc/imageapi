@@ -16,7 +16,7 @@ require (
 	github.com/go-openapi/validate v0.20.2
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/kraken-hpc/go-fork v0.1.1
-	github.com/kraken-hpc/uinit v0.1.1
+	github.com/kraken-hpc/uinit v0.2.0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/u-root/iscsinl v0.1.0

@@ -32,7 +32,7 @@ func init() {
   "info": {
     "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "basePath": "/imageapi/v1",
   "paths": {
@@ -630,6 +630,9 @@ func init() {
         "command": {
           "type": "string"
         },
+        "hooks": {
+          "$ref": "#/definitions/container_script_hooks"
+        },
         "id": {
           "$ref": "#/definitions/id"
         },
@@ -679,6 +682,78 @@ func init() {
         "user",
         "uts"
       ]
+    },
+    "container_script": {
+      "description": "A ` + "`" + `uinit` + "`" + ` style script to be executed on container load/unload.\n\nScripts can be passed in several ways, as specified by ` + "`" + `encoding` + "`" + `:\n- ` + "`" + `file` + "`" + ` : ` + "`" + `script` + "`" + ` must be a path to a valid file on the root filesystem.\n- ` + "`" + `container_file` + "`" + ` : ` + "`" + `script` + "`" + ` must be a path to a valid file in the contianer filesystem.\n- ` + "`" + `plain` + "`" + ` : multi-line script string.\n- ` + "`" + `base64` + "`" + ` : base64 encoded script string.\n- ` + "`" + `gzip` + "`" + ` : gzip + base64 encoded script string.\n- ` + "`" + `bzip2` + "`" + ` : bzip2 + base64 encoded script string.\n",
+      "type": "object",
+      "properties": {
+        "encoding": {
+          "description": "The type of script specification contained in ` + "`" + `script` + "`" + `",
+          "type": "string",
+          "enum": [
+            "file",
+            "container_file",
+            "plain",
+            "base64",
+            "gzip",
+            "bzip2"
+          ]
+        },
+        "last_error": {
+          "description": "The last error message reported by this script",
+          "type": "string",
+          "readOnly": true
+        },
+        "must": {
+          "description": "Any script failure is considered fatal",
+          "type": "boolean",
+          "default": false
+        },
+        "script": {
+          "description": "String either containing the script, or a script file location",
+          "type": "string"
+        },
+        "success": {
+          "description": "Was the last run of this script successful",
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    },
+    "container_script_hook": {
+      "description": "Describes a container script hook point with execution controls.\n\nScripts will be executed in array order after any default scripts.\n",
+      "type": "object",
+      "properties": {
+        "disable_defaults": {
+          "description": "Disable default script hooks.",
+          "type": "boolean",
+          "default": false
+        },
+        "scripts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/container_script"
+          }
+        }
+      }
+    },
+    "container_script_hooks": {
+      "description": "Container script execution hooks.\n\nWe currently provide 4 hook points:\n1. ` + "`" + `create` + "`" + ` is executed on container creation (root namespaces).\n2. ` + "`" + `init` + "`" + ` is executed in the container namespaces before the provided ` + "`" + `init` + "`" + ` is called (container namespaces). \n3. ` + "`" + `exit` + "`" + ` is executed on container exit (root namespaces).\n4. ` + "`" + `delete` + "`" + ` is executed on container deletion (root namespaces).\n",
+      "type": "object",
+      "properties": {
+        "create": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "delete": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "exit": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "init": {
+          "$ref": "#/definitions/container_script_hook"
+        }
+      }
     },
     "container_state": {
       "description": "Valid container states",
@@ -983,7 +1058,7 @@ func init() {
   "info": {
     "description": "This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.\n\nIn general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, \nor, they can contain the full specification of those lower objects.\n\nIf an object references another by ID, deletion of that object does not effect the underlying object.\n\nIf an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.\n\nFor instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount\nand detach those lower objects.\n",
     "title": "Image API",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "basePath": "/imageapi/v1",
   "paths": {
@@ -1581,6 +1656,9 @@ func init() {
         "command": {
           "type": "string"
         },
+        "hooks": {
+          "$ref": "#/definitions/container_script_hooks"
+        },
         "id": {
           "$ref": "#/definitions/id"
         },
@@ -1630,6 +1708,78 @@ func init() {
         "user",
         "uts"
       ]
+    },
+    "container_script": {
+      "description": "A ` + "`" + `uinit` + "`" + ` style script to be executed on container load/unload.\n\nScripts can be passed in several ways, as specified by ` + "`" + `encoding` + "`" + `:\n- ` + "`" + `file` + "`" + ` : ` + "`" + `script` + "`" + ` must be a path to a valid file on the root filesystem.\n- ` + "`" + `container_file` + "`" + ` : ` + "`" + `script` + "`" + ` must be a path to a valid file in the contianer filesystem.\n- ` + "`" + `plain` + "`" + ` : multi-line script string.\n- ` + "`" + `base64` + "`" + ` : base64 encoded script string.\n- ` + "`" + `gzip` + "`" + ` : gzip + base64 encoded script string.\n- ` + "`" + `bzip2` + "`" + ` : bzip2 + base64 encoded script string.\n",
+      "type": "object",
+      "properties": {
+        "encoding": {
+          "description": "The type of script specification contained in ` + "`" + `script` + "`" + `",
+          "type": "string",
+          "enum": [
+            "file",
+            "container_file",
+            "plain",
+            "base64",
+            "gzip",
+            "bzip2"
+          ]
+        },
+        "last_error": {
+          "description": "The last error message reported by this script",
+          "type": "string",
+          "readOnly": true
+        },
+        "must": {
+          "description": "Any script failure is considered fatal",
+          "type": "boolean",
+          "default": false
+        },
+        "script": {
+          "description": "String either containing the script, or a script file location",
+          "type": "string"
+        },
+        "success": {
+          "description": "Was the last run of this script successful",
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    },
+    "container_script_hook": {
+      "description": "Describes a container script hook point with execution controls.\n\nScripts will be executed in array order after any default scripts.\n",
+      "type": "object",
+      "properties": {
+        "disable_defaults": {
+          "description": "Disable default script hooks.",
+          "type": "boolean",
+          "default": false
+        },
+        "scripts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/container_script"
+          }
+        }
+      }
+    },
+    "container_script_hooks": {
+      "description": "Container script execution hooks.\n\nWe currently provide 4 hook points:\n1. ` + "`" + `create` + "`" + ` is executed on container creation (root namespaces).\n2. ` + "`" + `init` + "`" + ` is executed in the container namespaces before the provided ` + "`" + `init` + "`" + ` is called (container namespaces). \n3. ` + "`" + `exit` + "`" + ` is executed on container exit (root namespaces).\n4. ` + "`" + `delete` + "`" + ` is executed on container deletion (root namespaces).\n",
+      "type": "object",
+      "properties": {
+        "create": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "delete": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "exit": {
+          "$ref": "#/definitions/container_script_hook"
+        },
+        "init": {
+          "$ref": "#/definitions/container_script_hook"
+        }
+      }
     },
     "container_state": {
       "description": "Valid container states",

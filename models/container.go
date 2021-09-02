@@ -30,6 +30,9 @@ type Container struct {
 	// Required: true
 	Command *string `json:"command"`
 
+	// hooks
+	Hooks *ContainerScriptHooks `json:"hooks,omitempty"`
+
 	// id
 	ID ID `json:"id,omitempty"`
 
@@ -72,6 +75,10 @@ func (m *Container) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateHooks(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -102,6 +109,23 @@ func (m *Container) validateCommand(formats strfmt.Registry) error {
 
 	if err := validate.Required("command", "body", m.Command); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Container) validateHooks(formats strfmt.Registry) error {
+	if swag.IsZero(m.Hooks) { // not required
+		return nil
+	}
+
+	if m.Hooks != nil {
+		if err := m.Hooks.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("hooks")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -193,6 +217,10 @@ func (m *Container) validateState(formats strfmt.Registry) error {
 func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateHooks(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateID(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -224,6 +252,20 @@ func (m *Container) ContextValidate(ctx context.Context, formats strfmt.Registry
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Container) contextValidateHooks(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Hooks != nil {
+		if err := m.Hooks.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("hooks")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
