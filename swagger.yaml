@@ -1,33 +1,38 @@
 ---
 swagger: "2.0"
 consumes:
-- application/json
+  - application/json
 info:
   description: |
-    This API specification describes a service for attaching, mounting and preparing container images and manipulating those containers.
+    This API specification describes a service for attaching, mounting and
+    preparing container images and manipulating those containers.
 
-    In general, higher level objects can either reference lower level objects (e.g. a mount referencing an attachment point) by a reference ID, 
+    In general, higher level objects can either reference lower level objects
+    (e.g. a mount referencing an attachment point) by a reference ID,
     or, they can contain the full specification of those lower objects.
 
-    If an object references another by ID, deletion of that object does not effect the underlying object.
-    
-    If an object defines a lower level object, that lower level object will automatically be deleted on deletion of the higher level object.
+    If an object references another by ID, deletion of that object does not
+    effect the underlying object.
 
-    For instance, if a container contains all of the defintions for all mount points and attachments, deletion of the container will automatically unmount
+    If an object defines a lower level object, that lower level object will
+    automatically be deleted on deletion of the higher level object.
+
+    For instance, if a container contains all of the defintions for all mount
+    points and attachments, deletion of the container will automatically unmount
     and detach those lower objects.
   title: Image API
   version: 0.2.1
 produces:
-- application/json
+  - application/json
 schemes:
-- http
-- https
+  - http
+  - https
 basePath: /imageapi/v1
 
 definitions:
   id:
     description: |
-      An ID is a unique numeric ID that references an object.  
+      An ID is a unique numeric ID that references an object.
       IDs are not necessarily unique across object types.
       IDs are generall readOnly and generated internally.
     type: integer
@@ -37,7 +42,8 @@ definitions:
     description: |
       A name is a unique, user-provided identifier for an object.
 
-      A name must consist of numbers, letters, and the symbols in the set { `.`, `-`, `_`}.
+      A name must consist of numbers, letters, and the symbols in the set
+      { `.`, `-`, `_`}.
     type: string
     pattern: "^[A-Za-z0-1.\\-_]*$"
 
@@ -106,8 +112,9 @@ definitions:
 
   attach_rbd:
     description: |
-      attach_rbd describes an RBD map.  To successfully map, at least one monitor, pool and image must be specified.
-      Additionally, you will need options.name and options.secret specified.
+      attach_rbd describes an RBD map.  To successfully map, at least one
+      monitor, pool and image must be specified. Additionally, you will need
+      options.name and options.secret specified.
     type: object
     required:
       - monitors
@@ -119,7 +126,7 @@ definitions:
         type: integer
         format: int64
         readOnly: true
-      #external 
+      # external
       monitors:
         type: array
         items:
@@ -136,7 +143,7 @@ definitions:
         type: string
       options:
         $ref: "#/definitions/rbd_options"
-  
+
   attach_loopback:
     description: |
       `attach_loopback` describes a loopback device based on an available file.
@@ -149,14 +156,18 @@ definitions:
     properties:
       path:
         type: string
-        description: A unix-formatted filesystem path with `/` relative to the respective base.
+        description: >
+          A unix-formatted filesystem path with `/` relative to the respective
+          base.
       base:
-        description:  |
-          base determines the relative root for the path.  There are two options:
+        description: >
+          base determines the relative root for the path.  There are two
+          options:
           `root` means to use the current root (`/`) as the base path.
-          `mount` means to use a mount as the base path. If this is specified, `mount` must be specified as well.
+          `mount` means to use a mount as the base path. If this is specified,
+          `mount` must be specified as well.
         type: string
-        enum: [ "root", "mount" ]
+        enum: ["root", "mount"]
       readPartitions:
         description: |
           Should the partition table on the looback device be read?
@@ -179,8 +190,9 @@ definitions:
     properties:
       path:
         type: string
-        description: A unix-formatted filesystem path pointing to a block device file.
-  
+        description: >
+          A unix-formatted filesystem path pointing to a block device file.
+
   attach_iscsi:
     description: |
       `attach_iscsi` describes an block device available as an iSCSI attachment.
@@ -229,22 +241,25 @@ definitions:
         description: Block device scheduler
 
   attach:
-    description: |
-      Generically address attachments.  Attachments are objects that ultimately provide a block device file.    
+    description: >
+      Generically address attachments.  Attachments are objects that ultimately
+      provide a block device file.
     properties:
       id:
         $ref: "#/definitions/id"
         readOnly: true
       kind:
         type: string
-        enum: [ "iscsi", "local", "loopback", "rbd" ]
+        enum: ["iscsi", "local", "loopback", "rbd"]
         description: |
-          Kind specifies the kind of attachment.  Each kind has corresponding kind-specific options.
+          Kind specifies the kind of attachment.  Each kind has corresponding
+          kind-specific options.
 
           Currently known kinds:
 
           iscsi - attach an iscsi lun
-          local - create an attachment reference to an existing block device (specifying a non-block device will fail)
+          local - create an attachment reference to an existing block device
+                  (specifying a non-block device will fail)
           loopback - create a loopback device referencing a file in a mount
           rbd - attach a Ceph/RBD object
 
@@ -268,13 +283,14 @@ definitions:
 
   mount_attach:
     description: |
-      `mount_attach` describes an attach mount.  This must have at least attach ID associated with it, 
-      and a provided filesystem type.
-      
-      Either `attach_id` or `attach` must be specified.  If both are specified, `attach` will be ignored.
+      `mount_attach` describes an attach mount.  This must have at least attach
+      ID associated with it, and a provided filesystem type.
 
-      If `attach` is specified and `attach_id` is omitted, the specified attach will first be attached, and will be
-      detached on deletion.
+      Either `attach_id` or `attach` must be specified.  If both are specified,
+      `attach` will be ignored.
+
+      If `attach` is specified and `attach_id` is omitted, the specified attach
+      will first be attached, and will be detached on deletion.
     required:
       - fs_type
       - attach
@@ -284,19 +300,22 @@ definitions:
       fs_type:
         type: string
       mount_options:
-        description: these mount options will be passed to the mount syscall. Supported options depend on filesystem type.
+        description: >
+          these mount options will be passed to the mount syscall. Supported
+          options depend on filesystem type.
         type: array
         items:
           type: string
 
   mount_overlay:
     description: |
-      `mount_overlay` describes an Overlayfs mount.  All mount points must be RBD ID's.
-      At very least, `lower` must be specified.  If `upper` length is zero, no `upper`
-      mounts will be used.  `workdir` will be assigned automatically.
+      `mount_overlay` describes an Overlayfs mount.  All mount points must be
+      RBD ID's.  At very least, `lower` must be specified.  If `upper` length
+      is zero, no `upper` mounts will be used.  `workdir` will be assigned
+      automatically.
 
-      If the mounts specified in `lower` are specifications and not ID references, they
-      will be recursively mounted/attached.
+      If the mounts specified in `lower` are specifications and not ID
+      references, they will be recursively mounted/attached.
 
       Overlay mounts are identified by their uppermost `lower` ID.
     type: object
@@ -313,15 +332,18 @@ definitions:
         readOnly: true
       # external
       lower:
-        description: This is an array of mount specifications to be used (in order) as lower mounts for the overlay.
+        description: >
+          This is an array of mount specifications to be used (in order) as
+          lower mounts for the overlay.
         type: array
         items:
           $ref: "#/definitions/mount"
 
   mount_bind:
     description: |
-      `mount_bind` describes a local bind mount. 
-      Bind mounts can be relative to another mount, or to /, allowing a way to access local data.
+      `mount_bind` describes a local bind mount.
+      Bind mounts can be relative to another mount, or to /, allowing a way to
+      access local data.
     type: object
     required:
       - path
@@ -329,14 +351,18 @@ definitions:
     properties:
       path:
         type: string
-        description: A unix-formatted filesystem path with `/` relative to the respective base.
+        description: >
+          A unix-formatted filesystem path with `/` relative to the respective
+          base.
       base:
-        description:  |
-          base determines the relative root for the path.  There are two options:
+        description: |
+          base determines the relative root for the path.  There are two
+          options:
           `root` means to use the current root (`/`) as the base path.
-          `mount` means to use a mount as the base path. If this is specified, `mount` must be specified as well.
+          `mount` means to use a mount as the base path. If this is specified,
+                  `mount` must be specified as well.
         type: string
-        enum: [ "root", "mount" ]
+        enum: ["root", "mount"]
       recursive:
         description: perform a recursive bind mount
         type: boolean
@@ -347,7 +373,7 @@ definitions:
         default: false
       mount:
         $ref: "#/definitions/mount"
-          
+
   mount_nfs:
     description: |
       `mount_nfs` describes an NFS mount.
@@ -372,9 +398,9 @@ definitions:
         default: "4.2"
       options:
         description: |
-          Options as specified in nfs(5).  General mount options won't work here.
-          addr= and clientaddr= will be filled out automatically based on host.
-          vers= will be filled by version
+          Options as specified in nfs(5).  General mount options won't work
+          here.  addr= and clientaddr= will be filled out automatically based
+          on host. vers= will be filled by version
         type: array
         items:
           type: string
@@ -384,17 +410,19 @@ definitions:
       Generically address mounts by kind and ID or definition
       Either an `mount_id` or a mount definition must be supplied.
       If both are supplied, the mount definition will be ignored.
-      If `mount_id` is specified, then the kind/id will be used to reference that mount.
-      If no `mount_id` is supplied a defition of type `kind` must be present.
+      If `mount_id` is specified, then the kind/id will be used to reference
+      that mount.  If no `mount_id` is supplied a defition of type `kind` must
+      be present.
     type: object
     properties:
       id:
         $ref: "#/definitions/id"
       kind:
         type: string
-        enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+        enum: ["attach", "bind", "nfs", "overlay", "uri"]
         description: |
-          Kind specifies the kind of mount.  Each kind has corresponding kind-specific options.
+          Kind specifies the kind of mount.  Each kind has corresponding
+          kind-specific options.
 
           Currently known kinds:
 
@@ -425,13 +453,13 @@ definitions:
   container_namespace:
     description: Linux namespace
     type: string
-    enum: [ "cgroup", "ipc", "net", "mnt", "pid", "time", "user", "uts" ]
+    enum: ["cgroup", "ipc", "net", "mnt", "pid", "time", "user", "uts"]
 
   container_state:
     description: Valid container states
     type: string
     # stolen straight from docker (even if we don't use them all)
-    enum: [ "created",  "running", "stopping", "exited", "dead" ]
+    enum: ["created", "running", "stopping", "exited", "dead"]
 
   container_script:
     description: |
@@ -439,7 +467,8 @@ definitions:
 
       Scripts can be passed in several ways, as specified by `encoding`:
       - `file` : `script` must be a path to a valid file on the root filesystem.
-      - `container_file` : `script` must be a path to a valid file in the contianer filesystem.
+      - `container_file` : `script` must be a path to a valid file in the
+         contianer filesystem.
       - `plain` : multi-line script string.
       - `base64` : base64 encoded script string.
       - `gzip` : gzip + base64 encoded script string.
@@ -449,16 +478,17 @@ definitions:
       encoding:
         description: The type of script specification contained in `script`
         type: string
-        enum: [ "file", "container_file", "plain", "base64", "gzip", "bzip2" ]
+        enum: ["file", "container_file", "plain", "base64", "gzip", "bzip2"]
       script:
-        description: String either containing the script, or a script file location
+        description: >
+          String either containing the script, or a script file location
         type: string
       must:
         description: Any script failure is considered fatal
         type: boolean
         default: false
       success:
-        description: Was the last run of this script successful 
+        description: Was the last run of this script successful
         type: boolean
         readOnly: true
       last_error:
@@ -488,20 +518,20 @@ definitions:
 
       We currently provide 4 hook points:
       1. `create` is executed on container creation (root namespaces).
-      2. `init` is executed in the container namespaces before the provided `init` is called (container namespaces). 
+      2. `init` is executed in the container namespaces before the provided
+         `init` is called (container namespaces).
       3. `exit` is executed on container exit (root namespaces).
       4. `delete` is executed on container deletion (root namespaces).
     type: object
     properties:
       create:
         $ref: "#/definitions/container_script_hook"
-      init: 
+      init:
         $ref: "#/definitions/container_script_hook"
       exit:
         $ref: "#/definitions/container_script_hook"
       delete:
         $ref: "#/definitions/container_script_hook"
-    
 
   container:
     description: |
@@ -524,7 +554,9 @@ definitions:
         readOnly: true
       # external
       name:
-        description: name is an optional identifier for the container.  Name must be unique.
+        description: >
+          name is an optional identifier for the container.  Name must be
+          unique.
         $ref: "#/definitions/name"
       mount:
         $ref: "#/definitions/mount"
@@ -533,21 +565,22 @@ definitions:
       systemd:
         type: boolean
         description: >
-          When `systemd` is set to `true`, we will assume that this container will run `systemd`,
-          and perform the necessary magic dance to make systemd run inside of the container.
-          The default is `false`.
+          When `systemd` is set to `true`, we will assume that this container
+          will run `systemd`, and perform the necessary magic dance to make
+          systemd run inside of the container.  The default is `false`.
       state:
         description: >
           When read, this contains the current container state.
-          On creation, this requests the initial state (valid options: `created` or `running`).
+          On creation, this requests the initial state (valid options:
+          `created` or `running`).
           The default is `created`.
         $ref: "#/definitions/container_state"
       namespaces:
         description: |
           A list of Linux namespaces to use.
 
-          Note: This is currently unused.  All containers currently get `mnt` and `pid`.
-                It's here as a placeholder for future use.
+          Note: This is currently unused.  All containers currently get `mnt`
+          and `pid`.  It's here as a placeholder for future use.
         type: array
         items:
           $ref: "#/definitions/container_namespace"
@@ -557,7 +590,7 @@ definitions:
         type: integer
         format: int64
         readOnly: true
-  
+
   error:
     type: object
     required:
@@ -569,7 +602,7 @@ definitions:
       message:
         type: string
 
-  
+
 paths:
 
   /attach:
@@ -585,7 +618,7 @@ paths:
         - in: query
           name: kind
           type: string
-          enum: [ "iscsi", "local", "loopback", "rbd" ]
+          enum: ["iscsi", "local", "loopback", "rbd"]
           required: false
           description: Kind of attachments to query.
       tags:
@@ -660,7 +693,7 @@ paths:
         - in: query
           name: kind
           type: string
-          enum: [ "attach", "bind", "nfs", "overlay", "uri" ]
+          enum: ["attach", "bind", "nfs", "overlay", "uri"]
           required: false
           description: Kind of mounts to query.
       description: List mounts
@@ -699,7 +732,9 @@ paths:
           schema:
             $ref: "#/definitions/error"
     delete:
-      description: Unmount a specified mount.  Note that mount reference IDs must be specified.
+      description: |
+        Unmount a specified mount.  Note that mount reference IDs must be
+        specified.
       tags:
         - mounts
       parameters:
@@ -724,7 +759,7 @@ paths:
           description: Unmount failed
           schema:
             $ref: "#/definitions/error"
-  
+
   /container:
     get:
       parameters:
@@ -742,7 +777,7 @@ paths:
         - in: query
           name: state
           type: string
-          enum: [ "created",  "running", "stopping", "exited", "dead" ]
+          enum: ["created", "running", "stopping", "exited", "dead"]
           required: false
           description: Query containers by state
       tags:
@@ -803,7 +838,7 @@ paths:
       tags:
         - containers
       description: |
-        Delete a container defition.  
+        Delete a container defition.
         Either `id` or `name` query parameter must be specified.
       operationId: delete_container
       responses:
@@ -822,7 +857,7 @@ paths:
         - in: query
           name: state
           type: string
-          enum: [ "running", "exited", "paused" ]
+          enum: ["running", "exited", "paused"]
           required: true
           description: Desired container state
         - in: query
@@ -837,10 +872,12 @@ paths:
           required: false
           description: Name of container
       description: |
-        Request a (valid) state for a container. 
-        Valid states to request include: `running`, `exited`, `paused` (paused is not yet implemented)
+        Request a (valid) state for a container.
+        Valid states to request include: `running`, `exited`, `paused` (paused
+        is not yet implemented)
 
-        Either a valid Name or ID must be passed as a query parameter, along with a valid state parameter.
+        Either a valid Name or ID must be passed as a query parameter, along
+        with a valid state parameter.
       operationId: set_container_state
       responses:
         200:
